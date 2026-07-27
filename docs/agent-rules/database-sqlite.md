@@ -38,7 +38,7 @@ Creation MUST atomically:
 2. validate the room and interval;
 3. insert the booking;
 4. insert every slot row;
-5. insert required outbox records;
+5. insert outbox records only when an implemented bonus requires them;
 6. commit.
 
 Map a unique-slot violation to `BookingConflictError`. Cancellation MUST
