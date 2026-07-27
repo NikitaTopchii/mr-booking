@@ -7,7 +7,8 @@ export function hasLocale(value: string): value is Locale {
   return supportedLocales.some((locale) => locale === value);
 }
 
-export type LocalizedRoute = '/' | '/login' | '/register' | '/schedule';
+export type LocalizedRoute =
+  '/' | '/login' | '/register' | '/schedule' | '/my-bookings';
 
 export function localizedRoute(locale: Locale, route: LocalizedRoute): string {
   return route === '/' ? `/${locale}` : `/${locale}${route}`;

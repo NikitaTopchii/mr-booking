@@ -12,12 +12,18 @@ test.describe('authentication journey', () => {
     await page.getByRole('button', { name: 'Створити акаунт' }).click();
 
     await expect(page).toHaveURL(/\/uk\/schedule$/u);
+    const userMenu = page.getByRole('button', {
+      name: 'Відкрити меню користувача: E2E User',
+    });
+    await userMenu.click();
     await expect(page.getByText(email)).toBeVisible();
+    await page.keyboard.press('Escape');
     await page.reload();
     await expect(page).toHaveURL(/\/uk\/schedule$/u);
+    await userMenu.click();
     await expect(page.getByText(email)).toBeVisible();
 
-    await page.getByRole('button', { name: 'Вийти' }).click();
+    await page.getByRole('menuitem', { name: 'Вийти' }).click();
     await expect(page).toHaveURL(/\/uk\/login$/u);
     expect((await page.request.get('/api/auth/me')).status()).toBe(401);
     await page.goBack();

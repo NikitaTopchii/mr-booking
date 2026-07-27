@@ -117,6 +117,10 @@ mutation before the server succeeds.
 
 ## 11. Upcoming personal bookings
 
+- **Phase 2D foundation:** the protected localized page and upcoming/past
+  sections exist with explicit UI-foundation empty states and a localized
+  Schedule action. No booking query runs yet, so this does not claim an
+  authoritative empty result.
 - **Starting state:** authenticated user opens personal bookings.
 - **Actions:** view or select an upcoming item.
 - **Loading:** list skeleton/progress.
@@ -127,6 +131,9 @@ mutation before the server succeeds.
 
 ## 12. Past-booking navigation
 
+- **Phase 2D foundation:** the Past section is present, but rows, ordering,
+  pagination, timezone formatting, and room/week navigation wait for the
+  booking domain and API.
 - **Starting state:** personal bookings with past section.
 - **Actions:** load more and select an item.
 - **Loading:** incremental control prevents duplicate requests.

@@ -144,9 +144,10 @@ bookings remain deferred until the booking schema exists.
 - `GET /api/auth/me` resolves the current unexpired session.
 - `POST /api/auth/logout` idempotently deletes only the current session and
   clears its cookie.
-- `/uk/schedule` and `/en/schedule` are localized minimal protected shells.
+- `/uk/schedule`, `/en/schedule`, `/uk/my-bookings`, and
+  `/en/my-bookings` share one localized protected application shell.
   Unprefixed application routes redirect to the saved locale or Ukrainian by
-  default. Auth pages and protected layouts redirect on the server based on
+  default. Auth pages and the protected layout redirect on the server based on
   the NestJS API result.
 
 Authentication dictionaries live in `libs/shared/i18n`. They are typed,
@@ -163,6 +164,25 @@ payloads before using them.
 Supported application locales are Ukrainian (`uk`, default) and English
 (`en`). Locale-prefixed links, redirects, logout, and the auth language
 switcher preserve the corresponding route.
+
+## Authenticated workspace
+
+The protected Server Component layout resolves the current safe user once and
+passes only name, email, and public user id into the application shell. The
+shell provides product identity, active Schedule/My bookings navigation, a
+read-only user menu, locale switching, and the existing logout flow.
+
+Desktop uses horizontal primary navigation. Phone layouts use a floating
+two-item navigation capsule over a token-based bottom gradient, with safe-area
+spacing and reserved page padding; the user menu remains available in the
+header. Both navigation forms use `aria-current="page"`, visible focus, and at
+least 44px practical targets.
+
+My bookings currently provides localized Upcoming and Past UI foundations
+with deliberate empty-state copy and a localized Schedule action. It does not
+query or persist bookings and does not contain mock booking rows. Ordering,
+pagination, cancellation, timezone formatting, and room/week navigation will
+be connected when the authoritative booking domain and API exist.
 
 ## Quality checks
 
@@ -217,10 +237,11 @@ login, and session persistence across a normal Docker Compose restart.
 
 ## Phase status
 
-Phase 2 completes mandatory authentication only. Password recovery/change,
-OAuth, magic links, MFA, CAPTCHA, roles/admin, email verification, account
-deletion, device management, and logout-all are intentionally deferred.
-Bookings, booking permissions, calendar behavior, SWR, PWA support,
-notifications, Web Push, and recurring bookings are also outside this phase.
-Login throttling and expired-session cleanup are documented hardening work,
-not placeholder implementations.
+Phase 2D completes the authenticated shell and My bookings UI foundation.
+Password recovery/change, OAuth, magic links, MFA, CAPTCHA, roles/admin, email
+verification, account deletion, device management, and logout-all are
+intentionally deferred. Booking data, permissions, persistence, cancellation,
+calendar behavior, personal-list SWR, PWA support, notifications, Web Push,
+and recurring bookings are also outside this phase. Login throttling and
+expired-session cleanup are documented hardening work, not placeholder
+implementations.

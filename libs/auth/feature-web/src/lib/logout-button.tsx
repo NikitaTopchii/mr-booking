@@ -1,10 +1,5 @@
-import {
-  AuthClientError,
-  logoutSession,
-} from '@mr-booking/auth-data-access-web/client';
 import { LogoutControl } from '@mr-booking/auth-ui';
-import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useLogout } from './use-logout';
 
 export interface LogoutButtonProps {
   readonly label: string;
@@ -19,31 +14,7 @@ export function LogoutButton({
   errorMessage,
   successHref,
 }: LogoutButtonProps) {
-  const router = useRouter();
-  const active = useRef(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  async function logout(): Promise<void> {
-    if (active.current) {
-      return;
-    }
-
-    active.current = true;
-    setSubmitting(true);
-    setFailed(false);
-
-    try {
-      await logoutSession();
-      router.replace(successHref);
-      router.refresh();
-    } catch (error) {
-      setFailed(error instanceof AuthClientError || error instanceof Error);
-    } finally {
-      active.current = false;
-      setSubmitting(false);
-    }
-  }
+  const { submitting, failed, logout } = useLogout(successHref);
 
   return (
     <LogoutControl

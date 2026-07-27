@@ -15,6 +15,10 @@ delivery items. `Planned` means no implementation evidence exists yet.
 | AUTH-008         | Authentication    | Log out the current session                                                    | Mandatory          | Yes                        | Loading/success/error            | API + E2E                            | 2                            | Implemented | Handler/API/E2E tests; Phase 2C gateway revocation smoke                              |
 | AUTH-009         | Authentication    | Restore the session after page reload                                          | Mandatory          | Yes                        | Loading/authenticated/anonymous  | API + E2E                            | 2                            | Implemented | `server-auth.spec.ts`; E2E reload; Docker browser reload and Compose restart smoke    |
 | AUTH-010         | Authentication    | Return understandable server and field errors                                  | Mandatory          | Yes                        | Field/form errors                | API + E2E                            | 2                            | Implemented | strict auth-client parsing; localized form/API/E2E tests                              |
+| SHELL-001        | App shell         | Protect localized Schedule and My bookings workspaces                          | Mandatory          | Yes                        | Authenticated/redirect/error     | Server layout + E2E                  | 2D                           | Implemented | `(app)/layout.tsx`; `application-shell.spec.ts`                                       |
+| SHELL-002        | App shell         | Provide active Schedule and My bookings navigation                             | Mandatory          | No                         | Active/keyboard/responsive       | Component + responsive E2E           | 2D                           | Implemented | `application-navigation.spec.tsx`; `application-shell.spec.ts`                        |
+| SHELL-003        | App shell         | Show safe identity, locale switcher, and reusable logout                       | Mandatory          | Yes                        | Menu/pending/error               | Component + E2E                      | 2D                           | Implemented | `user-menu.spec.tsx`; `logout-button.spec.tsx`; `application-shell.spec.ts`           |
+| SHELL-004        | Personal bookings | Provide localized upcoming and past empty-state foundation                     | Mandatory          | No                         | Two deliberate empty states      | Component + E2E                      | 2D                           | Implemented | `my-bookings/page.spec.tsx`; `application-shell.spec.ts`                              |
 | ROOM-001         | Rooms             | Seed 5–6 deterministic rooms                                                   | Mandatory          | No                         | Loading/empty/error/success      | Seed integration + E2E               | 1/4                          | Planned     | —                                                                                     |
 | ROOM-002         | Rooms             | Every room has a name                                                          | Mandatory          | Yes                        | Room option/card                 | Schema + API                         | 1/4                          | Planned     | —                                                                                     |
 | ROOM-003         | Rooms             | Every room has a floor                                                         | Mandatory          | Yes                        | Room metadata                    | Schema + API                         | 1/4                          | Planned     | —                                                                                     |
@@ -120,6 +124,24 @@ delivery items. `Planned` means no implementation evidence exists yet.
 Docker remains a bonus delivery category in this matrix until the complete
 mandatory product scope is delivered; the Phase 2C evidence records only the
 authentication release gate and does not claim booking or calendar delivery.
+
+## Phase 2D application-shell evidence
+
+- The protected Server Component layout resolves the safe current user once
+  and composes the localized shell for Schedule and My bookings.
+- Desktop navigation and the mobile two-destination bottom navigation expose
+  the current route with visible state and `aria-current="page"`.
+- The Radix user menu shows read-only name/email identity, preserves the
+  current route when changing locale, and reuses the existing logout feature.
+- `/uk/my-bookings` and `/en/my-bookings` render upcoming and past UI
+  foundations with deliberate localized empty states and a localized Schedule
+  action.
+- No booking query, booking DTO, fake record, cancellation action, pagination,
+  timezone formatter, booking table, or client-side booking store exists yet.
+
+`MY-BOOKINGS-001` through `MY-BOOKINGS-006` remain planned until the
+authoritative booking domain and API provide real ordered, paginated,
+timezone-aware rows and navigation context.
 
 ## Status and evidence rules
 

@@ -66,10 +66,47 @@ export const dictionary = {
     serviceUnavailableTitle: 'Service temporarily unavailable',
     serviceUnavailableDescription:
       'We could not verify your session. Refresh this page in a minute.',
-    userMenuLabel: 'Current user',
-    protectedEyebrow: 'Protected area',
+  },
+  appShell: {
+    productName: 'MR Booking',
+    skipToContent: 'Skip to main content',
+    navigation: {
+      label: 'Primary navigation',
+      schedule: 'Schedule',
+      myBookings: 'My bookings',
+    },
+    userMenu: {
+      open: 'Open user menu',
+      signedInAs: 'Signed in as',
+      language: 'Interface language',
+      logout: 'Sign out',
+      loggingOut: 'Signing out…',
+      logoutError: 'We could not sign you out. Please try again.',
+    },
+  },
+  schedule: {
     scheduleTitle: 'The schedule is ready for the next phase',
     scheduleDescription:
       'Authentication works. Calendar and booking functionality will be implemented separately.',
+  },
+  myBookings: {
+    title: 'My bookings',
+    description:
+      'Your upcoming and past meeting-room bookings will be collected here.',
+    upcoming: {
+      title: 'Upcoming',
+      emptyTitle: 'You have no upcoming bookings yet.',
+      emptyDescription:
+        'Your nearest confirmed bookings will appear here once booking data is connected.',
+    },
+    past: {
+      title: 'Past',
+      emptyTitle: 'Past bookings will appear here.',
+      emptyDescription:
+        'History will be connected to authoritative booking data in a later phase.',
+    },
+    actions: {
+      viewSchedule: 'View schedule',
+    },
   },
 } satisfies AppDictionary;

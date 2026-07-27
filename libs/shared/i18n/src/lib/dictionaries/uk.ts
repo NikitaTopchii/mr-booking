@@ -66,10 +66,47 @@ export const dictionary = {
     serviceUnavailableTitle: 'Сервіс тимчасово недоступний',
     serviceUnavailableDescription:
       'Не вдалося перевірити сесію. Оновіть сторінку за хвилину.',
-    userMenuLabel: 'Поточний користувач',
-    protectedEyebrow: 'Захищена область',
+  },
+  appShell: {
+    productName: 'MR Booking',
+    skipToContent: 'Перейти до основного вмісту',
+    navigation: {
+      label: 'Основна навігація',
+      schedule: 'Розклад',
+      myBookings: 'Мої бронювання',
+    },
+    userMenu: {
+      open: 'Відкрити меню користувача',
+      signedInAs: 'Ви ввійшли як',
+      language: 'Мова інтерфейсу',
+      logout: 'Вийти',
+      loggingOut: 'Виходимо…',
+      logoutError: 'Не вдалося вийти. Спробуйте ще раз.',
+    },
+  },
+  schedule: {
     scheduleTitle: 'Розклад готовий до наступного етапу',
     scheduleDescription:
       'Автентифікація працює. Календар і бронювання будуть реалізовані окремою фазою.',
+  },
+  myBookings: {
+    title: 'Мої бронювання',
+    description:
+      'Тут будуть зібрані ваші майбутні та минулі бронювання переговорних кімнат.',
+    upcoming: {
+      title: 'Майбутні',
+      emptyTitle: 'Майбутніх бронювань поки немає.',
+      emptyDescription:
+        'Після підключення даних тут з’являться найближчі підтверджені бронювання.',
+    },
+    past: {
+      title: 'Минулі',
+      emptyTitle: 'Минулі бронювання з’являться тут.',
+      emptyDescription:
+        'Історію буде підключено до авторитетних даних у наступній фазі бронювань.',
+    },
+    actions: {
+      viewSchedule: 'Перейти до розкладу',
+    },
   },
 } satisfies AppDictionary;

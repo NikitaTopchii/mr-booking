@@ -59,9 +59,43 @@ export interface AppDictionary {
   readonly application: {
     readonly serviceUnavailableTitle: string;
     readonly serviceUnavailableDescription: string;
-    readonly userMenuLabel: string;
-    readonly protectedEyebrow: string;
+  };
+  readonly appShell: {
+    readonly productName: string;
+    readonly skipToContent: string;
+    readonly navigation: {
+      readonly label: string;
+      readonly schedule: string;
+      readonly myBookings: string;
+    };
+    readonly userMenu: {
+      readonly open: string;
+      readonly signedInAs: string;
+      readonly language: string;
+      readonly logout: string;
+      readonly loggingOut: string;
+      readonly logoutError: string;
+    };
+  };
+  readonly schedule: {
     readonly scheduleTitle: string;
     readonly scheduleDescription: string;
+  };
+  readonly myBookings: {
+    readonly title: string;
+    readonly description: string;
+    readonly upcoming: {
+      readonly title: string;
+      readonly emptyTitle: string;
+      readonly emptyDescription: string;
+    };
+    readonly past: {
+      readonly title: string;
+      readonly emptyTitle: string;
+      readonly emptyDescription: string;
+    };
+    readonly actions: {
+      readonly viewSchedule: string;
+    };
   };
 }

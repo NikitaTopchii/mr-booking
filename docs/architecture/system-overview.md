@@ -84,6 +84,13 @@ WAL, foreign keys, and a 5000 ms busy timeout are enabled and verified.
 - Localized routes use explicit `uk` or `en` URL segments. Typed dictionaries
   are dynamically loaded in Server Components and only selected serializable
   messages cross a Client Component boundary.
+- The protected locale layout resolves the safe authenticated user once and
+  owns the reusable application shell. It composes product identity, primary
+  navigation, the read-only user menu, locale switching, and the existing
+  logout feature without repeating current-user requests in nested pages.
+- Schedule and My bookings remain Server Component destinations. Small client
+  boundaries own only pathname-aware active navigation, the Radix user menu,
+  and logout interaction.
 - Interactive schedule, availability, and personal lists use SWR.
 - Mutations remain pending until the API confirms success.
 - The API uses the server clock and returns UTC ISO 8601 timestamps.

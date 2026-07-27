@@ -125,3 +125,38 @@ feature orchestration owns navigation. Field errors are associated with their
 inputs, announced politely, and focus moves to the first invalid field only
 after a server submission has re-enabled the controls. Real-browser checks
 covered 375, 768, 1024, and 1440 CSS-pixel widths with no horizontal overflow.
+
+## Authenticated shell and My bookings foundation
+
+Phase 2D keeps the existing calm token system and introduces one protected
+application shell. Desktop uses a compact horizontal header; phones use the
+same header plus a floating, rounded two-destination navigation capsule above
+a token-based bottom gradient. The capsule respects the device safe area and
+the shell reserves enough content space beneath it. Active destinations
+combine visible surface and font-weight changes with `aria-current="page"`.
+
+The current user is shown through generated presentational initials and a
+keyboard-operable Radix menu. Name and email are read-only safe-session
+identity. The menu also owns locale-preserving language links and presents the
+existing logout orchestration with pending and error states.
+
+My bookings uses two visible sections rather than interactive tabs because
+there is no data or selection state yet. Upcoming and Past each have a clear
+heading, Lucide icon, and honest localized foundation copy; one primary action
+returns to the localized Schedule.
+
+Accepted UI-skill recommendations were persistent top-level navigation,
+icon-and-label mobile destinations, 44px minimum controls, active state beyond
+color, visible focus, one primary empty-state action, semantic tokens, safe
+area spacing, constrained text measure, and checks at 375, 768, 1024, and 1440
+CSS pixels. The follow-up mobile reference was adopted as a floating capsule
+with 56px destinations, geometrically related outer and inner radii, a
+transform-only sliding active indicator with reduced-motion fallback, and a
+non-interactive gradient scrim. Manual browser review found and corrected a
+mobile z-index overlap between the bottom navigation and user-menu trigger.
+
+The generated horizontal-scroll journey, Liquid Glass treatment, amber/blue
+palette replacement, Roboto import, morphing/blur effects, long animations,
+adaptive desktop sidebar, and speculative loading skeletons were rejected.
+They conflict with the frozen design direction, current tokens, performance,
+the two-item information architecture, or the absence of a booking request.
