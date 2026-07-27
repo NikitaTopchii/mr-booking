@@ -18,13 +18,12 @@ Required fields:
 - `normalizedEmail`;
 - `passwordHash`;
 - `createdAtUtc`;
-- `updatedAtUtc`.
 
 Constraints and indexes:
 
 - primary key on `id`;
 - unique constraint/index on `normalizedEmail`;
-- non-empty checks for name, normalized email, and password hash.
+- database check for a name that remains non-empty after trimming.
 
 Lifecycle: created at registration; name/email changes are outside mandatory
 scope; deleting users is outside mandatory scope.
@@ -47,10 +46,12 @@ Constraints and indexes:
 - unique constraint on `tokenHash`;
 - foreign key `userId -> User.id`;
 - indexes on `userId` and `expiresAtUtc`.
+- check that both timestamps are integers and expiry follows creation.
 
 Lifecycle: created on login/registration, resolved on protected requests,
 deleted or invalidated on logout, and rejected after expiry. Cookie material
-is not stored or logged in plaintext.
+is not stored or logged in plaintext. Multiple active sessions per user are
+allowed; only the current token hash is deleted on logout.
 
 ## Room
 

@@ -12,6 +12,9 @@ __pycache__/
 !.yarn/sdks
 !.yarn/versions
 coverage/
+playwright-report/
+test-results/
+output/playwright/
 dist/
 node_modules/
 .data/
@@ -25,5 +28,6 @@ node_modules/
 
 # Next.js
 .next
+.next-e2e
 out
 *.tsbuildinfo

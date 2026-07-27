@@ -18,6 +18,11 @@ ownership.
 account. The original presentation value MAY be retained separately, but it
 MUST NOT control identity or uniqueness.
 
+### Names
+
+Names are trimmed at both ends and must remain non-empty. Unicode names are
+accepted without an invented format or uniqueness rule.
+
 ### Passwords
 
 - Password length is 8–72 Unicode code points.
@@ -26,6 +31,18 @@ MUST NOT control identity or uniqueness.
   logged in plaintext.
 - The selected hasher MUST preserve the full accepted range without silent
   truncation.
+
+### Sessions
+
+- Registration automatically creates a session.
+- A session token contains at least 256 bits of cryptographic entropy.
+- Only its SHA-256 hash is persisted; the raw value exists only in the
+  HttpOnly browser cookie and the issuing transport boundary.
+- Sessions expire after the configured lifetime and are never extended by a
+  current-user read.
+- One user may have multiple sessions. Logout deletes only the session
+  represented by the current cookie and remains idempotent if it is absent.
+- Missing, unknown, and expired sessions are all unauthenticated.
 
 ### Authenticated ownership
 

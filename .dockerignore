@@ -5,11 +5,15 @@
 .git
 .github
 .next
+.next-e2e
 .nx
 .yarn
 coverage
 dist
 node_modules
+output/playwright
+playwright-report
+test-results
 *.sqlite
 *.sqlite3
 *.sqlite-wal

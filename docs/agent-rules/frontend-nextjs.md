@@ -41,3 +41,21 @@ Every request MUST state its cache behavior:
 
 Creation and cancellation remain server-confirmed. Never show success before
 the API confirms it.
+
+## Localization
+
+Supported locales are `uk` and `en`, with `uk` as the default. The locale is
+an explicit App Router segment and every application link or redirect
+preserves it. Unprefixed routes redirect through `proxy.ts`; the proxy owns
+locale routing only and is never an authentication boundary.
+
+Dictionaries are typed, dynamically imported, and loaded only on the server
+through `@mr-booking/shared-i18n/server`. Its `getDictionary` entry point uses
+`server-only` and MUST NOT be imported by a Client Component. Server
+Components select the smallest serializable message slice needed by an
+interactive child; do not add a global client dictionary provider.
+
+Domain and API validation contracts use stable error codes. Client Components
+keep codes in state and translate them at render time; they MUST NOT translate
+backend prose or contain reusable hardcoded user-facing strings. Add future
+translations to both dictionaries under `libs/shared/i18n`.

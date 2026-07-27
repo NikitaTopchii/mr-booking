@@ -5,6 +5,6 @@ export default [
   ...baseConfig,
   nextEslintPluginNext.configs['core-web-vitals'],
   {
-    ignores: ['.next/**/*'],
+    ignores: ['.next/**/*', '.next-e2e/**/*'],
   },
 ];

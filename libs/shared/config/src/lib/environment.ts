@@ -19,6 +19,11 @@ const environmentSchema = z
     OFFICE_CLOSE_TIME: z.literal('19:00'),
     WEB_ORIGIN: z.url(),
     API_INTERNAL_URL: z.url(),
+    SESSION_COOKIE_NAME: z
+      .string()
+      .min(1)
+      .regex(/^[A-Za-z0-9_-]+$/u),
+    SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365),
   })
   .superRefine((environment, context) => {
     if (
@@ -44,6 +49,8 @@ const localDefaults = {
   OFFICE_CLOSE_TIME: '19:00',
   WEB_ORIGIN: 'http://localhost:3000',
   API_INTERNAL_URL: 'http://localhost:3002',
+  SESSION_COOKIE_NAME: 'room_booking_session',
+  SESSION_TTL_DAYS: '7',
 } as const;
 
 export type RuntimeEnvironment = z.infer<typeof environmentSchema>;

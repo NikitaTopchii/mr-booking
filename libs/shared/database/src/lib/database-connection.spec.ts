@@ -50,7 +50,7 @@ describe('SQLite foundation', () => {
       .prepare('SELECT COUNT(*) AS count FROM __drizzle_migrations')
       .get();
 
-    expect(migrationCount).toEqual({ count: 1 });
+    expect(migrationCount).toEqual({ count: 2 });
   });
 
   it('rolls back an immediate transaction when the operation fails', () => {

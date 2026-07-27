@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { parseRuntimeEnvironment } from '@mr-booking/shared-config';
 import { loadRootEnvironmentFile } from '@mr-booking/shared-config/node';
 import { applyMigrations, openDatabase } from '@mr-booking/shared-database';
@@ -19,7 +19,9 @@ try {
 }
 
 const nxCommand = process.platform === 'win32' ? 'nx.cmd' : 'nx';
-const result = spawnSync(
+let shutdownSignal: NodeJS.Signals | undefined;
+let forceShutdownTimer: NodeJS.Timeout | undefined;
+const developmentProcess = spawn(
   nxCommand,
   [
     'run-many',
@@ -30,6 +32,7 @@ const result = spawnSync(
   ],
   {
     stdio: 'inherit',
+    detached: process.platform !== 'win32',
     env: {
       ...process.env,
       API_INTERNAL_PORT: String(environment.API_INTERNAL_PORT),
@@ -38,9 +41,54 @@ const result = spawnSync(
   },
 );
 
-if (result.error) {
-  process.stderr.write(`Unable to start Nx: ${result.error.message}\n`);
+developmentProcess.once('error', (error) => {
+  process.stderr.write(`Unable to start Nx: ${error.message}\n`);
   process.exitCode = 1;
-} else {
-  process.exitCode = result.status ?? 1;
+});
+
+developmentProcess.once('exit', (code, signal) => {
+  if (forceShutdownTimer) {
+    clearTimeout(forceShutdownTimer);
+  }
+
+  if (shutdownSignal) {
+    process.exitCode = 0;
+    return;
+  }
+
+  if (signal) {
+    process.kill(process.pid, signal);
+    return;
+  }
+
+  process.exitCode = code ?? 1;
+});
+
+const signalDevelopmentProcess = (signal: NodeJS.Signals): void => {
+  try {
+    if (process.platform !== 'win32' && developmentProcess.pid) {
+      process.kill(-developmentProcess.pid, signal);
+    } else {
+      developmentProcess.kill(signal);
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+      throw error;
+    }
+  }
+};
+
+for (const signal of ['SIGHUP', 'SIGINT', 'SIGTERM'] as const) {
+  process.once(signal, () => {
+    if (shutdownSignal) {
+      return;
+    }
+
+    shutdownSignal = signal;
+    signalDevelopmentProcess(signal);
+    forceShutdownTimer = setTimeout(() => {
+      signalDevelopmentProcess('SIGKILL');
+      process.exit(0);
+    }, 3_000);
+  });
 }

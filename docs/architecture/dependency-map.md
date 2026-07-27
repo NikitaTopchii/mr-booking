@@ -43,6 +43,20 @@ tags defined in `docs/agent-rules/nx-architecture.md`.
 Cross-library imports use public entry points. Deep imports and cycles are
 prohibited. Web cannot import API-only code; API cannot import browser code.
 
+Authentication makes the platform split explicit:
+
+```text
+API: auth-feature -> auth-data-access -> auth-domain
+Web: auth-feature-web -> auth-ui / auth-data-access-web -> auth-domain
+                     -> shared-ui
+App routes -> shared-i18n/server
+```
+
+`auth-data-access` owns Drizzle, SQLite, Argon2, and session persistence.
+`auth-data-access-web` owns browser HTTP parsing and server-side current-user
+resolution through the NestJS API. Their public entry points are separate, so
+the web graph cannot transitively include API persistence.
+
 This map does not predeclare a library per box. Create a library only when it
 owns real code, has a meaningful boundary, and benefits from independent
 testing or dependency enforcement.

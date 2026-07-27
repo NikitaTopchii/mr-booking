@@ -81,11 +81,15 @@ WAL, foreign keys, and a 5000 ms busy timeout are enabled and verified.
 ## Request and state flow
 
 - Initial route data MAY be server-rendered through the API.
+- Localized routes use explicit `uk` or `en` URL segments. Typed dictionaries
+  are dynamically loaded in Server Components and only selected serializable
+  messages cross a Client Component boundary.
 - Interactive schedule, availability, and personal lists use SWR.
 - Mutations remain pending until the API confirms success.
 - The API uses the server clock and returns UTC ISO 8601 timestamps.
 - The UI formats instants in the browser timezone.
-- A stable error envelope maps typed application/domain errors to UI states.
+- A stable error envelope maps machine-readable application/domain and field
+  codes to localized UI states without translating backend prose.
 
 ## Bonus boundary
 

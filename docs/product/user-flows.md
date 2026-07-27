@@ -35,7 +35,18 @@ mutation before the server succeeds.
 - **Server checks:** session validity and user existence.
 - **Navigation:** remain on protected page when valid; otherwise login.
 
-## 4. Room selection
+## 4. Logout
+
+- **Starting state:** authenticated user in the application shell.
+- **Actions:** activate the logout control once.
+- **Loading:** disable repeated logout while the request is active.
+- **Success:** delete only the current server session, clear the cookie, and
+  navigate to login.
+- **Errors:** retain the current screen and offer a clear retry message.
+- **Server checks:** hash the current raw cookie token and delete its matching
+  session idempotently.
+
+## 5. Room selection
 
 - **Starting state:** authenticated schedule with rooms loading.
 - **Actions:** choose one room.
@@ -45,7 +56,7 @@ mutation before the server succeeds.
 - **Server checks:** room existence and schedule query bounds.
 - **Navigation:** URL/state identifies selected room and week.
 
-## 5. Weekly schedule navigation
+## 6. Weekly schedule navigation
 
 - **Starting state:** one room/week displayed.
 - **Actions:** move to previous or next week.
@@ -55,7 +66,7 @@ mutation before the server succeeds.
 - **Server checks:** room existence and normalized week range.
 - **Navigation:** URL represents room and week for deep linking.
 
-## 6. Booking creation
+## 7. Booking creation
 
 - **Starting state:** authenticated user, selected room/week, creation control.
 - **Actions:** enter title/date/start/end; submit.
@@ -67,7 +78,7 @@ mutation before the server succeeds.
   overlap, transactional slot ownership.
 - **Navigation:** remain on selected room/week and reveal confirmed booking.
 
-## 7. Booking conflict
+## 8. Booking conflict
 
 - **Starting state:** creation form proposes an occupied interval.
 - **Actions:** submit.
@@ -77,7 +88,7 @@ mutation before the server succeeds.
 - **Server checks:** unique room/slot ownership in the write transaction.
 - **Navigation:** remain in context; revalidate schedule to show the winner.
 
-## 8. Owned-booking cancellation
+## 9. Owned-booking cancellation
 
 - **Starting state:** user selects their active booking.
 - **Actions:** choose cancel and confirm, or use the specified undo pattern.
@@ -87,7 +98,7 @@ mutation before the server succeeds.
 - **Server checks:** authenticated ownership and transactional slot release.
 - **Navigation:** remain on schedule or personal list.
 
-## 9. Attempted foreign cancellation
+## 10. Attempted foreign cancellation
 
 - **Starting state:** user views another user's booking.
 - **Actions:** UI offers no cancellation action; direct API may still be
@@ -98,7 +109,7 @@ mutation before the server succeeds.
 - **Server checks:** booking owner equals authenticated user.
 - **Navigation:** remain in place; booking stays active.
 
-## 10. Upcoming personal bookings
+## 11. Upcoming personal bookings
 
 - **Starting state:** authenticated user opens personal bookings.
 - **Actions:** view or select an upcoming item.
@@ -108,7 +119,7 @@ mutation before the server succeeds.
 - **Server checks:** authenticated user scope and server-time partition.
 - **Navigation:** selected item opens matching room/week.
 
-## 11. Past-booking navigation
+## 12. Past-booking navigation
 
 - **Starting state:** personal bookings with past section.
 - **Actions:** load more and select an item.
@@ -118,7 +129,7 @@ mutation before the server succeeds.
 - **Server checks:** authenticated scope, stable cursor, past-time partition.
 - **Navigation:** selected item opens matching room/week.
 
-## 12. Mobile schedule usage
+## 13. Mobile schedule usage
 
 - **Starting state:** authenticated user on a phone-width viewport.
 - **Actions:** select room, navigate week/day, inspect booking, start creation.

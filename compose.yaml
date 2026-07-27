@@ -17,6 +17,8 @@ services:
       OFFICE_CLOSE_TIME: ${OFFICE_CLOSE_TIME:-19:00}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
       API_INTERNAL_URL: http://api:${API_INTERNAL_PORT:-3002}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-room_booking_session}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
     volumes:
       - sqlite_data:/data
     healthcheck:
@@ -49,6 +51,8 @@ services:
       OFFICE_CLOSE_TIME: ${OFFICE_CLOSE_TIME:-19:00}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
       API_INTERNAL_URL: http://api:${API_INTERNAL_PORT:-3002}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-room_booking_session}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
     healthcheck:
       test:
         [

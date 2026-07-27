@@ -1,18 +1,26 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { defaultLocale, hasLocale } from '@mr-booking/shared-i18n';
 import './global.css';
 
 export const metadata: Metadata = {
-  title: 'MR Booking',
-  description: 'Meeting-room booking foundation',
+  title: {
+    default: 'MR Booking',
+    template: '%s',
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const localeHeader = (await headers()).get('x-mr-booking-locale');
+  const locale =
+    localeHeader && hasLocale(localeHeader) ? localeHeader : defaultLocale;
+
   return (
-    <html lang="uk">
+    <html lang={locale}>
       <body>{children}</body>
     </html>
   );

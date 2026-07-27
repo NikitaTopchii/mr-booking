@@ -7,7 +7,10 @@ const environment = parseRuntimeEnvironment(process.env);
 
 export default defineConfig({
   dialect: 'sqlite',
-  schema: './libs/rooms/data-access/src/lib/room-schema.ts',
+  schema: [
+    './libs/rooms/data-access/src/lib/room-schema.ts',
+    './libs/auth/data-access/src/lib/auth-schema.ts',
+  ],
   out: './drizzle/migrations',
   dbCredentials: {
     url: environment.DATABASE_PATH,

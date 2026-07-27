@@ -27,7 +27,15 @@ describe('Nx module-boundary configuration', () => {
       'apps/api/project.json',
       'libs/shared/config/project.json',
       'libs/shared/database/project.json',
+      'libs/shared/i18n/project.json',
+      'libs/shared/ui/project.json',
       'libs/rooms/data-access/project.json',
+      'libs/auth/domain/project.json',
+      'libs/auth/data-access/project.json',
+      'libs/auth/data-access-web/project.json',
+      'libs/auth/feature/project.json',
+      'libs/auth/feature-web/project.json',
+      'libs/auth/ui/project.json',
       'tools/project.json',
     ];
 
@@ -54,12 +62,36 @@ describe('Nx module-boundary configuration', () => {
   });
 
   it('keeps database packages out of web source', () => {
-    const webSource = listSourceFiles(join(workspaceRoot, 'apps/web/src'))
+    const webDirectories = [
+      'apps/web/src',
+      'libs/auth/data-access-web/src',
+      'libs/auth/feature-web/src',
+      'libs/auth/ui/src',
+      'libs/shared/i18n/src',
+      'libs/shared/ui/src',
+    ];
+    const webSource = webDirectories
+      .flatMap((directory) => listSourceFiles(join(workspaceRoot, directory)))
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
 
     expect(webSource).not.toMatch(
-      /@mr-booking\/shared-database|better-sqlite3|drizzle-orm/,
+      /@mr-booking\/shared-database|better-sqlite3|drizzle-orm|argon2|@nestjs/,
     );
+  });
+
+  it('keeps server dictionaries out of Client Component entry points', () => {
+    const clientSourceFiles = [
+      ...listSourceFiles(join(workspaceRoot, 'libs/auth/feature-web/src')),
+      ...listSourceFiles(join(workspaceRoot, 'libs/auth/ui/src')),
+      join(workspaceRoot, 'libs/auth/data-access-web/src/client.ts'),
+      join(workspaceRoot, 'libs/auth/data-access-web/src/lib/auth-client.ts'),
+    ];
+
+    for (const file of clientSourceFiles) {
+      const source = readFileSync(file, 'utf8');
+      expect(source).not.toContain('@mr-booking/shared-i18n/server');
+      expect(source).not.toContain('getDictionary');
+    }
   });
 });

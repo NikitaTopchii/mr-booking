@@ -8,19 +8,23 @@ cookie.
 
 ```json
 {
-  "error": {
-    "code": "BOOKING_CONFLICT",
-    "message": "The room is already booked for this time.",
-    "fieldErrors": {
-      "startsAt": "Choose another time."
+  "code": "VALIDATION_ERROR",
+  "details": {
+    "fields": {
+      "email": "EMAIL_INVALID"
     }
   }
 }
 ```
 
-`fieldErrors` is optional. Codes are stable; messages are understandable but
-not used as programmatic identifiers. Raw driver errors and stack traces are
-never returned.
+`details.fields` is optional. Top-level and field codes are stable
+machine-readable identifiers. User-facing prose is selected from the active
+web dictionary and is not returned as an API contract. Raw driver errors,
+exception messages, and stack traces are never returned.
+
+Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
+`EMAIL_INVALID`, `PASSWORD_REQUIRED`, `PASSWORD_LENGTH`, and
+`EMAIL_ALREADY_EXISTS`.
 
 ## Authentication
 
@@ -30,7 +34,8 @@ never returned.
 - **Authentication:** anonymous only
 - **Input:** `{ name, email, password }`
 - **Success:** `201` with `{ user: { id, name, email } }` and session cookie
-- **Errors:** `VALIDATION_FAILED`, `EMAIL_ALREADY_EXISTS`
+- **Errors:** `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`,
+  `SERVICE_UNAVAILABLE`
 - **Cache:** private, `no-store`
 
 ### Login
@@ -39,22 +44,24 @@ never returned.
 - **Authentication:** anonymous
 - **Input:** `{ email, password }`
 - **Success:** `200` with `{ user: { id, name, email } }` and session cookie
-- **Errors:** `VALIDATION_FAILED`, `INVALID_CREDENTIALS`
+- **Errors:** `VALIDATION_ERROR`, `INVALID_CREDENTIALS`,
+  `SERVICE_UNAVAILABLE`
 - **Cache:** private, `no-store`
 
 ### Logout
 
 - **Method/path:** `POST /api/auth/logout`
-- **Authentication:** required
+- **Authentication:** cookie optional
 - **Input:** none
 - **Success:** `204`, session invalidated and cookie cleared
-- **Errors:** `UNAUTHENTICATED`
+- **Errors:** `SERVICE_UNAVAILABLE`; a missing session is still a successful
+  idempotent logout
 - **Cache:** private, `no-store`
 
-### Current session
+### Current user
 
-- **Method/path:** `GET /api/auth/session`
-- **Authentication:** cookie optional
+- **Method/path:** `GET /api/auth/me`
+- **Authentication:** required session cookie
 - **Input:** none
 - **Success:** `200` with `{ user }`; anonymous uses `401`
 - **Errors:** `UNAUTHENTICATED`

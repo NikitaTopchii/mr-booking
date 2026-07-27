@@ -93,3 +93,28 @@ When the UI skill is intentionally invoked, ask for:
 6. anti-patterns specific to this product.
 
 Review and freeze accepted recommendations before implementation.
+
+## Authentication UI decisions
+
+The auth audit accepted a calm hierarchy, 4/8-point spacing rhythm, visible
+inline errors, 44px minimum controls, stable submit width, clear keyboard
+focus, restrained motion, and responsive checks at 375, 768, 1024, and 1440
+CSS pixels. Authentication now composes the shared shadcn New York primitives
+with semantic Tailwind tokens.
+
+On mobile, the primary auth content uses a persistent bottom-sheet surface
+anchored to the viewport edge with safe-area padding. It is page content, not
+a dismissible modal: it has no backdrop, close action, or drag affordance. From
+the tablet breakpoint upward, the same content becomes a borderless inline
+form without card elevation or rounded container styling.
+
+The form heading is the first visual element; redundant logo and product
+eyebrow treatments are omitted. A compact `uk / en` language switch follows
+the form, while preserving full accessible names and 44px touch targets.
+
+The generated hero/social-proof layout, liquid-glass treatment, amber palette,
+external font pairing, blur, and morphing animation recommendations were
+rejected. They conflict with the focused product task, accessibility,
+performance, existing visual direction, and the requirement not to redesign
+the application. Dark mode remains intentionally deferred until its complete
+token and contrast pairs can be designed and verified.

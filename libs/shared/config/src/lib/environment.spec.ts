@@ -17,6 +17,8 @@ describe('parseRuntimeEnvironment', () => {
       OFFICE_CLOSE_TIME: '19:00',
       WEB_ORIGIN: 'http://localhost:3000',
       API_INTERNAL_URL: 'http://localhost:3002',
+      SESSION_COOKIE_NAME: 'room_booking_session',
+      SESSION_TTL_DAYS: 7,
     });
   });
 
@@ -39,5 +41,21 @@ describe('parseRuntimeEnvironment', () => {
     expect(
       parseRuntimeEnvironment({ SEED_ON_START: 'false' }).SEED_ON_START,
     ).toBe(false);
+  });
+
+  it('validates session configuration', () => {
+    expect(
+      parseRuntimeEnvironment({
+        SESSION_COOKIE_NAME: 'custom_session',
+        SESSION_TTL_DAYS: '30',
+      }),
+    ).toMatchObject({
+      SESSION_COOKIE_NAME: 'custom_session',
+      SESSION_TTL_DAYS: 30,
+    });
+
+    expect(() => parseRuntimeEnvironment({ SESSION_TTL_DAYS: '0' })).toThrow(
+      EnvironmentValidationError,
+    );
   });
 });
