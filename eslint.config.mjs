@@ -1,7 +1,22 @@
 import nx from '@nx/eslint-plugin';
+import tseslint from 'typescript-eslint';
 
 export default [
   ...nx.configs['flat/base'],
+  ...tseslint.configs.recommended,
+  {
+    files: [
+      '**/*.config.js',
+      '**/*.config.cjs',
+      '**/*.config.mjs',
+      '**/*.config.cts',
+      '**/jest.config.cts',
+      'jest.preset.js',
+    ],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -37,7 +52,11 @@ export default [
             },
             {
               sourceTag: 'type:data-access',
-              onlyDependOnLibsWithTags: ['type:domain', 'type:util'],
+              onlyDependOnLibsWithTags: [
+                'type:infrastructure',
+                'type:domain',
+                'type:util',
+              ],
             },
             {
               sourceTag: 'type:infrastructure',

@@ -1,0 +1,25 @@
+{
+  "name": "rooms-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/rooms/data-access/src",
+  "projectType": "library",
+  "tags": ["scope:rooms", "type:data-access", "platform:api"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/rooms/data-access",
+        "main": "libs/rooms/data-access/src/index.ts",
+        "tsConfig": "libs/rooms/data-access/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/rooms/data-access/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    }
+  }
+}

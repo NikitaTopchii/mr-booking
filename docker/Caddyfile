@@ -1,0 +1,9 @@
+:80 {
+	handle /api/* {
+		reverse_proxy api:{$API_INTERNAL_PORT}
+	}
+
+	handle {
+		reverse_proxy web:{$WEB_INTERNAL_PORT}
+	}
+}

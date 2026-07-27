@@ -1,0 +1,89 @@
+name: mr-booking
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      APP_PORT: ${APP_PORT:-3000}
+      WEB_INTERNAL_PORT: ${WEB_INTERNAL_PORT:-3001}
+      API_INTERNAL_PORT: ${API_INTERNAL_PORT:-3002}
+      DATABASE_PATH: /data/mr-booking.sqlite
+      SEED_ON_START: ${SEED_ON_START:-true}
+      OFFICE_TIME_ZONE: ${OFFICE_TIME_ZONE:-Europe/Kyiv}
+      OFFICE_OPEN_TIME: ${OFFICE_OPEN_TIME:-09:00}
+      OFFICE_CLOSE_TIME: ${OFFICE_CLOSE_TIME:-19:00}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      API_INTERNAL_URL: http://api:${API_INTERNAL_PORT:-3002}
+    volumes:
+      - sqlite_data:/data
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          'fetch(`http://127.0.0.1:$${process.env.API_INTERNAL_PORT}/api/health/ready`).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NODE_ENV: production
+      APP_PORT: ${APP_PORT:-3000}
+      WEB_INTERNAL_PORT: ${WEB_INTERNAL_PORT:-3001}
+      API_INTERNAL_PORT: ${API_INTERNAL_PORT:-3002}
+      DATABASE_PATH: /data/mr-booking.sqlite
+      SEED_ON_START: ${SEED_ON_START:-true}
+      OFFICE_TIME_ZONE: ${OFFICE_TIME_ZONE:-Europe/Kyiv}
+      OFFICE_OPEN_TIME: ${OFFICE_OPEN_TIME:-09:00}
+      OFFICE_CLOSE_TIME: ${OFFICE_CLOSE_TIME:-19:00}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      API_INTERNAL_URL: http://api:${API_INTERNAL_PORT:-3002}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          'fetch(`http://127.0.0.1:$${process.env.WEB_INTERNAL_PORT}/health`).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  gateway:
+    image: caddy:2.10.2-alpine
+    environment:
+      API_INTERNAL_PORT: ${API_INTERNAL_PORT:-3002}
+      WEB_INTERNAL_PORT: ${WEB_INTERNAL_PORT:-3001}
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    ports:
+      - '${APP_PORT:-3000}:80'
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--spider', 'http://127.0.0.1/health']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:

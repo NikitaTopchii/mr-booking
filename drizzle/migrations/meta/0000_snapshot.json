@@ -1,0 +1,86 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "5102664e-ee3d-427a-b680-bb460cf8c4b2",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "rooms": {
+      "name": "rooms",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "floor": {
+          "name": "floor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "capacity": {
+          "name": "capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at_utc": {
+          "name": "created_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "rooms_name_unique": {
+          "name": "rooms_name_unique",
+          "columns": ["name"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "rooms_name_non_empty": {
+          "name": "rooms_name_non_empty",
+          "value": "length(trim(\"rooms\".\"name\")) > 0"
+        },
+        "rooms_floor_integer": {
+          "name": "rooms_floor_integer",
+          "value": "typeof(\"rooms\".\"floor\") = 'integer'"
+        },
+        "rooms_capacity_positive": {
+          "name": "rooms_capacity_positive",
+          "value": "typeof(\"rooms\".\"capacity\") = 'integer' AND \"rooms\".\"capacity\" > 0"
+        },
+        "rooms_created_at_utc_integer": {
+          "name": "rooms_created_at_utc_integer",
+          "value": "typeof(\"rooms\".\"created_at_utc\") = 'integer'"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

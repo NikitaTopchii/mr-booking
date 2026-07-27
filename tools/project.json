@@ -1,0 +1,15 @@
+{
+  "name": "workspace-tooling",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools",
+  "projectType": "application",
+  "tags": ["scope:shared", "type:app", "platform:api"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tools/tsconfig.json --noEmit --rootDir ."
+      }
+    }
+  }
+}

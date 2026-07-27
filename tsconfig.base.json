@@ -16,6 +16,12 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "paths": {
+      "@mr-booking/shared-config": ["./libs/shared/config/src/index.ts"],
+      "@mr-booking/shared-config/node": ["./libs/shared/config/src/node.ts"],
+      "@mr-booking/shared-database": ["./libs/shared/database/src/index.ts"],
+      "@mr-booking/rooms-data-access": ["./libs/rooms/data-access/src/index.ts"]
+    }
   }
 }
