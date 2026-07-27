@@ -34,6 +34,9 @@ mutation before the server succeeds.
   offers retry.
 - **Server checks:** session validity and user existence.
 - **Navigation:** remain on protected page when valid; otherwise login.
+- **Cache:** current-user and protected authentication reads are private and
+  `no-store`; browser Back cannot restore authenticated server state after
+  logout.
 
 ## 4. Logout
 
@@ -45,6 +48,9 @@ mutation before the server succeeds.
 - **Errors:** retain the current screen and offer a clear retry message.
 - **Server checks:** hash the current raw cookie token and delete its matching
   session idempotently.
+- **Postcondition:** current-user returns unauthorized and a protected route
+  redirects to the locale-preserving login route, including after reload or
+  Back navigation.
 
 ## 5. Room selection
 

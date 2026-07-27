@@ -19,6 +19,10 @@ test.describe('authentication journey', () => {
 
     await page.getByRole('button', { name: 'Вийти' }).click();
     await expect(page).toHaveURL(/\/uk\/login$/u);
+    expect((await page.request.get('/api/auth/me')).status()).toBe(401);
+    await page.goBack();
+    await expect(page).not.toHaveURL(/\/uk\/schedule$/u);
+    await expect(page.getByText(email)).toHaveCount(0);
     await page.goto('/schedule');
     await expect(page).toHaveURL(/\/uk\/login$/u);
   });

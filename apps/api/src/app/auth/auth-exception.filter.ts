@@ -20,6 +20,7 @@ export class AuthExceptionFilter implements ExceptionFilter {
 
   public catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
+    response.setHeader('Cache-Control', 'private, no-store');
 
     if (exception instanceof AuthValidationError) {
       response.status(HttpStatus.BAD_REQUEST).json({

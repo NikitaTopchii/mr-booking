@@ -48,6 +48,9 @@ Constraints and indexes:
 - indexes on `userId` and `expiresAtUtc`.
 - check that both timestamps are integers and expiry follows creation.
 
+`tokenHash` is the 64-character lowercase hexadecimal SHA-256 digest of the
+32-byte base64url browser token. The raw token is never a database field.
+
 Lifecycle: created on login/registration, resolved on protected requests,
 deleted or invalidated on logout, and rejected after expiry. Cookie material
 is not stored or logged in plaintext. Multiple active sessions per user are

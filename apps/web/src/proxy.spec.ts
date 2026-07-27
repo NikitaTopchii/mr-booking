@@ -33,6 +33,9 @@ describe('locale proxy', () => {
       proxy(new NextRequest('http://localhost:3001/_next/static/app.js'))
         .status,
     ).toBe(200);
+    expect(proxy(new NextRequest('http://localhost:3001/health')).status).toBe(
+      200,
+    );
     expect(
       proxy(new NextRequest('http://localhost:3001/robots.txt')).status,
     ).toBe(200);

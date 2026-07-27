@@ -156,6 +156,13 @@ provides user-facing text.
 
 One user may remain logged in on multiple browsers. Session reads never extend
 expiry. Missing, unknown, and expired sessions return `UNAUTHENTICATED`.
+All authentication responses use `Cache-Control: private, no-store`.
+Browser and server-side web clients runtime-validate safe-user and error
+payloads before using them.
+
+Supported application locales are Ukrainian (`uk`, default) and English
+(`en`). Locale-prefixed links, redirects, logout, and the auth language
+switcher preserve the corresponding route.
 
 ## Quality checks
 
@@ -183,6 +190,11 @@ The Nx workspace enforces tagged module boundaries. The web application
 cannot import API-only database code, generic database infrastructure cannot
 depend on feature libraries, and cross-library imports go through public
 entry points.
+
+Phase 2C release verification also covers a clean Docker image build, public
+gateway registration and login, production cookie attributes, current-user
+lookup, protected rendering, browser reload, logout/revocation, Alice and Bob
+login, and session persistence across a normal Docker Compose restart.
 
 ## Workspace projects
 

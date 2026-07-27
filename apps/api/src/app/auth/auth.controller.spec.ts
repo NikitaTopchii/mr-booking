@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { sessions } from '@mr-booking/auth-data-access';
+import { sessions, users } from '@mr-booking/auth-data-access';
 import { DatabaseService } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
@@ -55,6 +55,16 @@ describe('authentication API', () => {
     expect(response.headers['set-cookie']?.[0]).toEqual(
       expect.stringContaining('SameSite=Lax'),
     );
+    expect(response.headers['set-cookie']?.[0]).toEqual(
+      expect.stringContaining('Max-Age=604800'),
+    );
+    expect(response.headers['set-cookie']?.[0]).toEqual(
+      expect.stringContaining('Expires='),
+    );
+    expect(response.headers['set-cookie']?.[0]).toEqual(
+      expect.stringContaining('Path=/'),
+    );
+    expect(response.headers['cache-control']).toBe('private, no-store');
     expect(response.body).toEqual({
       user: {
         id: expect.any(String),
@@ -63,6 +73,51 @@ describe('authentication API', () => {
       },
     });
     expect(JSON.stringify(response.body)).not.toMatch(/password|token|hash/iu);
+
+    const persistedUser = databaseService.connection.drizzle
+      .select()
+      .from(users)
+      .where(eq(users.normalizedEmail, 'alice@example.com'))
+      .get();
+    const persistedSession = persistedUser
+      ? databaseService.connection.drizzle
+          .select()
+          .from(sessions)
+          .where(eq(sessions.userId, persistedUser.id))
+          .get()
+      : undefined;
+    const rawSessionToken = response.headers['set-cookie']?.[0]?.match(
+      /room_booking_session=([^;]+)/u,
+    )?.[1];
+
+    expect(persistedUser?.passwordHash.startsWith('$argon2id$')).toBe(true);
+    expect(persistedUser?.passwordHash).not.toContain('password123');
+    expect(rawSessionToken).toBeDefined();
+    expect(persistedSession?.tokenHash).toHaveLength(64);
+    expect(persistedSession?.tokenHash).not.toBe(rawSessionToken);
+  });
+
+  it('automatically authenticates a newly registered user', async () => {
+    const agent = request.agent(application.getHttpServer());
+
+    await agent
+      .post('/api/auth/register')
+      .send({
+        name: 'Марія',
+        email: 'maria@example.com',
+        password: ' pass123 ',
+      })
+      .expect(201);
+    await agent
+      .get('/api/auth/me')
+      .expect(200)
+      .expect(({ body, headers }) => {
+        expect(headers['cache-control']).toBe('private, no-store');
+        expect(body.user).toMatchObject({
+          name: 'Марія',
+          email: 'maria@example.com',
+        });
+      });
   });
 
   it('returns field-level registration validation errors', async () => {
@@ -97,6 +152,36 @@ describe('authentication API', () => {
         expect(body.code).toBe('EMAIL_ALREADY_EXISTS');
         expect(body.details.fields.email).toBe('EMAIL_ALREADY_EXISTS');
       });
+  });
+
+  it('returns one stable winner for concurrent normalized-email registration', async () => {
+    const attempts = await Promise.all([
+      request(application.getHttpServer()).post('/api/auth/register').send({
+        name: 'Race One',
+        email: ' Race@Example.com ',
+        password: 'password123',
+      }),
+      request(application.getHttpServer()).post('/api/auth/register').send({
+        name: 'Race Two',
+        email: 'race@example.COM',
+        password: 'password123',
+      }),
+    ]);
+
+    expect(attempts.map(({ status }) => status).sort()).toEqual([201, 409]);
+    expect(attempts.find(({ status }) => status === 409)?.body).toMatchObject({
+      code: 'EMAIL_ALREADY_EXISTS',
+      details: {
+        fields: { email: 'EMAIL_ALREADY_EXISTS' },
+      },
+    });
+    expect(
+      databaseService.connection.drizzle
+        .select()
+        .from(users)
+        .where(eq(users.normalizedEmail, 'race@example.com'))
+        .all(),
+    ).toHaveLength(1);
   });
 
   it.each(['wrong password', 'unknown email'])(
@@ -142,6 +227,10 @@ describe('authentication API', () => {
     expect(logout.headers['set-cookie']?.[0]).toContain(
       'room_booking_session=;',
     );
+    expect(logout.headers['set-cookie']?.[0]).toContain('Path=/');
+    expect(logout.headers['set-cookie']?.[0]).toContain('HttpOnly');
+    expect(logout.headers['set-cookie']?.[0]).toContain('SameSite=Lax');
+    expect(logout.headers['cache-control']).toBe('private, no-store');
     await agent.get('/api/auth/me').expect(401).expect({
       code: 'UNAUTHENTICATED',
     });
@@ -151,8 +240,9 @@ describe('authentication API', () => {
     await request(application.getHttpServer())
       .get('/api/auth/me')
       .expect(401)
-      .expect(({ body }) => {
+      .expect(({ body, headers }) => {
         expect(body.code).toBe('UNAUTHENTICATED');
+        expect(headers['cache-control']).toBe('private, no-store');
       });
   });
 

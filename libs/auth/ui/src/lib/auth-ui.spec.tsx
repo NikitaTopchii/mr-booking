@@ -32,6 +32,9 @@ describe('auth presentation', () => {
     expect(email.getAttribute('aria-describedby')).toContain(
       'auth-email-error',
     );
+    expect(
+      screen.getByText('Enter a valid email.').getAttribute('aria-live'),
+    ).toBe('polite');
     expect((submit as HTMLButtonElement).disabled).toBe(true);
     expect(
       screen.getByText('The email or password is incorrect.'),

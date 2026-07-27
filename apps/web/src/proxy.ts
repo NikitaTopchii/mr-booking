@@ -46,6 +46,7 @@ function isInfrastructurePath(pathname: string): boolean {
   return (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
+    pathname === '/health' ||
     pathname === '/favicon.ico' ||
     /\.[a-z0-9]+$/iu.test(pathname)
   );

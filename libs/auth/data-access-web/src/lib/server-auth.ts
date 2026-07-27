@@ -1,16 +1,21 @@
 import 'server-only';
 
 import type { SafeUser } from '@mr-booking/auth-domain';
+import { parseRuntimeEnvironment } from '@mr-booking/shared-config';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 
-const currentUserResponseSchema = z.object({
-  user: z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string(),
-  }),
-});
+const currentUserResponseSchema = z
+  .object({
+    user: z
+      .object({
+        id: z.string(),
+        name: z.string(),
+        email: z.string(),
+      })
+      .strict(),
+  })
+  .strict();
 
 export type ServerAuthState =
   | { readonly status: 'authenticated'; readonly user: SafeUser }
@@ -18,24 +23,24 @@ export type ServerAuthState =
   | { readonly status: 'unavailable' };
 
 export async function resolveServerAuth(): Promise<ServerAuthState> {
-  const apiInternalUrl =
-    process.env['API_INTERNAL_URL'] ?? 'http://localhost:3002';
-  const sessionCookieName =
-    process.env['SESSION_COOKIE_NAME'] ?? 'room_booking_session';
+  const environment = parseRuntimeEnvironment(process.env);
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(sessionCookieName);
+  const sessionCookie = cookieStore.get(environment.SESSION_COOKIE_NAME);
 
   if (!sessionCookie) {
     return { status: 'anonymous' };
   }
 
   try {
-    const response = await fetch(`${apiInternalUrl}/api/auth/me`, {
-      cache: 'no-store',
-      headers: {
-        cookie: `${sessionCookieName}=${sessionCookie.value}`,
+    const response = await fetch(
+      `${environment.API_INTERNAL_URL}/api/auth/me`,
+      {
+        cache: 'no-store',
+        headers: {
+          cookie: `${environment.SESSION_COOKIE_NAME}=${sessionCookie.value}`,
+        },
       },
-    });
+    );
 
     if (response.status === 401) {
       return { status: 'anonymous' };

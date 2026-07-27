@@ -43,10 +43,6 @@ describe('web auth form orchestration', () => {
     refresh.mockReset();
     loginMock.mockReset();
     registerMock.mockReset();
-    Object.defineProperty(globalThis, 'requestAnimationFrame', {
-      configurable: true,
-      value: (callback: FrameRequestCallback) => callback(0),
-    });
   });
 
   it('renders Ukrainian and English messages without embedded translations', () => {
@@ -104,6 +100,60 @@ describe('web auth form orchestration', () => {
     expect(
       await screen.findByText('The email or password is incorrect.'),
     ).toBeDefined();
+  });
+
+  it('renders a duplicate-email field code with the active dictionary', async () => {
+    registerMock.mockRejectedValue(
+      new AuthClientError('EMAIL_ALREADY_EXISTS', 409, {
+        email: 'EMAIL_ALREADY_EXISTS',
+      }),
+    );
+    render(
+      <AuthForm
+        mode="register"
+        messages={{
+          nameLabel: 'Ім’я',
+          emailLabel: 'Електронна пошта',
+          passwordLabel: 'Пароль',
+          passwordHint: 'Від 8 до 72 символів. Пробіли дозволені.',
+          submit: 'Створити акаунт',
+          submitting: 'Створюємо…',
+          switchText: 'Вже маєте акаунт?',
+          switchAction: 'Увійти',
+        }}
+        errorMessages={{
+          ...errorMessages,
+          fields: {
+            ...errorMessages.fields,
+            EMAIL_ALREADY_EXISTS:
+              'Акаунт із цією електронною поштою вже існує.',
+          },
+        }}
+        loginHref="/uk/login"
+        registerHref="/uk/register"
+        successHref="/uk/schedule"
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Ім’я'), {
+      target: { value: 'Олена' },
+    });
+    fireEvent.change(screen.getByLabelText('Електронна пошта'), {
+      target: { value: 'alice@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText('Пароль'), {
+      target: { value: 'password123' },
+    });
+    fireEvent.submit(
+      screen.getByRole('button', { name: 'Створити акаунт' }).closest('form')!,
+    );
+
+    expect(
+      await screen.findByText('Акаунт із цією електронною поштою вже існує.'),
+    ).toBeDefined();
+    expect(document.activeElement).toBe(
+      screen.getByLabelText('Електронна пошта'),
+    );
   });
 
   it('shows network failure and prevents duplicate submission', async () => {

@@ -43,6 +43,9 @@ accepted without an invented format or uniqueness rule.
 - One user may have multiple sessions. Logout deletes only the session
   represented by the current cookie and remains idempotent if it is absent.
 - Missing, unknown, and expired sessions are all unauthenticated.
+- Authentication responses are private and non-cacheable. Success and error
+  bodies are runtime-validated at each web boundary; malformed or unexpected
+  payloads never become trusted user or field-error state.
 
 ### Authenticated ownership
 

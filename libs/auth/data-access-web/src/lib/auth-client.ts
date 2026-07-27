@@ -10,21 +10,18 @@ import {
 import { z } from 'zod';
 
 const authFieldErrorCodeSchema = z.enum(authFieldErrorCodes);
-const authErrorCodeSchema = z.enum([
-  'VALIDATION_ERROR',
-  'EMAIL_ALREADY_EXISTS',
-  'INVALID_CREDENTIALS',
-  'UNAUTHENTICATED',
-  'SERVICE_UNAVAILABLE',
-]);
-const safeUserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-});
-const authenticationResponseSchema = z.object({
-  user: safeUserSchema,
-});
+const safeUserSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+  })
+  .strict();
+const authenticationResponseSchema = z
+  .object({
+    user: safeUserSchema,
+  })
+  .strict();
 const fieldErrorsSchema = z
   .object({
     name: authFieldErrorCodeSchema.optional(),
@@ -32,17 +29,46 @@ const fieldErrorsSchema = z
     password: authFieldErrorCodeSchema.optional(),
   })
   .strict();
-const apiErrorSchema = z
+const validationErrorSchema = z
   .object({
-    code: authErrorCodeSchema,
+    code: z.literal('VALIDATION_ERROR'),
     details: z
       .object({
-        fields: fieldErrorsSchema.optional(),
+        fields: fieldErrorsSchema.refine(
+          (fields) => Object.keys(fields).length > 0,
+        ),
       })
-      .strict()
-      .optional(),
+      .strict(),
   })
   .strict();
+const duplicateEmailErrorSchema = z
+  .object({
+    code: z.literal('EMAIL_ALREADY_EXISTS'),
+    details: z
+      .object({
+        fields: z
+          .object({
+            email: z.literal('EMAIL_ALREADY_EXISTS'),
+          })
+          .strict(),
+      })
+      .strict(),
+  })
+  .strict();
+const formErrorSchema = z
+  .object({
+    code: z.enum([
+      'INVALID_CREDENTIALS',
+      'UNAUTHENTICATED',
+      'SERVICE_UNAVAILABLE',
+    ]),
+  })
+  .strict();
+const apiErrorSchema = z.union([
+  validationErrorSchema,
+  duplicateEmailErrorSchema,
+  formErrorSchema,
+]);
 
 export interface AuthenticationResponse {
   readonly user: SafeUser;
@@ -151,7 +177,9 @@ async function parseErrorResponse(
     return new AuthClientError(
       parsed.data.code,
       response.status,
-      compactFieldErrors(parsed.data.details?.fields),
+      compactFieldErrors(
+        'details' in parsed.data ? parsed.data.details.fields : undefined,
+      ),
     );
   } catch {
     return new AuthClientError('SERVICE_UNAVAILABLE', response.status);

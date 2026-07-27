@@ -5,6 +5,7 @@ import { AuthExceptionFilter } from './auth-exception.filter';
 describe('AuthExceptionFilter', () => {
   it('maps unexpected exceptions without returning internal prose', () => {
     const response = {
+      setHeader: jest.fn(),
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     } as unknown as Response;
@@ -22,6 +23,10 @@ describe('AuthExceptionFilter', () => {
 
     expect(response.status).toHaveBeenCalledWith(
       HttpStatus.SERVICE_UNAVAILABLE,
+    );
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'private, no-store',
     );
     expect(response.json).toHaveBeenCalledWith({
       code: 'SERVICE_UNAVAILABLE',

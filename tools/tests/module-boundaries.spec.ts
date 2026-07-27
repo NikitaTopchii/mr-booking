@@ -94,4 +94,21 @@ describe('Nx module-boundary configuration', () => {
       expect(source).not.toContain('getDictionary');
     }
   });
+
+  it('keeps auth presentation free of routing and data-access dependencies', () => {
+    const authUiSource = listSourceFiles(
+      join(workspaceRoot, 'libs/auth/ui/src'),
+    )
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    const browserBarrel = readFileSync(
+      join(workspaceRoot, 'libs/auth/data-access-web/src/index.ts'),
+      'utf8',
+    );
+
+    expect(authUiSource).not.toMatch(
+      /next\/(?:navigation|link)|@mr-booking\/auth-data-access-web|fetch\(/,
+    );
+    expect(browserBarrel).not.toContain('./lib/server-auth');
+  });
 });

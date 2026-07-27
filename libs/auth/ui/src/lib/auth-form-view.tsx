@@ -1,6 +1,5 @@
 import type { AuthField as AuthFieldName } from '@mr-booking/auth-domain';
 import { Button, Spinner } from '@mr-booking/shared-ui';
-import Link from 'next/link';
 import type { FormEventHandler, RefObject } from 'react';
 import { AuthField } from './auth-field';
 import { AuthFormError } from './auth-form-error';
@@ -93,12 +92,12 @@ export function AuthFormView({
 
       <p className="text-center text-sm leading-6 text-muted-foreground">
         {messages.switchText}{' '}
-        <Link
+        <a
           href={switchHref}
           className="font-medium text-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {messages.switchAction}
-        </Link>
+        </a>
       </p>
     </form>
   );

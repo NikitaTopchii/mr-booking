@@ -16,7 +16,7 @@ import {
   type AuthMode,
 } from '@mr-booking/auth-ui';
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 
 type FormErrorCode =
   'INVALID_CREDENTIALS' | 'NETWORK_ERROR' | 'SERVICE_UNAVAILABLE';
@@ -54,6 +54,22 @@ export function AuthForm({
   >({});
   const [formError, setFormError] = useState<FormErrorCode | null>(null);
   const isRegistration = mode === 'register';
+
+  useEffect(() => {
+    if (submitting) {
+      return;
+    }
+
+    const firstField = (['name', 'email', 'password'] as const).find(
+      (field) => fieldErrors[field],
+    );
+
+    if (firstField) {
+      formRef.current
+        ?.querySelector<HTMLInputElement>(`[name="${firstField}"]`)
+        ?.focus();
+    }
+  }, [fieldErrors, submitting]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,17 +138,6 @@ export function AuthForm({
     errors: Readonly<Partial<Record<AuthField, AuthFieldErrorCode>>>,
   ): void {
     setFieldErrors(errors);
-    const firstField = (['name', 'email', 'password'] as const).find(
-      (field) => errors[field],
-    );
-
-    if (firstField) {
-      requestAnimationFrame(() => {
-        formRef.current
-          ?.querySelector<HTMLInputElement>(`[name="${firstField}"]`)
-          ?.focus();
-      });
-    }
   }
 
   const translatedFieldErrors = Object.fromEntries(

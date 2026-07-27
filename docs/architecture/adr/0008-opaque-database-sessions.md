@@ -21,6 +21,12 @@ independent sessions, so multiple browsers remain valid. Logout deletes only
 the current token hash and clears the cookie. Missing, unknown, and expired
 tokens produce the same unauthenticated boundary.
 
+Authentication responses use `Cache-Control: private, no-store`. Browser and
+Next.js server clients runtime-validate the safe-user and error envelopes;
+unexpected fields, malformed JSON, and incomplete field-error contracts become
+a generic localized service failure rather than crossing the application
+boundary.
+
 ## Alternatives considered
 
 - JWT access/refresh tokens: rejected because immediate revocation still needs
@@ -43,3 +49,11 @@ but are not yet removed by a scheduled cleanup job. Cookie confidentiality in
 production relies on HTTPS so the `Secure` attribute is effective. Login
 throttling is deferred hardening because the repository has no existing
 throttling infrastructure.
+
+## Phase 2C verification
+
+The production Docker gateway was exercised with registration, current-user
+lookup, protected rendering, reload, logout, seeded-user login, and a normal
+Compose restart. The issued session remained valid across the restart because
+the SQLite volume persisted, then became unauthorized immediately after
+logout. The Linux image also built and loaded the native Argon2id adapter.

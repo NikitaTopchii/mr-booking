@@ -118,3 +118,10 @@ rejected. They conflict with the focused product task, accessibility,
 performance, existing visual direction, and the requirement not to redesign
 the application. Dark mode remains intentionally deferred until its complete
 token and contrast pairs can be designed and verified.
+
+Phase 2C retained these decisions and hardened behavior instead of redesigning
+the surface. Presentational auth UI no longer depends on Next.js routing;
+feature orchestration owns navigation. Field errors are associated with their
+inputs, announced politely, and focus moves to the first invalid field only
+after a server submission has re-enabled the controls. Real-browser checks
+covered 375, 768, 1024, and 1440 CSS-pixel widths with no horizontal overflow.

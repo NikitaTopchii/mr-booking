@@ -49,6 +49,7 @@ export function AuthField({
         <p
           id={errorId}
           className="text-xs font-medium leading-5 text-destructive"
+          aria-live="polite"
         >
           {error}
         </p>

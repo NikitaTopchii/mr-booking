@@ -11,6 +11,7 @@ describe('authentication security adapters', () => {
     const second = generator.generate();
 
     expect(first).not.toBe(second);
+    expect(first).toHaveLength(43);
     expect(Buffer.from(first, 'base64url')).toHaveLength(32);
   });
 
@@ -21,6 +22,7 @@ describe('authentication security adapters', () => {
       '34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943',
     );
     expect(hasher.hash('raw-token')).toHaveLength(64);
+    expect(hasher.hash('raw-token')).not.toBe('raw-token');
   });
 
   it('hashes and verifies passwords with Argon2id', async () => {

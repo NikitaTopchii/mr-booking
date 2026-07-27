@@ -1,5 +1,6 @@
 import {
   AuthClientError,
+  getCurrentUser,
   loginUser,
   logoutSession,
   registerUser,
@@ -72,6 +73,12 @@ describe('browser auth client', () => {
         details: { fields: { email: 'INTERNAL_PROSE' } },
       }),
     ],
+    [
+      'an incomplete duplicate-email contract',
+      jsonResponse(409, {
+        code: 'EMAIL_ALREADY_EXISTS',
+      }),
+    ],
   ])('maps %s to a generic service failure', async (_scenario, response) => {
     fetchMock.mockResolvedValue(response);
 
@@ -81,6 +88,23 @@ describe('browser auth client', () => {
         password: 'password123',
       }),
     ).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
+  });
+
+  it('rejects success payloads containing unvalidated sensitive fields', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(200, {
+        user: {
+          id: 'alice',
+          name: 'Alice',
+          email: 'alice@example.com',
+          passwordHash: 'must-not-cross-the-boundary',
+        },
+      }),
+    );
+
+    await expect(getCurrentUser()).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+    });
   });
 
   it('maps network failures without exposing the underlying error', async () => {

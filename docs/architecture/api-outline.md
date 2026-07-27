@@ -17,10 +17,17 @@ cookie.
 }
 ```
 
-`details.fields` is optional. Top-level and field codes are stable
-machine-readable identifiers. User-facing prose is selected from the active
-web dictionary and is not returned as an API contract. Raw driver errors,
-exception messages, and stack traces are never returned.
+`details.fields` is omitted for errors without a field contract and required
+for authentication validation or duplicate-email errors. Top-level and field
+codes are stable machine-readable identifiers. User-facing prose is selected
+from the active web dictionary and is not returned as an API contract. Raw
+driver errors, exception messages, and stack traces are never returned.
+
+Web clients runtime-validate the complete response shape. Authentication
+success bodies reject extra fields, while validation and duplicate-email
+errors require their documented field details. Malformed JSON, unknown codes,
+unexpected fields, and incomplete error envelopes map to a safe localized
+`SERVICE_UNAVAILABLE` state.
 
 Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 `EMAIL_INVALID`, `PASSWORD_REQUIRED`, `PASSWORD_LENGTH`, and

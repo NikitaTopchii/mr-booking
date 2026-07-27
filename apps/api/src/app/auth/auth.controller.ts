@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Post,
@@ -32,6 +33,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @Header('Cache-Control', 'private, no-store')
   public async register(
     @Body() input: unknown,
     @Res({ passthrough: true }) response: Response,
@@ -51,6 +53,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'private, no-store')
   public async login(
     @Body() input: unknown,
     @Res({ passthrough: true }) response: Response,
@@ -70,6 +73,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Header('Cache-Control', 'private, no-store')
   public async logout(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
@@ -85,6 +89,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(SessionAuthGuard)
+  @Header('Cache-Control', 'private, no-store')
   public currentUser(@CurrentUser() user: SafeUser): {
     readonly user: SafeUser;
   } {
