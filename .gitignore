@@ -4,6 +4,8 @@
 !.env.example
 .nx/
 .yarn/*
+__pycache__/
+*.py[cod]
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases

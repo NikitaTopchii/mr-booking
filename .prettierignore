@@ -1,5 +1,6 @@
 .nx
 .yarn
+.agents/skills/ui-ux-pro-max
 coverage
 dist
 node_modules

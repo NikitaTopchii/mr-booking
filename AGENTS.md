@@ -100,6 +100,17 @@ from the repository root down to the target. Do not assume nested files were
 loaded automatically. If multiple areas are changed, apply the union of their
 routed rules.
 
+### UI/UX design skill
+
+For substantial UI/UX design work, use the repository skill at
+`.agents/skills/ui-ux-pro-max/SKILL.md`. Its recommendations are advisory and
+MUST NOT override the hackathon specification, manual calendar-grid
+requirement, approved shadcn/Radix/Tailwind stack, accessibility and
+mobile-first rules, or repository module boundaries.
+
+Review recommendations before implementation. Do not introduce another UI
+framework solely because the skill suggests it.
+
 ## Absolute architecture constraints
 
 - The repository MUST remain an Nx monorepo with feature-first libraries,
