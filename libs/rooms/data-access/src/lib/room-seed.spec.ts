@@ -7,6 +7,7 @@ import {
   openDatabase,
   resolveMigrationsFolder,
 } from '@mr-booking/shared-database';
+import { DrizzleRoomReader } from './room-reader';
 import { deterministicRooms, seedRooms } from './room-seed';
 
 describe('room schema and deterministic seed', () => {
@@ -50,6 +51,14 @@ describe('room schema and deterministic seed', () => {
     expect(
       connection.sqlite.prepare('SELECT COUNT(*) AS count FROM rooms').get(),
     ).toEqual({ count: 6 });
+  });
+
+  it('reads room existence through the focused application port', () => {
+    seedRooms(connection);
+    const reader = new DrizzleRoomReader({ connection });
+
+    expect(reader.exists('room-aquarium')).toBe(true);
+    expect(reader.exists('missing-room')).toBe(false);
   });
 
   it('preserves room records outside the deterministic seed', () => {

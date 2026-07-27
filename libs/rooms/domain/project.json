@@ -1,0 +1,25 @@
+{
+  "name": "rooms-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/rooms/domain/src",
+  "projectType": "library",
+  "tags": ["scope:rooms", "type:domain", "platform:shared"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/rooms/domain",
+        "main": "libs/rooms/domain/src/index.ts",
+        "tsConfig": "libs/rooms/domain/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/rooms/domain/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    }
+  }
+}

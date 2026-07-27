@@ -36,6 +36,19 @@ The hackathon deployment uses one API process as the only SQLite writer. Web
 and API should preferably share one public origin. The frontend never mounts
 or opens the database volume.
 
+Phase 3A realizes the booking write side as three Nx boundaries:
+
+```text
+booking-feature -> booking-domain <- booking-data-access
+                                  -> SQLite bookings + booking_slots
+```
+
+`rooms-domain` exposes only the room-existence port. Feature-owned
+`auth-infrastructure` and `rooms-infrastructure` expose Drizzle table
+declarations so booking foreign keys do not require data-access-to-data-access
+dependencies. Existing auth and room data-access barrels preserve their public
+schema exports.
+
 ## Responsibility boundaries
 
 ### Next.js

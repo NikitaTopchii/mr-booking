@@ -25,6 +25,12 @@ timezone and show the office timezone when it differs.
 One centralized conversion policy supports consistent API, persistence, and
 tests. DST cases are explicit test inputs.
 
+Phase 3A implements the server policy with one `Intl.DateTimeFormat` fixed to
+`Europe/Kyiv`. It extracts numeric office-local calendar fields from absolute
+instants; it never compares locale-formatted strings or hardcodes UTC offsets.
+Tests cover the 2026 spring and autumn offset transitions plus opening and
+closing boundaries.
+
 ## Limitations
 
 Conversion requires a timezone-aware library/platform API and careful handling

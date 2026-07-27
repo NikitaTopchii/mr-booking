@@ -1,7 +1,7 @@
 import type { PasswordHasher } from '@mr-booking/auth-domain';
+import { users } from '@mr-booking/auth-infrastructure';
 import type { DatabaseConnection } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
-import { users } from './auth-schema';
 
 const seededUsers = [
   {

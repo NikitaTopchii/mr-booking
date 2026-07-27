@@ -112,8 +112,9 @@ The server returns a stable, understandable error for every failed rule.
 
 - Only the authenticated owner may cancel an active booking.
 - UI visibility does not replace server authorization.
-- Cancellation is idempotent only if the future API contract explicitly
-  defines it; otherwise a non-active booking returns a stable state error.
+- A booking that has started or is in the past cannot be newly cancelled.
+- Repeating cancellation as the owner is idempotent, including after the
+  original start instant; the original cancellation timestamp is preserved.
 - Cancellation makes the booking inactive and releases all owned slots in one
   transaction.
 

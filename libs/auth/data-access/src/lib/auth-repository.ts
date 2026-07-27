@@ -7,9 +7,9 @@ import {
   type SafeUser,
   type UserCredentials,
 } from '@mr-booking/auth-domain';
+import { sessions, users } from '@mr-booking/auth-infrastructure';
 import { DatabaseService } from '@mr-booking/shared-database';
 import { and, eq, gt } from 'drizzle-orm';
-import { sessions, users } from './auth-schema';
 
 @Injectable()
 export class DrizzleAuthRepository implements AuthRepository {

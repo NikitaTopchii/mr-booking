@@ -1,0 +1,25 @@
+{
+  "name": "booking-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/booking/domain/src",
+  "projectType": "library",
+  "tags": ["scope:booking", "type:domain", "platform:shared"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/booking/domain",
+        "main": "libs/booking/domain/src/index.ts",
+        "tsConfig": "libs/booking/domain/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/booking/domain/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    }
+  }
+}

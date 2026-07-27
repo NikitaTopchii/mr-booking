@@ -1,0 +1,426 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "4d1c6748-a43f-4718-9180-bd2c7e36581c",
+  "prevId": "5744e74c-0414-453b-a218-795907c7f7b5",
+  "tables": {
+    "rooms": {
+      "name": "rooms",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "floor": {
+          "name": "floor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "capacity": {
+          "name": "capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at_utc": {
+          "name": "created_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "rooms_name_unique": {
+          "name": "rooms_name_unique",
+          "columns": ["name"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "rooms_name_non_empty": {
+          "name": "rooms_name_non_empty",
+          "value": "length(trim(\"rooms\".\"name\")) > 0"
+        },
+        "rooms_floor_integer": {
+          "name": "rooms_floor_integer",
+          "value": "typeof(\"rooms\".\"floor\") = 'integer'"
+        },
+        "rooms_capacity_positive": {
+          "name": "rooms_capacity_positive",
+          "value": "typeof(\"rooms\".\"capacity\") = 'integer' AND \"rooms\".\"capacity\" > 0"
+        },
+        "rooms_created_at_utc_integer": {
+          "name": "rooms_created_at_utc_integer",
+          "value": "typeof(\"rooms\".\"created_at_utc\") = 'integer'"
+        }
+      }
+    },
+    "sessions": {
+      "name": "sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at_utc": {
+          "name": "created_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at_utc": {
+          "name": "expires_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "sessions_token_hash_unique": {
+          "name": "sessions_token_hash_unique",
+          "columns": ["token_hash"],
+          "isUnique": true
+        },
+        "sessions_user_id_index": {
+          "name": "sessions_user_id_index",
+          "columns": ["user_id"],
+          "isUnique": false
+        },
+        "sessions_expires_at_utc_index": {
+          "name": "sessions_expires_at_utc_index",
+          "columns": ["expires_at_utc"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "sessions_user_id_users_id_fk": {
+          "name": "sessions_user_id_users_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sessions_timestamps_integer": {
+          "name": "sessions_timestamps_integer",
+          "value": "typeof(\"sessions\".\"created_at_utc\") = 'integer' AND typeof(\"sessions\".\"expires_at_utc\") = 'integer'"
+        },
+        "sessions_expiry_after_creation": {
+          "name": "sessions_expiry_after_creation",
+          "value": "\"sessions\".\"expires_at_utc\" > \"sessions\".\"created_at_utc\""
+        }
+      }
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "normalized_email": {
+          "name": "normalized_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at_utc": {
+          "name": "created_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "users_normalized_email_unique": {
+          "name": "users_normalized_email_unique",
+          "columns": ["normalized_email"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "users_name_non_empty": {
+          "name": "users_name_non_empty",
+          "value": "length(trim(\"users\".\"name\")) > 0"
+        },
+        "users_created_at_utc_integer": {
+          "name": "users_created_at_utc_integer",
+          "value": "typeof(\"users\".\"created_at_utc\") = 'integer'"
+        }
+      }
+    },
+    "booking_slots": {
+      "name": "booking_slots",
+      "columns": {
+        "booking_id": {
+          "name": "booking_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slot_starts_at_utc": {
+          "name": "slot_starts_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "booking_slots_room_slot_unique": {
+          "name": "booking_slots_room_slot_unique",
+          "columns": ["room_id", "slot_starts_at_utc"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "booking_slots_booking_id_bookings_id_fk": {
+          "name": "booking_slots_booking_id_bookings_id_fk",
+          "tableFrom": "booking_slots",
+          "tableTo": "bookings",
+          "columnsFrom": ["booking_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "booking_slots_room_id_rooms_id_fk": {
+          "name": "booking_slots_room_id_rooms_id_fk",
+          "tableFrom": "booking_slots",
+          "tableTo": "rooms",
+          "columnsFrom": ["room_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "booking_slots_booking_slot_primary": {
+          "columns": ["booking_id", "slot_starts_at_utc"],
+          "name": "booking_slots_booking_slot_primary"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "booking_slots_start_integer": {
+          "name": "booking_slots_start_integer",
+          "value": "typeof(\"booking_slots\".\"slot_starts_at_utc\") = 'integer'"
+        }
+      }
+    },
+    "bookings": {
+      "name": "bookings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "author_user_id": {
+          "name": "author_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "starts_at_utc": {
+          "name": "starts_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ends_at_utc": {
+          "name": "ends_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at_utc": {
+          "name": "created_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cancelled_at_utc": {
+          "name": "cancelled_at_utc",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "bookings_active_room_start_index": {
+          "name": "bookings_active_room_start_index",
+          "columns": ["room_id", "starts_at_utc"],
+          "isUnique": false,
+          "where": "\"bookings\".\"cancelled_at_utc\" IS NULL"
+        },
+        "bookings_active_author_start_index": {
+          "name": "bookings_active_author_start_index",
+          "columns": ["author_user_id", "starts_at_utc"],
+          "isUnique": false,
+          "where": "\"bookings\".\"cancelled_at_utc\" IS NULL"
+        }
+      },
+      "foreignKeys": {
+        "bookings_room_id_rooms_id_fk": {
+          "name": "bookings_room_id_rooms_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "rooms",
+          "columnsFrom": ["room_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bookings_author_user_id_users_id_fk": {
+          "name": "bookings_author_user_id_users_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "users",
+          "columnsFrom": ["author_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "bookings_title_non_empty": {
+          "name": "bookings_title_non_empty",
+          "value": "length(trim(\"bookings\".\"title\")) > 0"
+        },
+        "bookings_title_max_length": {
+          "name": "bookings_title_max_length",
+          "value": "length(\"bookings\".\"title\") <= 100"
+        },
+        "bookings_timestamps_integer": {
+          "name": "bookings_timestamps_integer",
+          "value": "typeof(\"bookings\".\"starts_at_utc\") = 'integer' AND typeof(\"bookings\".\"ends_at_utc\") = 'integer' AND typeof(\"bookings\".\"created_at_utc\") = 'integer' AND (\"bookings\".\"cancelled_at_utc\" IS NULL OR typeof(\"bookings\".\"cancelled_at_utc\") = 'integer')"
+        },
+        "bookings_end_after_start": {
+          "name": "bookings_end_after_start",
+          "value": "\"bookings\".\"ends_at_utc\" > \"bookings\".\"starts_at_utc\""
+        },
+        "bookings_minimum_duration": {
+          "name": "bookings_minimum_duration",
+          "value": "\"bookings\".\"ends_at_utc\" - \"bookings\".\"starts_at_utc\" >= 1800000"
+        },
+        "bookings_maximum_duration": {
+          "name": "bookings_maximum_duration",
+          "value": "\"bookings\".\"ends_at_utc\" - \"bookings\".\"starts_at_utc\" <= 14400000"
+        },
+        "bookings_slot_duration": {
+          "name": "bookings_slot_duration",
+          "value": "(\"bookings\".\"ends_at_utc\" - \"bookings\".\"starts_at_utc\") % 1800000 = 0"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

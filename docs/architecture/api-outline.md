@@ -104,9 +104,11 @@ Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 - **Input:** `{ roomId, title, startsAt, endsAt }` as ISO 8601 instants; no
   owner ID
 - **Success:** `201` with confirmed booking
-- **Errors:** `UNAUTHENTICATED`, `VALIDATION_FAILED`, `ROOM_NOT_FOUND`,
-  `INVALID_BOOKING_INTERVAL`, `BOOKING_OUTSIDE_WORKING_HOURS`,
-  `BOOKING_IN_PAST`, `BOOKING_CONFLICT`, `DATABASE_BUSY`
+- **Errors:** `UNAUTHENTICATED`, `BOOKING_TITLE_REQUIRED`,
+  `BOOKING_TITLE_TOO_LONG`, `BOOKING_START_NOT_IN_FUTURE`,
+  `BOOKING_INVALID_INTERVAL`, `BOOKING_INVALID_DURATION`,
+  `BOOKING_SLOT_ALIGNMENT`, `BOOKING_OUTSIDE_OFFICE_HOURS`,
+  `ROOM_NOT_FOUND`, `BOOKING_CONFLICT`, `DATABASE_BUSY`
 - **Cache:** mutation, `no-store`; revalidate schedule and personal lists
 
 ### Cancel booking
@@ -114,10 +116,18 @@ Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 - **Method/path:** `DELETE /api/bookings/:bookingId`
 - **Authentication:** required
 - **Input:** booking ID path parameter
-- **Success:** `204` after booking and slots update atomically
+- **Success:** `204` after booking and slots update atomically; repeating an
+  owner cancellation is an idempotent `204`
 - **Errors:** `UNAUTHENTICATED`, `BOOKING_NOT_FOUND`,
-  `BOOKING_CANCELLATION_FORBIDDEN`, `BOOKING_NOT_ACTIVE`, `DATABASE_BUSY`
+  `BOOKING_CANCELLATION_FORBIDDEN`, `BOOKING_NOT_CANCELLABLE`,
+  `DATABASE_BUSY`
 - **Cache:** mutation, `no-store`; revalidate affected lists/schedule
+
+The future transport mapper uses `400` for booking validation codes, `403` for
+`BOOKING_CANCELLATION_FORBIDDEN`, `404` for missing rooms/bookings, `409` for
+`BOOKING_CONFLICT` and `BOOKING_NOT_CANCELLABLE`, and `503` for
+`DATABASE_BUSY`. Phase 3A implements the commands and stable codes but
+deliberately does not add these HTTP endpoints or their mapper.
 
 ## Personal bookings
 

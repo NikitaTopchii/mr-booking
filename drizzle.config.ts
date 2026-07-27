@@ -8,8 +8,9 @@ const environment = parseRuntimeEnvironment(process.env);
 export default defineConfig({
   dialect: 'sqlite',
   schema: [
-    './libs/rooms/data-access/src/lib/room-schema.ts',
-    './libs/auth/data-access/src/lib/auth-schema.ts',
+    './libs/rooms/infrastructure/src/lib/room-schema.ts',
+    './libs/auth/infrastructure/src/lib/auth-schema.ts',
+    './libs/booking/data-access/src/lib/booking-schema.ts',
   ],
   out: './drizzle/migrations',
   dbCredentials: {

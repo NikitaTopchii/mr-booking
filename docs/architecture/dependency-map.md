@@ -52,6 +52,24 @@ Web: auth-feature-web -> auth-ui / auth-data-access-web -> auth-domain
 App routes -> shared-i18n/server
 ```
 
+The booking write foundation adds:
+
+```text
+booking-feature
+  -> booking-domain
+  -> booking-data-access -> booking-domain
+                         -> auth-infrastructure / rooms-infrastructure
+                         -> shared-database
+  -> rooms-domain / rooms-data-access
+  -> auth-domain / auth-data-access for composition-time Clock/UUID aliases
+```
+
+`auth-infrastructure` and `rooms-infrastructure` own only their feature's
+Drizzle table declarations. This lets booking foreign keys reuse authoritative
+schemas while preserving the prohibition on data-access-to-data-access
+imports. `rooms-domain` owns the focused room-existence port; it has no booking
+dependency.
+
 `auth-data-access` owns Drizzle, SQLite, Argon2, and session persistence.
 `auth-data-access-web` owns browser HTTP parsing and server-side current-user
 resolution through the NestJS API. Their public entry points are separate, so

@@ -86,7 +86,7 @@ Required fields:
 
 - `id`;
 - `roomId`;
-- `userId`;
+- `authorUserId`;
 - `title`;
 - `startsAtUtc`;
 - `endsAtUtc`;
@@ -96,17 +96,19 @@ Required fields:
 Constraints and indexes:
 
 - primary key on `id`;
-- foreign keys `roomId -> Room.id` and `userId -> User.id`;
-- checks for non-empty title, title length at most 100, and
-  `startsAtUtc < endsAtUtc`;
-- index on `(roomId, startsAtUtc, endsAtUtc)`;
-- index on `(userId, startsAtUtc, id)`;
-- index supporting active bookings where the chosen SQLite strategy permits.
+- foreign keys `roomId -> Room.id` and `authorUserId -> User.id`;
+- checks for a non-empty trimmed title, title length at most 100, integer UTC
+  timestamps, `startsAtUtc < endsAtUtc`, duration from 30 minutes through four
+  hours, and duration divisible by 30 minutes;
+- partial active index on `(roomId, startsAtUtc)`;
+- partial active index on `(authorUserId, startsAtUtc)`.
 
 Lifecycle: created with all slots in one transaction. Cancellation sets
 `cancelledAtUtc` and releases slots in one transaction. A cancelled booking
 is retained for integrity but excluded from active schedule and mandatory
-personal-list results.
+personal-list results. A repeated owner cancellation preserves the first
+`cancelledAtUtc`; a booking that has already started cannot be newly
+cancelled.
 
 ## BookingSlot
 
@@ -125,12 +127,19 @@ Constraints and indexes:
 - foreign key `bookingId -> Booking.id` with appropriate cascading cleanup;
 - foreign key `roomId -> Room.id`;
 - unique constraint on `(roomId, slotStartsAtUtc)`;
-- index on `bookingId`;
+- the composite primary-key prefix supports lookup and deletion by
+  `bookingId`;
 - slot timestamps align to office 30-minute boundaries.
 
 Lifecycle: every interval owns one row per start slot. For 10:00–11:00, rows
 start at 10:00 and 10:30, not 11:00. All rows are inserted atomically with the
 booking and removed atomically on cancellation.
+
+Migration `0002_booking_foundation.sql` implements these tables and constraints.
+Absolute timestamps are integer UTC epoch milliseconds. Europe/Kyiv
+interpretation, strict-future validation, local office-day boundaries, and
+ownership remain authoritative application policies because SQLite cannot
+safely infer them from an absolute instant.
 
 ## Deferred bonus extensions
 

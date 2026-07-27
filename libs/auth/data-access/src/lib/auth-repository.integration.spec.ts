@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { EmailAlreadyExistsError } from '@mr-booking/auth-domain';
+import { sessions, users } from '@mr-booking/auth-infrastructure';
 import {
   applyMigrations,
   type DatabaseConnection,
@@ -11,7 +12,6 @@ import {
 } from '@mr-booking/shared-database';
 import { eq, sql } from 'drizzle-orm';
 import { DrizzleAuthRepository } from './auth-repository';
-import { sessions, users } from './auth-schema';
 import { seedAuthUsers } from './auth-seed';
 import { Argon2PasswordHasher } from './security-adapters';
 

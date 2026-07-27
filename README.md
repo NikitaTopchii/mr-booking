@@ -1,8 +1,8 @@
 # MR Booking
 
 MR Booking is an Nx monorepo for the UA-SKILLS meeting-room booking
-application. Phase 2 adds complete password and session authentication to the
-production-shaped runtime foundation:
+application. The current foundation combines password/session authentication
+with the authoritative booking write core:
 
 ```text
 Browser -> Caddy -> Next.js web -> NestJS API -> SQLite
@@ -11,7 +11,8 @@ Browser -> Caddy -> Next.js web -> NestJS API -> SQLite
 The current phase includes registration with automatic login, login, logout,
 server-restored protected routes, Argon2id password hashes, opaque
 database-backed sessions, deterministic users and rooms, health checks,
-Docker images, and quality gates. Bookings and the calendar remain deferred.
+race-safe booking commands, Docker images, and quality gates. Booking HTTP/UI
+and the calendar remain deferred.
 
 ## Prerequisites
 
@@ -134,8 +135,9 @@ account or resetting its password:
 | Alice | `alice@example.com` | `password123` |
 | Bob   | `bob@example.com`   | `password123` |
 
-Passwords are seeded through the same production Argon2id adapter. Demo
-bookings remain deferred until the booking schema exists.
+Passwords are seeded through the same production Argon2id adapter. Phase 3A
+adds the booking schema but intentionally does not seed demo bookings; those
+arrive with the schedule and personal-list integration.
 
 ## Authentication behavior
 
@@ -182,7 +184,33 @@ My bookings currently provides localized Upcoming and Past UI foundations
 with deliberate empty-state copy and a localized Schedule action. It does not
 query or persist bookings and does not contain mock booking rows. Ordering,
 pagination, cancellation, timezone formatting, and room/week navigation will
-be connected when the authoritative booking domain and API exist.
+be connected when the booking HTTP/query API exists.
+
+## Booking command foundation
+
+Phase 3A implements the authoritative server write core without exposing HTTP
+controllers or frontend booking data:
+
+- titles are trimmed, Unicode-preserving, required, and limited to 100
+  characters;
+- absolute instants are integer UTC epoch milliseconds;
+- the server clock requires a strictly future start;
+- office policy is evaluated in `Europe/Kyiv`, every day from 09:00 through
+  19:00;
+- boundaries use a 30-minute grid and duration is 30 minutes through four
+  hours;
+- intervals are half-open, so 10:00–11:00 and 11:00–12:00 are adjacent and
+  valid;
+- each active interval owns deterministic 30-minute rows in `booking_slots`;
+- unique `(room_id, slot_starts_at_utc)` ownership makes concurrent creation
+  race-safe inside `BEGIN IMMEDIATE`;
+- owner-only cancellation preserves the booking, records the server
+  cancellation time, and releases its slots atomically;
+- started bookings cannot be newly cancelled, while repeating an owner
+  cancellation is idempotent.
+
+SQLite is intentionally operated by one API process. WAL and a 5000 ms busy
+timeout are enabled; exhausted write contention maps to `DATABASE_BUSY`.
 
 ## Quality checks
 
@@ -226,8 +254,14 @@ login, and session persistence across a normal Docker Compose restart.
 | `shared-database`      | `libs/shared/database`      | `scope:shared,type:infrastructure,platform:api` |
 | `shared-i18n`          | `libs/shared/i18n`          | `scope:shared,type:util,platform:web`           |
 | `shared-ui`            | `libs/shared/ui`            | `scope:shared,type:ui,platform:web`             |
+| `booking-domain`       | `libs/booking/domain`       | `scope:booking,type:domain,platform:shared`     |
+| `booking-data-access`  | `libs/booking/data-access`  | `scope:booking,type:data-access,platform:api`   |
+| `booking-feature`      | `libs/booking/feature`      | `scope:booking,type:feature,platform:api`       |
+| `rooms-domain`         | `libs/rooms/domain`         | `scope:rooms,type:domain,platform:shared`       |
+| `rooms-infrastructure` | `libs/rooms/infrastructure` | `scope:rooms,type:infrastructure,platform:api`  |
 | `rooms-data-access`    | `libs/rooms/data-access`    | `scope:rooms,type:data-access,platform:api`     |
 | `auth-domain`          | `libs/auth/domain`          | `scope:auth,type:domain,platform:shared`        |
+| `auth-infrastructure`  | `libs/auth/infrastructure`  | `scope:auth,type:infrastructure,platform:api`   |
 | `auth-data-access`     | `libs/auth/data-access`     | `scope:auth,type:data-access,platform:api`      |
 | `auth-data-access-web` | `libs/auth/data-access-web` | `scope:auth,type:data-access,platform:web`      |
 | `auth-feature`         | `libs/auth/feature`         | `scope:auth,type:feature,platform:api`          |
@@ -237,11 +271,16 @@ login, and session persistence across a normal Docker Compose restart.
 
 ## Phase status
 
-Phase 2D completes the authenticated shell and My bookings UI foundation.
+Phase 3A completes the booking domain, committed persistence schema,
+race-safe create command, and ownership-protected cancellation command.
+Booking controllers, DTO validation, centralized HTTP error mapping, schedule
+queries/UI, booking form, and real My bookings data remain deliberately
+deferred.
+
+Phase 2D completed the authenticated shell and My bookings UI foundation.
 Password recovery/change, OAuth, magic links, MFA, CAPTCHA, roles/admin, email
 verification, account deletion, device management, and logout-all are
-intentionally deferred. Booking data, permissions, persistence, cancellation,
-calendar behavior, personal-list SWR, PWA support, notifications, Web Push,
-and recurring bookings are also outside this phase. Login throttling and
-expired-session cleanup are documented hardening work, not placeholder
-implementations.
+intentionally deferred. Calendar behavior, personal-list SWR, PWA support,
+notifications, Web Push, and recurring bookings are also outside Phase 3A.
+Login throttling and expired-session cleanup are documented hardening work,
+not placeholder implementations.
