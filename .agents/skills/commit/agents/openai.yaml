@@ -1,0 +1,7 @@
+interface:
+  display_name: 'Commit'
+  short_description: 'Verify changes and create a meaningful local commit'
+  default_prompt: 'Validate the current repository changes and create one coherent local commit.'
+
+policy:
+  allow_implicit_invocation: false

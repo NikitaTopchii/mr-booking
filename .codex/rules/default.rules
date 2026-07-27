@@ -1,0 +1,54 @@
+# Project-local command policy. These rules apply only when this repository's
+# .codex configuration layer is trusted.
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Pushing changes requires explicit user approval",
+    match = [
+        "git push",
+        "git push origin main",
+    ],
+    not_match = [
+        "git status",
+        "git log --oneline",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "forbidden",
+    justification = "Use a non-destructive Git recovery method instead",
+    match = [
+        "git reset --hard",
+        "git reset --hard HEAD",
+    ],
+    not_match = [
+        "git reset HEAD path/to/file",
+        "git restore --staged path/to/file",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "clean"],
+    decision = "prompt",
+    justification = "Git clean may permanently delete untracked project files",
+    match = [
+        "git clean -fd",
+        "git clean -fdx",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "commit", "--amend"],
+    decision = "prompt",
+    justification = "Amending commits requires explicit user approval",
+    match = [
+        "git commit --amend",
+        "git commit --amend --no-edit",
+    ],
+    not_match = [
+        "git commit",
+        "git commit -F /tmp/commit-message",
+    ],
+)

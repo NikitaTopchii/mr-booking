@@ -1,0 +1,28 @@
+{
+  "name": "mr-booking",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "yarn@4.17.1",
+  "scripts": {
+    "test": "node tools/scripts/run-nx-target.mjs test",
+    "lint": "node tools/scripts/run-nx-target.mjs lint",
+    "typecheck": "node tools/scripts/run-nx-target.mjs typecheck",
+    "build": "node tools/scripts/run-nx-target.mjs build",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "verify:commit": "node tools/scripts/verify-commit.mjs"
+  },
+  "devDependencies": {
+    "@nx/eslint-plugin": "23.1.0",
+    "@typescript-eslint/parser": "8.65.0",
+    "eslint": "10.8.0",
+    "eslint-config-prettier": "10.1.8",
+    "nx": "23.1.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3"
+  },
+  "resolutions": {
+    "axios": "1.18.1",
+    "brace-expansion": "5.0.8"
+  }
+}
