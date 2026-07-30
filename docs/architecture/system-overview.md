@@ -106,7 +106,7 @@ WAL, foreign keys, and a 5000 ms busy timeout are enabled and verified.
   and logout interaction.
 - Interactive schedule, availability, and personal lists use SWR.
 - Mutations remain pending until the API confirms success.
-- The API uses the server clock and returns UTC ISO 8601 timestamps.
+- The API uses the server clock and returns canonical UTC ISO 8601 timestamps.
 - The UI formats instants in the browser timezone.
 - A stable error envelope maps machine-readable application/domain and field
   codes to localized UI states without translating backend prose.

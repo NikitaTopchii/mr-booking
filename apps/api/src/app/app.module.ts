@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '@mr-booking/shared-database';
 import { RoomsDataAccessModule } from '@mr-booking/rooms-data-access';
 import { AuthDataAccessModule } from '@mr-booking/auth-data-access';
-import { BookingFeatureModule } from '@mr-booking/booking-feature';
 import { FoundationStartupService } from './foundation-startup.service';
 import { AuthModule } from './auth/auth.module';
+import { BookingApiModule } from './booking/booking-api.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -13,7 +13,7 @@ import { HealthModule } from './health/health.module';
     RoomsDataAccessModule,
     AuthDataAccessModule,
     AuthModule,
-    BookingFeatureModule,
+    BookingApiModule,
     HealthModule,
   ],
   providers: [FoundationStartupService],

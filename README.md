@@ -2,7 +2,7 @@
 
 MR Booking is an Nx monorepo for the UA-SKILLS meeting-room booking
 application. The current foundation combines password/session authentication
-with the authoritative booking write core:
+with the authoritative booking HTTP and persistence core:
 
 ```text
 Browser -> Caddy -> Next.js web -> NestJS API -> SQLite
@@ -11,8 +11,8 @@ Browser -> Caddy -> Next.js web -> NestJS API -> SQLite
 The current phase includes registration with automatic login, login, logout,
 server-restored protected routes, Argon2id password hashes, opaque
 database-backed sessions, deterministic users and rooms, health checks,
-race-safe booking commands, Docker images, and quality gates. Booking HTTP/UI
-and the calendar remain deferred.
+race-safe booking commands, authenticated room/schedule/booking endpoints,
+Docker images, and quality gates. The weekly calendar UI remains deferred.
 
 ## Prerequisites
 
@@ -183,13 +183,34 @@ least 44px practical targets.
 My bookings currently provides localized Upcoming and Past UI foundations
 with deliberate empty-state copy and a localized Schedule action. It does not
 query or persist bookings and does not contain mock booking rows. Ordering,
-pagination, cancellation, timezone formatting, and room/week navigation will
-be connected when the booking HTTP/query API exists.
+pagination, cancellation, timezone formatting, and room/week navigation are
+not connected in Phase 3B.
 
-## Booking command foundation
+## Booking API and command foundation
 
-Phase 3A implements the authoritative server write core without exposing HTTP
-controllers or frontend booking data:
+Phase 3B exposes the Phase 3A authoritative write core through four
+session-authenticated endpoints:
+
+- `GET /api/rooms` returns safe room metadata in deterministic floor/name
+  order;
+- `GET /api/rooms/:roomId/bookings?fromUtc=2030-06-03T06%3A00%3A00.000Z&toUtc=2030-06-10T06%3A00%3A00.000Z`
+  returns active bookings overlapping the requested half-open absolute range;
+- `POST /api/bookings` creates a booking for the session user;
+- `DELETE /api/bookings/:bookingId` cancels an owned future booking and
+  returns `204`.
+
+Booking request timestamps are ISO 8601 absolute datetime strings with `Z` or
+an explicit offset, for example `2030-06-03T09:00:00.000+03:00`. Responses
+normalize every booking timestamp to canonical UTC such as
+`2030-06-03T06:00:00.000Z`. Datetimes without timezone information are
+rejected. Query-string datetime values must be URL-encoded when they contain
+an explicit `+` offset.
+The future browser schedule chooses the absolute visible range in the browser
+timezone; booking creation validity is still evaluated in `Europe/Kyiv`.
+Schedule reads exclude cancelled bookings and return only author ID/name.
+`isMine` is server-derived, and booking-slot rows are never public.
+
+The authoritative booking rules remain:
 
 - titles are trimmed, Unicode-preserving, required, and limited to 100
   characters;
@@ -271,16 +292,16 @@ login, and session persistence across a normal Docker Compose restart.
 
 ## Phase status
 
-Phase 3A completes the booking domain, committed persistence schema,
-race-safe create command, and ownership-protected cancellation command.
-Booking controllers, DTO validation, centralized HTTP error mapping, schedule
-queries/UI, booking form, and real My bookings data remain deliberately
-deferred.
+Phase 3B completes the authenticated room catalogue, room-range schedule,
+booking creation, and owner cancellation HTTP API with runtime DTO validation,
+stable error mapping, safe author data, and file-backed API integration tests.
+The weekly schedule UI, booking dialog/form, and real My bookings data remain
+deliberately deferred.
 
 Phase 2D completed the authenticated shell and My bookings UI foundation.
 Password recovery/change, OAuth, magic links, MFA, CAPTCHA, roles/admin, email
 verification, account deletion, device management, and logout-all are
 intentionally deferred. Calendar behavior, personal-list SWR, PWA support,
-notifications, Web Push, and recurring bookings are also outside Phase 3A.
+notifications, Web Push, and recurring bookings are also outside Phase 3B.
 Login throttling and expired-session cleanup are documented hardening work,
 not placeholder implementations.

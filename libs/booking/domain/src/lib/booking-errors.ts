@@ -13,6 +13,15 @@ export type BookingErrorCode =
   | 'BOOKING_NOT_CANCELLABLE'
   | 'DATABASE_BUSY';
 
+export class ScheduleRangeValidationError extends Error {
+  public readonly code = 'VALIDATION_ERROR' as const;
+
+  public constructor() {
+    super('VALIDATION_ERROR');
+    this.name = 'ScheduleRangeValidationError';
+  }
+}
+
 abstract class BookingError extends Error {
   protected constructor(public readonly code: BookingErrorCode) {
     super(code);

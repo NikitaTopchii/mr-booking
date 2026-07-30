@@ -81,19 +81,35 @@ Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 - **Method/path:** `GET /api/rooms`
 - **Authentication:** required
 - **Input:** none
-- **Success:** `200` with `{ rooms: [{ id, name, floor, capacity }] }`
+- **Success:** `200` with
+  `{ rooms: [{ id, name, floor, capacity }] }`, ordered by floor and then name
 - **Errors:** `UNAUTHENTICATED`
-- **Cache:** private; catalogue may use controlled revalidation
+- **Cache:** private, `no-store`
 
-### Weekly room schedule
+### Room schedule range
 
-- **Method/path:** `GET /api/rooms/:roomId/schedule`
+- **Method/path:** `GET /api/rooms/:roomId/bookings`
 - **Authentication:** required
-- **Input:** query `{ weekStart }`, an unambiguous office-calendar date
-- **Success:** `200` with room, UTC range, and active bookings containing
-  `{ id, title, authorName, startsAt, endsAt, isOwned }`
-- **Errors:** `UNAUTHENTICATED`, `VALIDATION_FAILED`, `ROOM_NOT_FOUND`
+- **Input:** query `{ fromUtc, toUtc }` as ISO 8601 absolute datetime strings
+  with `Z` or an explicit offset and `fromUtc < toUtc`
+- **Success:** `200` with
+  `{ bookings: [{ id, roomId, title, startsAtUtc, endsAtUtc, author: { id, name }, isMine }] }`
+- **Errors:** `UNAUTHENTICATED`, `VALIDATION_ERROR`, `ROOM_NOT_FOUND`
 - **Cache:** private, dynamic/no-store; SWR manages interactive copies
+
+The requested range is an absolute half-open interval `[fromUtc, toUtc)`.
+The HTTP boundary rejects datetimes without timezone information and parses
+valid absolute datetime strings immediately to internal UTC epoch
+milliseconds. Explicit `+` offsets must be URL-encoded in query strings.
+The browser will choose the absolute instants for its browser-local visible
+week; NestJS does not reinterpret this query in `Europe/Kyiv`. Active
+bookings overlap the range when
+`booking.startsAtUtc < toUtc && fromUtc < booking.endsAtUtc`, so bookings
+crossing either visible boundary are included. Cancelled bookings and
+internal booking-slot rows are excluded. Results order by start, end, and
+stable booking ID. The server joins only the author's public ID/name and
+derives `isMine` from the authenticated session. Response timestamps are
+canonical UTC ISO 8601 strings with milliseconds and `Z`.
 
 ## Bookings
 
@@ -101,9 +117,11 @@ Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 
 - **Method/path:** `POST /api/bookings`
 - **Authentication:** required
-- **Input:** `{ roomId, title, startsAt, endsAt }` as ISO 8601 instants; no
-  owner ID
-- **Success:** `201` with confirmed booking
+- **Input:** `{ roomId, title, startsAtUtc, endsAtUtc }`; timestamps are ISO
+  8601 absolute datetime strings with `Z` or an explicit offset, and
+  identity/ownership fields are forbidden
+- **Success:** `201` with
+  `{ booking: { id, roomId, title, startsAtUtc, endsAtUtc, author: { id, name }, isMine: true } }`
 - **Errors:** `UNAUTHENTICATED`, `BOOKING_TITLE_REQUIRED`,
   `BOOKING_TITLE_TOO_LONG`, `BOOKING_START_NOT_IN_FUTURE`,
   `BOOKING_INVALID_INTERVAL`, `BOOKING_INVALID_DURATION`,
@@ -126,8 +144,11 @@ Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 The future transport mapper uses `400` for booking validation codes, `403` for
 `BOOKING_CANCELLATION_FORBIDDEN`, `404` for missing rooms/bookings, `409` for
 `BOOKING_CONFLICT` and `BOOKING_NOT_CANCELLABLE`, and `503` for
-`DATABASE_BUSY`. Phase 3A implements the commands and stable codes but
-deliberately does not add these HTTP endpoints or their mapper.
+`DATABASE_BUSY`. Malformed transport input uses `400 VALIDATION_ERROR`.
+Phase 3B implements these authenticated endpoints and their stable mapper.
+Booking validity remains authoritative in the existing domain and evaluates
+office hours in `Europe/Kyiv`. Successful booking responses normalize
+timestamps to canonical UTC ISO 8601 strings with milliseconds and `Z`.
 
 ## Personal bookings
 

@@ -252,6 +252,10 @@ class TestRoomReader implements RoomReader {
   public exists(roomId: string): boolean {
     return this.existingRoomIds.has(roomId);
   }
+
+  public list(): readonly [] {
+    return [];
+  }
 }
 
 class MutableClock implements BookingClock {

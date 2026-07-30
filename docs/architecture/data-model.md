@@ -4,7 +4,7 @@ This is an implementation-independent schema outline. Exact SQL names are
 chosen with the first migration, while these invariants remain fixed.
 
 All absolute timestamps use integer UTC epoch milliseconds in SQLite and ISO
-8601 UTC strings at the API boundary.
+8601 absolute datetime strings at the booking HTTP boundary.
 
 ## User
 
@@ -140,6 +140,11 @@ Absolute timestamps are integer UTC epoch milliseconds. Europe/Kyiv
 interpretation, strict-future validation, local office-day boundaries, and
 ownership remain authoritative application policies because SQLite cannot
 safely infer them from an absolute instant.
+
+The Phase 3B room-schedule read model queries `bookings` directly, joins only
+`users.id` and `users.name`, excludes cancelled rows, and applies half-open
+overlap semantics. `booking_slots` remains an internal write-concurrency
+mechanism and is never an API response model.
 
 ## Deferred bonus extensions
 

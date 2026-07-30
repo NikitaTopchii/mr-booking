@@ -66,7 +66,9 @@ session user ID.
 
 - The server converts proposed local office times through `Europe/Kyiv`.
 - Absolute instants are persisted in UTC.
-- API timestamps use ISO 8601 UTC values.
+- Phase 3B booking API timestamps use ISO 8601 absolute datetime strings.
+  Inputs require `Z` or an explicit offset; responses use canonical UTC with
+  milliseconds and `Z`.
 - The browser timezone controls display only.
 - When browser and office zones differ, the UI identifies the office zone.
 - Locale-formatted strings and ambiguous date strings are never authoritative.

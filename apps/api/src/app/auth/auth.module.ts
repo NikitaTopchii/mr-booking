@@ -8,6 +8,6 @@ import { SessionCookieService } from './session-cookie.service';
   imports: [AuthFeatureModule],
   controllers: [AuthController],
   providers: [SessionCookieService, SessionAuthGuard],
-  exports: [SessionAuthGuard],
+  exports: [SessionAuthGuard, SessionCookieService],
 })
 export class AuthModule {}
