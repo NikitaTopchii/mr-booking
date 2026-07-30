@@ -16,8 +16,11 @@ export interface ScheduleSlot {
   readonly endsAtUtc: number;
 }
 
-export interface ScheduleWeek {
+export type SchedulePresentation = 'compact' | 'medium' | 'expanded';
+
+export interface ScheduleRange {
   readonly weekKey: string;
+  readonly selectedDate: CalendarDate;
   readonly visibleDates: readonly CalendarDate[];
   readonly slots: readonly ScheduleSlot[];
   readonly range: {
@@ -73,15 +76,7 @@ export function addCalendarDays(
 }
 
 export function startOfLocalWeek(now: number, timeZone: string): CalendarDate {
-  const localDate = calendarDateAt(now, timeZone);
-  const isoDay =
-    ((new Date(
-      Date.UTC(localDate.year, localDate.month - 1, localDate.day),
-    ).getUTCDay() +
-      6) %
-      7) +
-    1;
-  return addCalendarDays(localDate, -(isoDay - 1));
+  return startOfCalendarWeek(calendarDateAt(now, timeZone));
 }
 
 export function isMonday(date: CalendarDate): boolean {
@@ -93,22 +88,32 @@ export function isMonday(date: CalendarDate): boolean {
 export function createScheduleWeek(
   weekKey: string,
   browserTimeZone: string,
-): ScheduleWeek {
+): ScheduleRange {
   const weekStart = parseCalendarDate(weekKey);
 
   if (!weekStart || !isMonday(weekStart)) {
     throw new Error('INVALID_WEEK');
   }
 
-  const visibleDates = Array.from({ length: 7 }, (_, index) =>
-    addCalendarDays(weekStart, index),
+  return createScheduleRange(weekStart, 7, browserTimeZone);
+}
+
+export function createScheduleRange(
+  selectedDate: CalendarDate,
+  visibleDayCount: 1 | 3 | 7,
+  browserTimeZone: string,
+): ScheduleRange {
+  const visibleDates = Array.from({ length: visibleDayCount }, (_, index) =>
+    addCalendarDays(selectedDate, index),
   );
   const firstVisibleKey = formatCalendarDate(visibleDates[0] as CalendarDate);
-  const lastVisibleKey = formatCalendarDate(visibleDates[6] as CalendarDate);
+  const lastVisibleKey = formatCalendarDate(
+    visibleDates[visibleDates.length - 1] as CalendarDate,
+  );
   const slots: ScheduleSlot[] = [];
 
-  for (let offset = -2; offset <= 8; offset += 1) {
-    const officeDate = addCalendarDays(weekStart, offset);
+  for (let offset = -2; offset <= visibleDayCount + 1; offset += 1) {
+    const officeDate = addCalendarDays(selectedDate, offset);
     const officeDateKey = formatCalendarDate(officeDate);
     const opensAt = zonedDateTimeToEpoch(
       officeDate,
@@ -142,22 +147,109 @@ export function createScheduleWeek(
   }
 
   slots.sort((left, right) => left.startsAtUtc - right.startsAtUtc);
-  const firstSlot = slots[0];
-  const lastSlot = slots.at(-1);
-
-  if (!firstSlot || !lastSlot) {
+  if (slots.length === 0) {
     throw new Error('EMPTY_WEEK');
   }
 
   return {
-    weekKey,
+    weekKey: formatCalendarDate(startOfCalendarWeek(selectedDate)),
+    selectedDate,
     visibleDates,
     slots,
     range: {
-      fromUtc: new Date(firstSlot.startsAtUtc).toISOString(),
-      toUtc: new Date(lastSlot.endsAtUtc).toISOString(),
+      fromUtc: new Date(
+        zonedDateTimeToEpoch(selectedDate, 0, 0, browserTimeZone),
+      ).toISOString(),
+      toUtc: new Date(
+        zonedDateTimeToEpoch(
+          addCalendarDays(selectedDate, visibleDayCount),
+          0,
+          0,
+          browserTimeZone,
+        ),
+      ).toISOString(),
     },
   };
+}
+
+export function startOfCalendarWeek(date: CalendarDate): CalendarDate {
+  const isoDay =
+    ((new Date(Date.UTC(date.year, date.month - 1, date.day)).getUTCDay() + 6) %
+      7) +
+    1;
+  return addCalendarDays(date, -(isoDay - 1));
+}
+
+export function selectedDateFromUrl(
+  requestedDate: string | null,
+  legacyWeek: string | null,
+  now: number,
+  browserTimeZone: string,
+): CalendarDate {
+  const parsedDate = requestedDate
+    ? parseCalendarDate(requestedDate)
+    : undefined;
+  if (parsedDate) return parsedDate;
+
+  const today = calendarDateAt(now, browserTimeZone);
+  const parsedWeek = legacyWeek ? parseCalendarDate(legacyWeek) : undefined;
+  if (!parsedWeek || !isMonday(parsedWeek)) return today;
+
+  const weekEnd = addCalendarDays(parsedWeek, 7);
+  const todayKey = formatCalendarDate(today);
+  return todayKey >= formatCalendarDate(parsedWeek) &&
+    todayKey < formatCalendarDate(weekEnd)
+    ? today
+    : parsedWeek;
+}
+
+export function visibleDayCount(presentation: SchedulePresentation): 1 | 3 | 7 {
+  if (presentation === 'compact') return 1;
+  if (presentation === 'medium') return 3;
+  return 7;
+}
+
+export function createPresentationRange(
+  selectedDate: CalendarDate,
+  presentation: SchedulePresentation,
+  browserTimeZone: string,
+): ScheduleRange {
+  const rangeStart =
+    presentation === 'expanded'
+      ? startOfCalendarWeek(selectedDate)
+      : selectedDate;
+  return createScheduleRange(
+    rangeStart,
+    visibleDayCount(presentation),
+    browserTimeZone,
+  );
+}
+
+export function overlapsAbsoluteRange(
+  startsAtUtc: string,
+  endsAtUtc: string,
+  range: ScheduleRange['range'],
+): boolean {
+  return (
+    Date.parse(startsAtUtc) < Date.parse(range.toUtc) &&
+    Date.parse(range.fromUtc) < Date.parse(endsAtUtc)
+  );
+}
+
+export function currentTimePosition(
+  now: number,
+  firstSlot: ScheduleSlot | undefined,
+  lastSlot: ScheduleSlot | undefined,
+): number | undefined {
+  if (
+    !firstSlot ||
+    !lastSlot ||
+    now < firstSlot.startsAtUtc ||
+    now >= lastSlot.endsAtUtc
+  ) {
+    return undefined;
+  }
+  return (now - firstSlot.startsAtUtc) / SLOT_DURATION_MS;
 }
 
 export function calendarDateAt(

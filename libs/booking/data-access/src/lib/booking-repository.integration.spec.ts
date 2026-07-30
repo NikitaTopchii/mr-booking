@@ -11,7 +11,10 @@ import {
   openDatabase,
 } from '@mr-booking/shared-database';
 import { eq, sql } from 'drizzle-orm';
-import { DrizzleBookingRepository } from './booking-repository';
+import {
+  DrizzleBookingRepository,
+  DrizzleMyBookingsReader,
+} from './booking-repository';
 import { bookingSlots, bookings } from './booking-schema';
 
 jest.setTimeout(15_000);
@@ -256,6 +259,98 @@ describe('Drizzle booking persistence', () => {
 
     expect(countRows(connection, bookings)).toBe(1);
     expect(countRows(connection, bookingSlots)).toBe(2);
+  });
+
+  it('reads only the owner active non-past bookings in nearest-first stable order', () => {
+    const reader = new DrizzleMyBookingsReader({ connection });
+    const now = startsAtUtc;
+    [
+      bookingRecord('upcoming-b', {
+        startsAtUtc: now + slotMilliseconds,
+        endsAtUtc: now + 2 * slotMilliseconds,
+      }),
+      bookingRecord('upcoming-a', {
+        startsAtUtc: now + slotMilliseconds,
+        endsAtUtc: now + 2 * slotMilliseconds,
+        roomId: 'room-mars',
+      }),
+      bookingRecord('ongoing', {
+        startsAtUtc: now - slotMilliseconds,
+        endsAtUtc: now + slotMilliseconds,
+      }),
+      bookingRecord('ended', {
+        startsAtUtc: now - 2 * slotMilliseconds,
+        endsAtUtc: now,
+      }),
+      bookingRecord('cancelled-upcoming', {
+        startsAtUtc: now + 3 * slotMilliseconds,
+        endsAtUtc: now + 4 * slotMilliseconds,
+        cancelledAtUtc: now - slotMilliseconds,
+      }),
+      bookingRecord('foreign-upcoming', {
+        authorUserId: 'user-bob',
+        startsAtUtc: now + 4 * slotMilliseconds,
+        endsAtUtc: now + 5 * slotMilliseconds,
+      }),
+    ].forEach((record) => insertBookingRecord(connection, record));
+
+    const result = reader.findUpcoming('user-alice', now);
+
+    expect(result.map(({ id }) => id)).toEqual([
+      'ongoing',
+      'upcoming-a',
+      'upcoming-b',
+    ]);
+    expect(result[1]?.room).toEqual({
+      id: 'room-mars',
+      name: 'Марс',
+      floor: 2,
+      capacity: 6,
+    });
+    expect(JSON.stringify(result)).not.toMatch(/authorUserId|cancelledAtUtc/);
+  });
+
+  it('reads past pages newest-first with a tie-safe cursor and no duplicates', () => {
+    const reader = new DrizzleMyBookingsReader({ connection });
+    const now = startsAtUtc + 10 * slotMilliseconds;
+    [
+      bookingRecord('past-c', {
+        startsAtUtc: now - 4 * slotMilliseconds,
+        endsAtUtc: now - 3 * slotMilliseconds,
+      }),
+      bookingRecord('past-b', {
+        startsAtUtc: now - 4 * slotMilliseconds,
+        endsAtUtc: now - 3 * slotMilliseconds,
+      }),
+      bookingRecord('past-a', {
+        startsAtUtc: now - 5 * slotMilliseconds,
+        endsAtUtc: now - 4 * slotMilliseconds,
+      }),
+      bookingRecord('cancelled-past', {
+        startsAtUtc: now - 6 * slotMilliseconds,
+        endsAtUtc: now - 5 * slotMilliseconds,
+        cancelledAtUtc: now - slotMilliseconds,
+      }),
+      bookingRecord('foreign-past', {
+        authorUserId: 'user-bob',
+        startsAtUtc: now - 7 * slotMilliseconds,
+        endsAtUtc: now - 6 * slotMilliseconds,
+      }),
+    ].forEach((record) => insertBookingRecord(connection, record));
+
+    const first = reader.findPast('user-alice', now, null, 2);
+    const second = reader.findPast(
+      'user-alice',
+      now,
+      {
+        startsAtUtc: first[1]?.startsAtUtc ?? 0,
+        bookingId: first[1]?.id ?? '',
+      },
+      2,
+    );
+
+    expect(first.map(({ id }) => id)).toEqual(['past-c', 'past-b']);
+    expect(second.map(({ id }) => id)).toEqual(['past-a']);
   });
 
   it('allows exactly one winner across concurrent independent connections', async () => {

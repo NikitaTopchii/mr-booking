@@ -41,8 +41,12 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   useSearchParams: jest.fn(),
 }));
+jest.mock('./use-browser-time-zone', () => ({
+  useBrowserTimeZone: () => 'Europe/Lisbon',
+}));
 
 const router = { push: jest.fn(), replace: jest.fn() };
+let viewportWidth = 375;
 const messages: AppDictionary['schedule'] = {
   title: 'Weekly schedule',
   description: 'Choose a room.',
@@ -79,6 +83,36 @@ const messages: AppDictionary['schedule'] = {
   cancelConfirmation: 'Confirm cancellation',
   successCreated: 'Booking created',
   successCancelled: 'Booking cancelled',
+  mobile: {
+    selectedDate: 'Selected date',
+    openCalendar: 'Open month calendar',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+    today: 'Today',
+    selectRoom: 'Select meeting room',
+    changeRoom: 'Change',
+    selectedRoom: 'Selected room',
+    floor: 'Floor',
+    capacity: 'people',
+    noBookingsForDay: 'No bookings for this day',
+    browserTimezone: 'Your time',
+    officeTimezone: 'Office hours',
+    officeInterval: 'Kyiv',
+  },
+  duration: {
+    label: 'Duration',
+    thirtyMinutes: '30 min',
+    oneHour: '1 hour',
+    ninetyMinutes: '1.5 hours',
+    twoHours: '2 hours',
+    custom: 'Other end time',
+  },
+  accessibility: {
+    selectDay: 'Select',
+    selectedDay: 'selected',
+    currentDay: 'today',
+    bookingAtTime: 'Booking',
+  },
   errors: {
     rooms: 'Rooms failed',
     schedule: 'Schedule failed',
@@ -96,6 +130,19 @@ const messages: AppDictionary['schedule'] = {
 describe('weekly schedule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    viewportWidth = 375;
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: query.includes('min-width: 1024')
+        ? viewportWidth >= 1024
+        : viewportWidth >= 640 && viewportWidth < 1024,
+      media: query,
+      onchange: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
     jest.useFakeTimers().setSystemTime(new Date('2029-12-01T10:00:00.000Z'));
     router.push.mockReset();
     router.replace.mockReset();
@@ -115,25 +162,148 @@ describe('weekly schedule', () => {
     jest.useRealTimers();
   });
 
-  it('renders the manual week and opens booking creation from a future slot', async () => {
+  it('renders one compact day with a seven-day strip and opens the booking sheet', async () => {
     renderSchedule();
 
     expect(
-      await screen.findByRole('heading', { name: 'Weekly schedule' }),
-    ).toBeDefined();
-    expect(
-      (await screen.findByRole('combobox', { name: 'Meeting room' }))
+      (await screen.findByRole('combobox', { name: 'Select meeting room' }))
         .textContent,
-    ).toContain('Aquarium');
+    ).toContain('Change');
+    expect(
+      screen.getByRole('status', { name: 'Selected room: Aquarium' })
+        .textContent,
+    ).toContain('Floor 2 · 6 people');
+    expect(
+      document.querySelector('[data-schedule-presentation="compact"]'),
+    ).toBeDefined();
+    expect(screen.getAllByRole('button', { name: /^Select /u })).toHaveLength(
+      7,
+    );
     const available = await screen.findAllByRole('gridcell', {
       name: /Available/,
     });
 
-    fireEvent.click(available[0]!);
+    const firstAvailable = available[0];
+    if (!firstAvailable) throw new Error('Expected an available slot');
+    expect(firstAvailable.style.gridColumn).toBe('1');
+    fireEvent.click(firstAvailable);
     expect(
       await screen.findByRole('dialog', { name: 'Book a meeting room' }),
     ).toBeDefined();
     expect(screen.getByLabelText('Meeting title')).toBeDefined();
+    expect(screen.getByText('Duration')).toBeDefined();
+  });
+
+  it('renders exactly three days at medium width', async () => {
+    viewportWidth = 768;
+    renderSchedule();
+    await screen.findByRole('combobox', { name: 'Select meeting room' });
+    const grid = await waitFor(() => {
+      const result = document.querySelector(
+        '[data-schedule-presentation="medium"]',
+      );
+      expect(result).not.toBeNull();
+      return result;
+    });
+    expect(grid).not.toBeNull();
+    expect(grid?.querySelector('[role="grid"]')?.children).toHaveLength(4);
+  });
+
+  it('preserves the expanded seven-day presentation', async () => {
+    viewportWidth = 1440;
+    renderSchedule();
+    await screen.findByRole('combobox', { name: 'Select meeting room' });
+    const grid = await waitFor(() => {
+      const result = document.querySelector(
+        '[data-schedule-presentation="expanded"]',
+      );
+      expect(result).not.toBeNull();
+      return result;
+    });
+    expect(grid).not.toBeNull();
+    expect(grid?.querySelector('[role="grid"]')?.children).toHaveLength(8);
+  });
+
+  it('updates selected date and normalized week from the compact strip', async () => {
+    renderSchedule();
+    const day = (
+      await screen.findAllByRole('button', {
+        name: /^Select /u,
+      })
+    )[1];
+    if (!day) throw new Error('Expected a date-strip day');
+    fireEvent.click(day);
+    expect(router.push).toHaveBeenCalledWith(
+      expect.stringMatching(/week=2030-06-03.*date=2030-06-04/u),
+      { scroll: false },
+    );
+  });
+
+  it('shows exact local booking time and text ownership in compact mode', async () => {
+    jest.mocked(listRoomBookings).mockResolvedValue([
+      {
+        id: 'booking-1',
+        roomId: 'room-1',
+        title: 'Design sync',
+        startsAtUtc: '2030-06-03T06:00:00.000Z',
+        endsAtUtc: '2030-06-03T07:00:00.000Z',
+        author: { id: 'user-1', name: 'Alice' },
+        isMine: true,
+      },
+    ]);
+    renderSchedule();
+    const booking = await screen.findByRole('button', {
+      name: /Design sync.*07:00–08:00.*Your booking/u,
+    });
+    expect(booking.style.gridColumn).toBe('1');
+  });
+
+  it('stops booking durations at the next occupied interval', async () => {
+    jest.mocked(listRoomBookings).mockResolvedValue([
+      {
+        id: 'booking-next',
+        roomId: 'room-1',
+        title: 'Next meeting',
+        startsAtUtc: '2030-06-03T08:00:00.000Z',
+        endsAtUtc: '2030-06-03T09:00:00.000Z',
+        author: { id: 'user-2', name: 'Bob' },
+        isMine: false,
+      },
+    ]);
+    renderSchedule();
+
+    fireEvent.click(
+      await screen.findByRole('gridcell', {
+        name: /June 3, 2030.*08:30.*Available/u,
+      }),
+    );
+
+    expect(
+      screen.getByRole('button', { name: '30 min' }).hasAttribute('disabled'),
+    ).toBe(false);
+    expect(
+      screen.getByRole('button', { name: '1 hour' }).hasAttribute('disabled'),
+    ).toBe(true);
+    expect(
+      screen
+        .getByRole('button', { name: '1.5 hours' })
+        .hasAttribute('disabled'),
+    ).toBe(true);
+  });
+
+  it('opens the month picker and selects a date', async () => {
+    renderSchedule();
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Open month calendar' }),
+    );
+    expect(
+      await screen.findByRole('dialog', { name: 'Open month calendar' }),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: /June 12, 2030/u }));
+    expect(router.push).toHaveBeenCalledWith(
+      expect.stringMatching(/week=2030-06-10.*date=2030-06-12/u),
+      { scroll: false },
+    );
   });
 
   it('submits canonical ISO timestamps and refreshes the schedule', async () => {
@@ -150,7 +320,9 @@ describe('weekly schedule', () => {
     const available = await screen.findAllByRole('gridcell', {
       name: /Available/,
     });
-    fireEvent.click(available[0]!);
+    const firstAvailable = available[0];
+    if (!firstAvailable) throw new Error('Expected an available slot');
+    fireEvent.click(firstAvailable);
     fireEvent.change(await screen.findByLabelText('Meeting title'), {
       target: { value: 'Planning' },
     });
@@ -175,11 +347,11 @@ describe('weekly schedule', () => {
 
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith(
-        expect.stringContaining('week=2029-11-26'),
+        expect.stringMatching(/week=2029-11-26.*date=2029-12-01/u),
         { scroll: false },
       ),
     );
-    await screen.findByRole('combobox', { name: 'Meeting room' });
+    await screen.findByRole('combobox', { name: 'Select meeting room' });
   });
 });
 

@@ -2,6 +2,9 @@ import {
   BookingClientError,
   cancelBooking,
   createBooking,
+  isScheduleKeyForRoom,
+  listMyPastBookings,
+  listMyUpcomingBookings,
   listRoomBookings,
   listRooms,
 } from './booking-client';
@@ -110,5 +113,74 @@ describe('booking browser client', () => {
       }),
     ).rejects.toMatchObject({ code: 'BOOKING_CONFLICT', status: 409 });
     await expect(cancelBooking('booking/1')).resolves.toBeUndefined();
+  });
+
+  it('runtime-validates personal booking pages and encodes opaque cursors', async () => {
+    const item = {
+      id: 'booking-1',
+      title: 'Planning',
+      startsAtUtc: booking.startsAtUtc,
+      endsAtUtc: booking.endsAtUtc,
+      room: { id: 'room-1', name: 'Aquarium', floor: 1, capacity: 4 },
+      status: 'UPCOMING',
+      canCancel: true,
+    };
+    jest
+      .mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [item],
+            serverNowUtc: '2030-06-03T06:00:00.000Z',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [{ ...item, status: 'PAST', canCancel: false }],
+            serverNowUtc: '2030-06-03T09:00:00.000Z',
+            nextCursor: null,
+          }),
+        ),
+      );
+
+    await expect(listMyUpcomingBookings()).resolves.toMatchObject({
+      items: [{ id: 'booking-1', status: 'UPCOMING' }],
+    });
+    await expect(listMyPastBookings('cursor/value', 10)).resolves.toMatchObject(
+      { nextCursor: null },
+    );
+    expect(jest.mocked(fetch).mock.calls[1]?.[0]).toBe(
+      '/api/bookings/mine/past?limit=10&cursor=cursor%2Fvalue',
+    );
+  });
+
+  it('rejects noncanonical personal response timestamps and identifies affected schedule keys', async () => {
+    jest.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          items: [],
+          serverNowUtc: '2030-06-03T08:00:00+02:00',
+        }),
+      ),
+    );
+
+    await expect(listMyUpcomingBookings()).rejects.toMatchObject({
+      code: 'INVALID_RESPONSE',
+    });
+    expect(
+      isScheduleKeyForRoom(
+        [
+          'booking',
+          'schedule',
+          'room-1',
+          '2030-06-03T00:00:00.000Z',
+          '2030-06-10T00:00:00.000Z',
+        ],
+        'room-1',
+      ),
+    ).toBe(true);
+    expect(isScheduleKeyForRoom(['booking', 'mine'], 'room-1')).toBe(false);
   });
 });

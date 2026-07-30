@@ -10,6 +10,8 @@ import {
 import { RoomsDataAccessModule } from '@mr-booking/rooms-data-access';
 import { CancelBookingHandler, CreateBookingHandler } from './booking-handlers';
 import {
+  GetMyPastBookingsHandler,
+  GetMyUpcomingBookingsHandler,
   GetRoomsHandler,
   GetRoomScheduleHandler,
 } from './booking-query-handlers';
@@ -26,6 +28,8 @@ import {
     CancelBookingHandler,
     GetRoomsHandler,
     GetRoomScheduleHandler,
+    GetMyUpcomingBookingsHandler,
+    GetMyPastBookingsHandler,
     {
       provide: BOOKING_CLOCK,
       useExisting: AUTH_CLOCK,

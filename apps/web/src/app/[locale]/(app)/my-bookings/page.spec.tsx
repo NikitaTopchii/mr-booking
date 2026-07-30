@@ -1,46 +1,33 @@
 /** @jest-environment jsdom */
 
 jest.mock('server-only', () => ({}));
+jest.mock('@mr-booking/booking-feature-web', () => ({
+  MyBookings: ({
+    locale,
+    messages,
+  }: {
+    locale: string;
+    messages: { title: string };
+  }) => <div data-locale={locale}>{messages.title}</div>,
+}));
 
 import { render, screen } from '@testing-library/react';
 import MyBookingsPage from './page';
 
-describe('My bookings UI foundation', () => {
+describe('My bookings page composition', () => {
   it.each([
-    {
-      locale: 'uk',
-      title: 'Мої бронювання',
-      upcoming: 'Майбутніх бронювань поки немає.',
-      past: 'Минулі бронювання з’являться тут.',
-      action: 'Перейти до розкладу',
-      href: '/uk/schedule',
-    },
-    {
-      locale: 'en',
-      title: 'My bookings',
-      upcoming: 'You have no upcoming bookings yet.',
-      past: 'Past bookings will appear here.',
-      action: 'View schedule',
-      href: '/en/schedule',
-    },
+    ['uk', 'Мої бронювання'],
+    ['en', 'My bookings'],
   ] as const)(
-    'renders deliberate $locale empty states without booking records',
-    async ({ locale, title, upcoming, past, action, href }) => {
+    'passes the localized dictionary slice for %s',
+    async (locale, title) => {
       render(
         await MyBookingsPage({
           params: Promise.resolve({ locale }),
         }),
       );
 
-      expect(
-        screen.getByRole('heading', { level: 1, name: title }),
-      ).toBeDefined();
-      expect(screen.getByText(upcoming)).toBeDefined();
-      expect(screen.getByText(past)).toBeDefined();
-      expect(
-        screen.getByRole('link', { name: action }).getAttribute('href'),
-      ).toBe(href);
-      expect(screen.queryByRole('listitem')).toBeNull();
+      expect(screen.getByText(title).getAttribute('data-locale')).toBe(locale);
     },
   );
 });

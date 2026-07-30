@@ -154,18 +154,35 @@ timestamps to canonical UTC ISO 8601 strings with milliseconds and `Z`.
 
 ### Upcoming bookings
 
-- **Method/path:** `GET /api/me/bookings/upcoming`
+- **Method/path:** `GET /api/bookings/mine/upcoming`
 - **Authentication:** required
 - **Input:** none
-- **Success:** `200` with active bookings ordered by start ascending
+- **Success:** `200` with
+  `{ items: [{ id, title, startsAtUtc, endsAtUtc, room: { id, name, floor, capacity }, status, canCancel }], serverNowUtc }`
 - **Errors:** `UNAUTHENTICATED`
 - **Cache:** private, `no-store`
 
+Items are active, owned, and satisfy `endsAtUtc > serverNowUtc`. They order by
+`startsAtUtc ASC, id ASC`. `UPCOMING` items start after the authoritative
+clock and have `canCancel: true`; already-started active items are
+`IN_PROGRESS` and cannot be cancelled. All timestamps are canonical UTC ISO
+8601 strings with milliseconds and `Z`.
+
 ### Past bookings
 
-- **Method/path:** `GET /api/me/bookings/past`
+- **Method/path:** `GET /api/bookings/mine/past`
 - **Authentication:** required
-- **Input:** query `{ cursor?, limit? }` with bounded limit
-- **Success:** `200` with `{ items, nextCursor }`, newest first
-- **Errors:** `VALIDATION_FAILED`, `UNAUTHENTICATED`
+- **Input:** query `{ cursor?, limit? }`; `limit` defaults to 20 and is bounded
+  from 1 through 50
+- **Success:** `200` with
+  `{ items: [{ id, title, startsAtUtc, endsAtUtc, room, status: "PAST", canCancel: false }], serverNowUtc, nextCursor }`
+- **Errors:** `VALIDATION_ERROR`, `UNAUTHENTICATED`
 - **Cache:** private, `no-store`
+
+Past items are active, owned, and satisfy `endsAtUtc <= serverNowUtc`. They
+order by `startsAtUtc DESC, id DESC`. The opaque cursor carries the stable
+ordering tuple and carries a process-keyed HMAC signature; malformed or
+tampered cursors and invalid limits return `400 VALIDATION_ERROR`. The query
+requests `limit + 1` rows to decide whether another page exists. Cursors are
+intentionally invalidated by an API process restart. Cancelled and foreign
+bookings never appear.

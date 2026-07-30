@@ -27,6 +27,16 @@ export const createBookingBodySchema = z.strictObject({
   endsAtUtc: absoluteDateTimeSchema,
 });
 
+export const myPastBookingsQuerySchema = z
+  .strictObject({
+    cursor: z.string().min(1).max(1_000).optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+  })
+  .transform(({ cursor, limit }) => ({
+    cursor,
+    limit,
+  }));
+
 export interface RoomDto {
   readonly id: string;
   readonly name: string;
@@ -45,6 +55,25 @@ export interface ScheduleBookingDto {
     readonly name: string;
   };
   readonly isMine: boolean;
+}
+
+export interface MyBookingDto {
+  readonly id: string;
+  readonly title: string;
+  readonly startsAtUtc: string;
+  readonly endsAtUtc: string;
+  readonly room: RoomDto;
+  readonly status: 'UPCOMING' | 'IN_PROGRESS' | 'PAST';
+  readonly canCancel: boolean;
+}
+
+export interface MyBookingsDto {
+  readonly items: readonly MyBookingDto[];
+  readonly serverNowUtc: string;
+}
+
+export interface MyPastBookingsDto extends MyBookingsDto {
+  readonly nextCursor: string | null;
 }
 
 export type CreateBookingBody = z.output<typeof createBookingBodySchema>;

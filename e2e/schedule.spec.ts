@@ -9,13 +9,17 @@ test.describe('interactive weekly schedule', () => {
     await expect(
       page.getByRole('heading', { name: 'Weekly schedule' }),
     ).toBeVisible();
-    await expect(page).toHaveURL(/roomId=.*&week=\d{4}-\d{2}-\d{2}/u);
+    await expect(page).toHaveURL(
+      /date=\d{4}-\d{2}-\d{2}&week=\d{4}-\d{2}-\d{2}&roomId=.+/u,
+    );
   });
 
   test('selects rooms, navigates stable week URLs, and preserves state by locale', async ({
     page,
   }) => {
-    const roomSelect = page.getByRole('combobox', { name: 'Meeting room' });
+    const roomSelect = page.getByRole('combobox', {
+      name: 'Select meeting room',
+    });
     await roomSelect.click();
     await page.getByRole('option', { name: /Марс/u }).click();
     await expect(page).toHaveURL(/roomId=room-mars/u);
@@ -27,7 +31,9 @@ test.describe('interactive weekly schedule', () => {
 
     await page.getByRole('button', { name: /Open user menu/u }).click();
     await page.getByRole('menuitem', { name: 'Українська' }).click();
-    await expect(page).toHaveURL(/\/uk\/schedule\?roomId=room-mars&week=/u);
+    await expect(page).toHaveURL(
+      /\/uk\/schedule\?date=.*&week=.*&roomId=room-mars/u,
+    );
     await expect(
       page.getByRole('heading', { name: 'Тижневий розклад' }),
     ).toBeVisible();
@@ -36,17 +42,23 @@ test.describe('interactive weekly schedule', () => {
   test('creates, displays, inspects, and cancels an owned booking', async ({
     page,
   }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(
+      page.locator('[data-schedule-presentation="compact"]'),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Next week' }).click();
     const title = `E2E schedule ${Date.now()}`;
-    await page
+    const availableSlot = page
       .getByRole('gridcell', { name: /Available/u })
-      .first()
-      .click();
+      .first();
+    await expect(availableSlot).toBeVisible();
+    await availableSlot.click();
     await page.getByLabel('Meeting title').fill(title);
     await page.getByRole('button', { name: 'Book room' }).click();
 
     await expect(page.getByText('Booking created.')).toBeVisible();
     const booking = page.getByRole('button', {
-      name: new RegExp(`${title}, Booked by Alice`, 'u'),
+      name: new RegExp(`${title}.*Your booking`, 'u'),
     });
     await expect(booking).toBeVisible();
     await booking.click();
@@ -62,14 +74,33 @@ test.describe('interactive weekly schedule', () => {
   test('keeps the manual grid usable at required viewport sizes', async ({
     page,
   }) => {
-    for (const width of [375, 768, 1024, 1440]) {
-      await page.setViewportSize({ width, height: 900 });
+    for (const [width, expected] of [
+      [375, 'compact'],
+      [390, 'compact'],
+      [768, 'medium'],
+      [1024, 'expanded'],
+      [1440, 'expanded'],
+    ] as const) {
+      await page.setViewportSize({
+        width,
+        height: width === 390 ? 844 : 900,
+      });
       await expect(
         page.getByRole('grid', { name: 'Weekly schedule' }),
       ).toBeVisible();
       await expect(
-        page.getByRole('combobox', { name: 'Meeting room' }),
+        page.getByRole('combobox', { name: 'Select meeting room' }),
       ).toBeVisible();
+      await expect(
+        page.locator(`[data-schedule-presentation="${expected}"]`),
+      ).toBeVisible();
+      if (expected === 'compact') {
+        await expect(
+          page
+            .getByRole('group', { name: 'Selected date' })
+            .getByRole('button'),
+        ).toHaveCount(7);
+      }
       const dimensions = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
@@ -79,10 +110,35 @@ test.describe('interactive weekly schedule', () => {
       );
     }
   });
+
+  test('keeps the final compact slot above bottom navigation', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    const grid = page.locator('[data-schedule-presentation="compact"]');
+    await expect(grid).toBeVisible();
+    await grid.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const finalCell = grid.getByRole('gridcell').last();
+    const navigation = page.locator('[data-mobile-navigation]');
+    const [cellBox, navigationBox] = await Promise.all([
+      finalCell.boundingBox(),
+      navigation.boundingBox(),
+    ]);
+    expect(cellBox).not.toBeNull();
+    expect(navigationBox).not.toBeNull();
+    if (!cellBox || !navigationBox) {
+      throw new Error('Expected compact timeline and navigation bounds');
+    }
+    expect(cellBox.y + cellBox.height).toBeLessThanOrEqual(navigationBox.y);
+  });
 });
 
 test.describe('schedule timezone rendering', () => {
-  test.use({ timezoneId: 'America/New_York' });
+  test.use({
+    timezoneId: 'Europe/Lisbon',
+    viewport: { width: 390, height: 844 },
+  });
 
   test('uses browser-local labels while querying absolute ISO ranges', async ({
     page,
@@ -98,7 +154,12 @@ test.describe('schedule timezone rendering', () => {
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
-    await expect(page.getByText(/America\/New_York/u)).toBeVisible();
+    await expect(page.getByText('Your time: Europe/Lisbon')).toBeVisible();
+    await expect(
+      page
+        .getByRole('region', { name: 'Weekly schedule' })
+        .getByText('Office hours: 09:00–19:00 Europe/Kyiv'),
+    ).toBeVisible();
     await expect(
       page.getByRole('grid', { name: 'Weekly schedule' }),
     ).toBeVisible();

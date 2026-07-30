@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
 const absoluteDateTimeSchema = z.iso.datetime({ offset: true });
+const canonicalUtcDateTimeSchema = z.iso
+  .datetime()
+  .refine((value) => new Date(value).toISOString() === value);
 const roomSchema = z
   .object({
     id: z.string().min(1),
@@ -14,8 +17,8 @@ const bookingSchema = z
     id: z.string().min(1),
     roomId: z.string().min(1),
     title: z.string(),
-    startsAtUtc: absoluteDateTimeSchema,
-    endsAtUtc: absoluteDateTimeSchema,
+    startsAtUtc: canonicalUtcDateTimeSchema,
+    endsAtUtc: canonicalUtcDateTimeSchema,
     author: z
       .object({
         id: z.string().min(1),
@@ -30,6 +33,28 @@ const bookingsResponseSchema = z
   .object({ bookings: z.array(bookingSchema) })
   .strict();
 const bookingResponseSchema = z.object({ booking: bookingSchema }).strict();
+const myBookingSchema = z
+  .object({
+    id: z.string().min(1),
+    title: z.string(),
+    startsAtUtc: canonicalUtcDateTimeSchema,
+    endsAtUtc: canonicalUtcDateTimeSchema,
+    room: roomSchema,
+    status: z.enum(['UPCOMING', 'IN_PROGRESS', 'PAST']),
+    canCancel: z.boolean(),
+  })
+  .strict();
+const myBookingsResponseSchema = z
+  .object({
+    items: z.array(myBookingSchema),
+    serverNowUtc: canonicalUtcDateTimeSchema,
+  })
+  .strict();
+const myPastBookingsResponseSchema = myBookingsResponseSchema
+  .extend({
+    nextCursor: z.string().min(1).nullable(),
+  })
+  .strict();
 const apiErrorSchema = z
   .object({
     code: z.string().min(1),
@@ -38,6 +63,11 @@ const apiErrorSchema = z
 
 export type Room = z.infer<typeof roomSchema>;
 export type ScheduleBooking = z.infer<typeof bookingSchema>;
+export type MyBooking = z.infer<typeof myBookingSchema>;
+export type MyBookingsResponse = z.infer<typeof myBookingsResponseSchema>;
+export type MyPastBookingsResponse = z.infer<
+  typeof myPastBookingsResponseSchema
+>;
 
 export interface BookingRange {
   readonly fromUtc: string;
@@ -68,7 +98,19 @@ export const bookingKeys = {
   rooms: () => ['booking', 'rooms'] as const,
   schedule: (roomId: string, range: BookingRange) =>
     ['booking', 'schedule', roomId, range.fromUtc, range.toUtc] as const,
+  mineUpcoming: () => ['booking', 'mine', 'upcoming'] as const,
+  minePast: (cursor: string | null, limit: number) =>
+    ['booking', 'mine', 'past', cursor, limit] as const,
 };
+
+export function isScheduleKeyForRoom(key: unknown, roomId: string): boolean {
+  return (
+    Array.isArray(key) &&
+    key[0] === 'booking' &&
+    key[1] === 'schedule' &&
+    key[2] === roomId
+  );
+}
 
 export async function listRooms(): Promise<readonly Room[]> {
   const response = await request('/api/rooms', { method: 'GET' });
@@ -115,6 +157,28 @@ export async function cancelBooking(bookingId: string): Promise<void> {
   await request(`/api/bookings/${encodeURIComponent(bookingId)}`, {
     method: 'DELETE',
   });
+}
+
+export async function listMyUpcomingBookings(): Promise<MyBookingsResponse> {
+  const response = await request('/api/bookings/mine/upcoming', {
+    method: 'GET',
+  });
+  return parseResponse(response, myBookingsResponseSchema);
+}
+
+export async function listMyPastBookings(
+  cursor: string | null,
+  limit = 20,
+): Promise<MyPastBookingsResponse> {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (cursor) {
+    query.set('cursor', cursor);
+  }
+  const response = await request(
+    `/api/bookings/mine/past?${query.toString()}`,
+    { method: 'GET' },
+  );
+  return parseResponse(response, myPastBookingsResponseSchema);
 }
 
 async function request(endpoint: string, init: RequestInit): Promise<Response> {

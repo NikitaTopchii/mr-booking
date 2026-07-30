@@ -41,6 +41,7 @@ export class BookingExceptionFilter implements ExceptionFilter {
 
     if (
       exception instanceof ZodError ||
+      (exception instanceof Error && exception.message === 'INVALID_CURSOR') ||
       exception instanceof BadRequestException ||
       exception instanceof ScheduleRangeValidationError
     ) {

@@ -12,7 +12,8 @@ The current phase includes registration with automatic login, login, logout,
 server-restored protected routes, Argon2id password hashes, opaque
 database-backed sessions, deterministic users and rooms, health checks,
 race-safe booking commands, authenticated room/schedule/booking endpoints,
-Docker images, and quality gates. The weekly calendar UI remains deferred.
+the interactive weekly calendar, the cursor-paginated My bookings page,
+Docker images, and quality gates.
 
 ## Prerequisites
 
@@ -180,15 +181,17 @@ spacing and reserved page padding; the user menu remains available in the
 header. Both navigation forms use `aria-current="page"`, visible focus, and at
 least 44px practical targets.
 
-My bookings currently provides localized Upcoming and Past UI foundations
-with deliberate empty-state copy and a localized Schedule action. It does not
-query or persist bookings and does not contain mock booking rows. Ordering,
-pagination, cancellation, timezone formatting, and room/week navigation are
-not connected in Phase 3B.
+My bookings loads only the authenticated user's authoritative active records.
+Upcoming includes future and in-progress meetings nearest first. Past is
+newest first and incrementally loads opaque cursor pages. Cards show safe room
+metadata and browser-local date/time, link to the matching room and
+browser-local Monday, and expose server-authorized future cancellation through
+an accessible confirmation dialog. Upcoming, Past, and incremental pages have
+independent loading, empty, retry, error, and end states.
 
 ## Booking API and command foundation
 
-Phase 3B exposes the Phase 3A authoritative write core through four
+The booking API exposes the authoritative write core and read models through
 session-authenticated endpoints:
 
 - `GET /api/rooms` returns safe room metadata in deterministic floor/name
@@ -197,7 +200,11 @@ session-authenticated endpoints:
   returns active bookings overlapping the requested half-open absolute range;
 - `POST /api/bookings` creates a booking for the session user;
 - `DELETE /api/bookings/:bookingId` cancels an owned future booking and
-  returns `204`.
+  returns `204`;
+- `GET /api/bookings/mine/upcoming` returns owned active bookings whose end is
+  after the authoritative server clock;
+- `GET /api/bookings/mine/past?limit=20&cursor=...` returns owned completed
+  active bookings through stable opaque cursor pagination.
 
 Booking request timestamps are ISO 8601 absolute datetime strings with `Z` or
 an explicit offset, for example `2030-06-03T09:00:00.000+03:00`. Responses
@@ -205,12 +212,31 @@ normalize every booking timestamp to canonical UTC such as
 `2030-06-03T06:00:00.000Z`. Datetimes without timezone information are
 rejected. Query-string datetime values must be URL-encoded when they contain
 an explicit `+` offset.
-The browser schedule chooses its Monday–Sunday URL week in the browser
-timezone, derives the corresponding office slots as absolute instants, and
-sends canonical ISO 8601 range parameters. Booking creation validity is still
-evaluated authoritatively in `Europe/Kyiv`.
+The browser schedule uses `date=YYYY-MM-DD` as its authoritative browser-local
+selected date and keeps a normalized Monday `week` for legacy compatibility.
+It requests only the active compact one-day, medium three-day, or expanded
+seven-day half-open range as canonical ISO 8601 parameters. Booking creation
+validity is still evaluated authoritatively in `Europe/Kyiv`.
 Schedule reads exclude cancelled bookings and return only author ID/name.
 `isMine` is server-derived, and booking-slot rows are never public.
+Personal-booking reads join only safe room ID/name/floor/capacity metadata.
+Their DTOs include server-derived `status`, `canCancel`, and `serverNowUtc`;
+cancelled and foreign rows are excluded.
+
+Example personal-booking requests after authentication:
+
+```bash
+curl --cookie cookie.txt http://localhost:3000/api/bookings/mine/upcoming
+curl --cookie cookie.txt \
+  'http://localhost:3000/api/bookings/mine/past?limit=20'
+```
+
+Use the returned opaque `nextCursor` without decoding or modifying it:
+
+```bash
+curl --cookie cookie.txt \
+  'http://localhost:3000/api/bookings/mine/past?limit=20&cursor=RETURNED_CURSOR'
+```
 
 The authoritative booking rules remain:
 
@@ -297,22 +323,25 @@ login, and session persistence across a normal Docker Compose restart.
 
 ## Phase status
 
-Phase 3C adds the localized interactive weekly schedule. The Server Component
-route passes only its dictionary slice to an SWR-powered client boundary. The
-manual Monday–Sunday grid renders 30-minute Kyiv office slots in the browser
-timezone, persists `roomId` and Monday `week` in the URL, and supports room
-selection, week navigation, creation, booking details, conflict refresh, and
-owner cancellation. Browser responses are runtime-validated and every range
-or mutation timestamp uses absolute ISO 8601 at the HTTP boundary.
+Phase 3C.1 adapts the localized interactive schedule without changing its API
+or domain. Below 640px it renders one selected day with a seven-day strip,
+secondary month picker, sticky context, and mobile booking/details sheets.
+From 640–1023px it renders the selected date plus two days; from 1024px it
+retains the Monday–Sunday grid. All modes share one selected room/date model,
+one SWR resource, and server-confirmed mutations. The shell reserves a
+tokenized bottom-navigation and safe-area inset so the final slot remains
+reachable.
+
+Phase 3D integrates authoritative upcoming and cursor-paginated past bookings,
+browser-local booking cards, schedule deep links, and owner cancellation.
 
 Phase 3B completed the authenticated room catalogue, room-range schedule,
-booking creation, and owner cancellation HTTP API. Real My bookings data
-remains deliberately deferred.
+booking creation, and owner cancellation HTTP API.
 
 Phase 2D completed the authenticated shell and My bookings UI foundation.
 Password recovery/change, OAuth, magic links, MFA, CAPTCHA, roles/admin, email
 verification, account deletion, device management, and logout-all are
-intentionally deferred. Personal-list SWR, PWA support, notifications, Web
-Push, and recurring bookings are outside Phase 3C.
+intentionally deferred. PWA support, notifications, Web Push, and recurring
+bookings remain outside the implemented phases.
 Login throttling and expired-session cleanup are documented hardening work,
 not placeholder implementations.

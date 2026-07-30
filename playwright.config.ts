@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { defineConfig, devices } from '@playwright/test';
 
-const databasePath = join(
-  tmpdir(),
-  `mr-booking-auth-e2e-${process.pid}.sqlite`,
-);
+const databasePath =
+  process.env['E2E_DATABASE_PATH'] ??
+  join(tmpdir(), `mr-booking-auth-e2e-${process.pid}.sqlite`);
+process.env['E2E_DATABASE_PATH'] = databasePath;
 const webPort = 3101;
 const apiPort = 3102;
 

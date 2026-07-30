@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import {
   BOOKING_REPOSITORY,
   BOOKING_SCHEDULE_READER,
+  MY_BOOKINGS_READER,
 } from '@mr-booking/booking-domain';
 import { DatabaseModule, DatabaseService } from '@mr-booking/shared-database';
 import {
   DrizzleBookingRepository,
   DrizzleBookingScheduleReader,
+  DrizzleMyBookingsReader,
 } from './booking-repository';
 
 @Module({
@@ -32,7 +34,17 @@ import {
       provide: BOOKING_SCHEDULE_READER,
       useExisting: DrizzleBookingScheduleReader,
     },
+    {
+      provide: DrizzleMyBookingsReader,
+      inject: [DatabaseService],
+      useFactory: (databaseService: DatabaseService) =>
+        new DrizzleMyBookingsReader(databaseService),
+    },
+    {
+      provide: MY_BOOKINGS_READER,
+      useExisting: DrizzleMyBookingsReader,
+    },
   ],
-  exports: [BOOKING_REPOSITORY, BOOKING_SCHEDULE_READER],
+  exports: [BOOKING_REPOSITORY, BOOKING_SCHEDULE_READER, MY_BOOKINGS_READER],
 })
 export class BookingDataAccessModule {}

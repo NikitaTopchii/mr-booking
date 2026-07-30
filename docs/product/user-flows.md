@@ -117,23 +117,19 @@ mutation before the server succeeds.
 
 ## 11. Upcoming personal bookings
 
-- **Phase 2D foundation:** the protected localized page and upcoming/past
-  sections exist with explicit UI-foundation empty states and a localized
-  Schedule action. No booking query runs yet, so this does not claim an
-  authoritative empty result.
 - **Starting state:** authenticated user opens personal bookings.
-- **Actions:** view or select an upcoming item.
+- **Actions:** view or select an upcoming item; cancel a future item through
+  the confirmation dialog.
 - **Loading:** list skeleton/progress.
-- **Success:** active non-past items ordered nearest first.
+- **Success:** active non-past items ordered nearest first; cancellation is
+  server-confirmed before the list and affected schedule cache revalidate.
 - **Errors:** query error with retry; empty state when none exist.
-- **Server checks:** authenticated user scope and server-time partition.
+- **Server checks:** session-derived user scope, server-time partition, and
+  cancellation ownership/cutoff.
 - **Navigation:** selected item opens matching room/week.
 
 ## 12. Past-booking navigation
 
-- **Phase 2D foundation:** the Past section is present, but rows, ordering,
-  pagination, timezone formatting, and room/week navigation wait for the
-  booking domain and API.
 - **Starting state:** personal bookings with past section.
 - **Actions:** load more and select an item.
 - **Loading:** incremental control prevents duplicate requests.
@@ -145,10 +141,15 @@ mutation before the server succeeds.
 ## 13. Mobile schedule usage
 
 - **Starting state:** authenticated user on a phone-width viewport.
-- **Actions:** select room, navigate week/day, inspect booking, start creation.
+- **Actions:** select a room; choose a day from the seven-day strip, Today,
+  week controls, or month picker; inspect a booking; create from a free slot.
 - **Loading:** compact states preserve room/week context.
-- **Success:** core schedule and booking behavior works without hover or a
-  shrunken desktop-only grid.
+- **Success:** compact renders one full-width day, medium renders the selected
+  day and following two days, and expanded retains the Monday-based week.
+  Booking sheets show exact browser-local time and Kyiv office time when the
+  zones differ.
 - **Errors:** readable inline/retry states; offline remains non-mutating.
 - **Server checks:** identical to desktop; viewport never changes authority.
-- **Navigation:** controls and deep links remain keyboard/touch accessible.
+- **Navigation:** `date=YYYY-MM-DD` is authoritative, `week` is a normalized
+  compatibility value, and room/date deep links remain keyboard/touch
+  accessible across reload and browser history.

@@ -68,7 +68,7 @@ export function ApplicationNavigation({
       <nav
         aria-label={label}
         data-mobile-navigation
-        className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 mx-auto max-w-sm rounded-[2rem] border border-border/80 bg-card p-1.5 shadow-xl md:hidden"
+        className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 mx-auto min-h-[var(--mobile-nav-height)] max-w-sm rounded-[2rem] border border-border/80 bg-card p-1.5 shadow-xl md:hidden"
       >
         <ul className="relative grid grid-cols-2 gap-2">
           <li

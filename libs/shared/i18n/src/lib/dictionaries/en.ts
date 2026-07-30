@@ -122,6 +122,36 @@ export const dictionary = {
       'This will release the room for everyone. This action cannot be undone.',
     successCreated: 'Booking created.',
     successCancelled: 'Booking cancelled.',
+    mobile: {
+      selectedDate: 'Selected date',
+      openCalendar: 'Open month calendar',
+      previousMonth: 'Previous month',
+      nextMonth: 'Next month',
+      today: 'Today',
+      selectRoom: 'Select meeting room',
+      changeRoom: 'Change',
+      selectedRoom: 'Selected room',
+      floor: 'Floor',
+      capacity: 'people',
+      noBookingsForDay: 'No bookings for this day.',
+      browserTimezone: 'Your time',
+      officeTimezone: 'Office hours',
+      officeInterval: 'Kyiv',
+    },
+    duration: {
+      label: 'Duration',
+      thirtyMinutes: '30 min',
+      oneHour: '1 hour',
+      ninetyMinutes: '1.5 hours',
+      twoHours: '2 hours',
+      custom: 'Other end time',
+    },
+    accessibility: {
+      selectDay: 'Select',
+      selectedDay: 'selected',
+      currentDay: 'today',
+      bookingAtTime: 'Booking',
+    },
     errors: {
       rooms: 'We could not load meeting rooms.',
       schedule: 'We could not load this schedule.',
@@ -138,21 +168,54 @@ export const dictionary = {
   myBookings: {
     title: 'My bookings',
     description:
-      'Your upcoming and past meeting-room bookings will be collected here.',
+      'Review your upcoming meetings, revisit past bookings, or open the matching room and week.',
+    localTime: 'Times shown in',
+    loading: 'Loading bookings…',
+    retry: 'Try again',
+    loadMore: 'Load more',
+    loadingMore: 'Loading more…',
+    endOfHistory: 'You have reached the end of your booking history.',
     upcoming: {
       title: 'Upcoming',
       emptyTitle: 'You have no upcoming bookings yet.',
-      emptyDescription:
-        'Your nearest confirmed bookings will appear here once booking data is connected.',
+      emptyDescription: 'Open the schedule to reserve a meeting room.',
+      error: 'We could not load your upcoming bookings.',
     },
     past: {
       title: 'Past',
       emptyTitle: 'Past bookings will appear here.',
-      emptyDescription:
-        'History will be connected to authoritative booking data in a later phase.',
+      emptyDescription: 'Completed meetings will be kept here for reference.',
+      error: 'We could not load your booking history.',
+      loadMoreError:
+        'We could not load the next page. Your existing history is still available.',
     },
     actions: {
       viewSchedule: 'View schedule',
+      openSchedule: 'Open in schedule',
+      cancel: 'Cancel booking',
+    },
+    floor: 'Floor',
+    capacity: 'people',
+    statuses: {
+      UPCOMING: 'Upcoming',
+      IN_PROGRESS: 'In progress',
+      PAST: 'Past',
+    },
+    cancellation: {
+      title: 'Cancel booking?',
+      description: 'This will release the room for everyone else.',
+      consequence: 'The cancelled booking will be removed from your lists.',
+      keep: 'Keep booking',
+      confirm: 'Cancel booking',
+      confirming: 'Cancelling…',
+      success: 'Booking cancelled.',
+      errors: {
+        stale: 'This booking no longer exists. The list has been refreshed.',
+        notCancellable:
+          'This booking has already started and can no longer be cancelled.',
+        unauthenticated: 'Your session expired. Sign in again to continue.',
+        service: 'We could not cancel this booking. Please try again.',
+      },
     },
   },
 } satisfies AppDictionary;

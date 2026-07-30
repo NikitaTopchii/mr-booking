@@ -69,6 +69,29 @@ test('booking API uses ISO 8601 timestamps through the gateway', async ({
     }),
   );
 
+  const upcomingResponse = await request.get('/api/bookings/mine/upcoming');
+  expect(upcomingResponse.status()).toBe(200);
+  const upcoming = (await upcomingResponse.json()) as {
+    items: { id: string; startsAtUtc: string; endsAtUtc: string }[];
+    serverNowUtc: string;
+  };
+  expect(upcoming.serverNowUtc).toMatch(/\.\d{3}Z$/u);
+  expect(upcoming.items).toContainEqual(
+    expect.objectContaining({
+      id: created.booking.id,
+      startsAtUtc: startsAt.toISOString(),
+      endsAtUtc: endsAt.toISOString(),
+    }),
+  );
+
+  const pastResponse = await request.get('/api/bookings/mine/past?limit=20');
+  expect(pastResponse.status()).toBe(200);
+  await expect(pastResponse.json()).resolves.toMatchObject({
+    items: expect.any(Array),
+    nextCursor: null,
+    serverNowUtc: expect.stringMatching(/\.\d{3}Z$/u),
+  });
+
   const timezoneLessResponse = await request.get(
     `/api/rooms/${roomId}/bookings?fromUtc=2030-06-03T09%3A00%3A00&toUtc=${encodeURIComponent(rangeEnd)}`,
   );

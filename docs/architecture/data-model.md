@@ -146,6 +146,14 @@ The Phase 3B room-schedule read model queries `bookings` directly, joins only
 overlap semantics. `booking_slots` remains an internal write-concurrency
 mechanism and is never an API response model.
 
+The Phase 3D personal-booking read model also queries `bookings` directly and
+joins only safe room metadata. It scopes by `author_user_id`, excludes
+cancelled rows, partitions on `ends_at_utc` using the authoritative server
+clock, and uses `(starts_at_utc, id)` stable cursor ordering. The existing
+partial active `(author_user_id, starts_at_utc)` index covers the ownership
+filter and primary ordering, so Phase 3D does not change the schema or UTC
+epoch-millisecond representation.
+
 ## Deferred bonus extensions
 
 Recurring series, notifications, outbox records, push subscriptions, and

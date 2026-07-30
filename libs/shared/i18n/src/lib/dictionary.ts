@@ -113,6 +113,36 @@ export interface AppDictionary {
     readonly cancelConfirmation: string;
     readonly successCreated: string;
     readonly successCancelled: string;
+    readonly mobile: {
+      readonly selectedDate: string;
+      readonly openCalendar: string;
+      readonly previousMonth: string;
+      readonly nextMonth: string;
+      readonly today: string;
+      readonly selectRoom: string;
+      readonly changeRoom: string;
+      readonly selectedRoom: string;
+      readonly floor: string;
+      readonly capacity: string;
+      readonly noBookingsForDay: string;
+      readonly browserTimezone: string;
+      readonly officeTimezone: string;
+      readonly officeInterval: string;
+    };
+    readonly duration: {
+      readonly label: string;
+      readonly thirtyMinutes: string;
+      readonly oneHour: string;
+      readonly ninetyMinutes: string;
+      readonly twoHours: string;
+      readonly custom: string;
+    };
+    readonly accessibility: {
+      readonly selectDay: string;
+      readonly selectedDay: string;
+      readonly currentDay: string;
+      readonly bookingAtTime: string;
+    };
     readonly errors: {
       readonly rooms: string;
       readonly schedule: string;
@@ -129,18 +159,51 @@ export interface AppDictionary {
   readonly myBookings: {
     readonly title: string;
     readonly description: string;
+    readonly localTime: string;
+    readonly loading: string;
+    readonly retry: string;
+    readonly loadMore: string;
+    readonly loadingMore: string;
+    readonly endOfHistory: string;
     readonly upcoming: {
       readonly title: string;
       readonly emptyTitle: string;
       readonly emptyDescription: string;
+      readonly error: string;
     };
     readonly past: {
       readonly title: string;
       readonly emptyTitle: string;
       readonly emptyDescription: string;
+      readonly error: string;
+      readonly loadMoreError: string;
     };
     readonly actions: {
       readonly viewSchedule: string;
+      readonly openSchedule: string;
+      readonly cancel: string;
+    };
+    readonly floor: string;
+    readonly capacity: string;
+    readonly statuses: {
+      readonly UPCOMING: string;
+      readonly IN_PROGRESS: string;
+      readonly PAST: string;
+    };
+    readonly cancellation: {
+      readonly title: string;
+      readonly description: string;
+      readonly consequence: string;
+      readonly keep: string;
+      readonly confirm: string;
+      readonly confirming: string;
+      readonly success: string;
+      readonly errors: {
+        readonly stale: string;
+        readonly notCancellable: string;
+        readonly unauthenticated: string;
+        readonly service: string;
+      };
     };
   };
 }

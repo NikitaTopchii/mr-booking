@@ -41,6 +41,28 @@ const scheduleBookingSchema = z.strictObject({
   }),
   isMine: z.boolean(),
 });
+const myBookingSchema = z.strictObject({
+  id: z.string(),
+  title: z.string(),
+  startsAtUtc: z.iso
+    .datetime()
+    .refine((value) => new Date(value).toISOString() === value),
+  endsAtUtc: z.iso
+    .datetime()
+    .refine((value) => new Date(value).toISOString() === value),
+  room: roomSchema,
+  status: z.enum(['UPCOMING', 'IN_PROGRESS', 'PAST']),
+  canCancel: z.boolean(),
+});
+const myBookingsSchema = z.strictObject({
+  items: z.array(myBookingSchema),
+  serverNowUtc: z.iso
+    .datetime()
+    .refine((value) => new Date(value).toISOString() === value),
+});
+const myPastBookingsSchema = myBookingsSchema.extend({
+  nextCursor: z.string().nullable(),
+});
 
 class MutableClock implements BookingClock {
   public constructor(public value: number) {}
@@ -123,6 +145,18 @@ describe('rooms and bookings API', () => {
           request(application.getHttpServer()).delete(
             '/api/bookings/unknown-booking',
           ),
+      ],
+      [
+        'my upcoming bookings',
+        () =>
+          request(application.getHttpServer()).get(
+            '/api/bookings/mine/upcoming',
+          ),
+      ],
+      [
+        'my past bookings',
+        () =>
+          request(application.getHttpServer()).get('/api/bookings/mine/past'),
       ],
     ])('rejects unauthenticated %s requests', async (_name, perform) => {
       await perform().expect(401).expect({ code: 'UNAUTHENTICATED' });
@@ -474,11 +508,16 @@ describe('rooms and bookings API', () => {
     });
 
     it('maps overlapping and concurrent slot conflicts to 409', async () => {
-      const overlapStart = createStart + 3 * day;
+      const overlapStart = createStart + 3 * day + hour;
       await alice
         .post('/api/bookings')
         .send(validBookingInput(overlapStart, 'Winner'))
         .expect(201);
+      await bob
+        .post('/api/bookings')
+        .send(validBookingInput(overlapStart - halfHour, 'Crosses start'))
+        .expect(409)
+        .expect({ code: 'BOOKING_CONFLICT' });
       await bob
         .post('/api/bookings')
         .send(validBookingInput(overlapStart + halfHour, 'Overlap'))
@@ -499,6 +538,155 @@ describe('rooms and bookings API', () => {
       expect(attempts.find(({ status }) => status === 409)?.body).toEqual({
         code: 'BOOKING_CONFLICT',
       });
+    });
+  });
+
+  describe('personal bookings', () => {
+    let charlie: SuperAgentTest;
+    let charlieId: string;
+
+    beforeAll(async () => {
+      charlie = request.agent(application.getHttpServer());
+      charlieId = await register(
+        charlie,
+        'Charlie',
+        'charlie-booking@example.com',
+      );
+      [
+        {
+          id: 'mine-ongoing',
+          startsAtUtc: serverNowUtc - halfHour,
+          endsAtUtc: serverNowUtc + halfHour,
+          title: 'Ongoing',
+        },
+        {
+          id: 'mine-upcoming-b',
+          startsAtUtc: serverNowUtc + 2 * hour,
+          endsAtUtc: serverNowUtc + 3 * hour,
+          title: 'Upcoming B',
+        },
+        {
+          id: 'mine-upcoming-a',
+          startsAtUtc: serverNowUtc + 2 * hour,
+          endsAtUtc: serverNowUtc + 3 * hour,
+          title: 'Upcoming A',
+        },
+        {
+          id: 'mine-past-c',
+          startsAtUtc: serverNowUtc - 4 * hour,
+          endsAtUtc: serverNowUtc - 3 * hour,
+          title: 'Past C',
+        },
+        {
+          id: 'mine-past-b',
+          startsAtUtc: serverNowUtc - 4 * hour,
+          endsAtUtc: serverNowUtc - 3 * hour,
+          title: 'Past B',
+        },
+        {
+          id: 'mine-past-a',
+          startsAtUtc: serverNowUtc - 6 * hour,
+          endsAtUtc: serverNowUtc - 5 * hour,
+          title: 'Past A',
+        },
+      ].forEach((record) =>
+        insertBooking({
+          ...record,
+          authorUserId: charlieId,
+          roomId: 'room-mars',
+        }),
+      );
+      insertBooking({
+        id: 'mine-cancelled',
+        authorUserId: charlieId,
+        roomId: 'room-mars',
+        title: 'Cancelled',
+        startsAtUtc: serverNowUtc + 5 * hour,
+        endsAtUtc: serverNowUtc + 6 * hour,
+        cancelledAtUtc: serverNowUtc - hour,
+      });
+    });
+
+    it('returns upcoming and in-progress rows with safe room metadata and server-derived cancellation state', async () => {
+      const response = await charlie
+        .get('/api/bookings/mine/upcoming')
+        .expect(200)
+        .expect('Cache-Control', 'private, no-store');
+      const parsed = myBookingsSchema.parse(response.body);
+
+      expect(parsed.serverNowUtc).toBe(iso(serverNowUtc));
+      expect(parsed.items.map(({ id }) => id)).toEqual([
+        'mine-ongoing',
+        'mine-upcoming-a',
+        'mine-upcoming-b',
+      ]);
+      expect(parsed.items[0]).toEqual(
+        expect.objectContaining({
+          status: 'IN_PROGRESS',
+          canCancel: false,
+          room: expect.objectContaining({
+            id: 'room-mars',
+            name: expect.any(String),
+            floor: 2,
+            capacity: 6,
+          }),
+        }),
+      );
+      expect(parsed.items[1]).toEqual(
+        expect.objectContaining({ status: 'UPCOMING', canCancel: true }),
+      );
+      expect(JSON.stringify(parsed)).not.toMatch(
+        /author|cancelledAt|createdAt/,
+      );
+    });
+
+    it('paginates past rows with an opaque stable cursor and rejects malformed pagination', async () => {
+      const firstResponse = await charlie
+        .get('/api/bookings/mine/past?limit=2')
+        .expect(200);
+      const first = myPastBookingsSchema.parse(firstResponse.body);
+      expect(first.items.map(({ id }) => id)).toEqual([
+        'mine-past-c',
+        'mine-past-b',
+      ]);
+      expect(
+        first.items.every(
+          ({ status, canCancel }) => status === 'PAST' && !canCancel,
+        ),
+      ).toBe(true);
+      expect(first.nextCursor).toEqual(expect.any(String));
+
+      const secondResponse = await charlie
+        .get(
+          `/api/bookings/mine/past?limit=2&cursor=${encodeURIComponent(first.nextCursor ?? '')}`,
+        )
+        .expect(200);
+      const second = myPastBookingsSchema.parse(secondResponse.body);
+      expect(second.items.map(({ id }) => id)).toEqual(['mine-past-a']);
+      expect(second.nextCursor).toBeNull();
+
+      await charlie
+        .get('/api/bookings/mine/past?limit=0')
+        .expect(400)
+        .expect({ code: 'VALIDATION_ERROR' });
+      await charlie
+        .get('/api/bookings/mine/past?limit=51')
+        .expect(400)
+        .expect({ code: 'VALIDATION_ERROR' });
+      await charlie
+        .get('/api/bookings/mine/past?cursor=not-a-cursor')
+        .expect(400)
+        .expect({ code: 'VALIDATION_ERROR' });
+      const cursor = first.nextCursor ?? '';
+      const tamperedCursor = `${cursor.slice(0, -1)}${
+        cursor.endsWith('A') ? 'B' : 'A'
+      }`;
+      await charlie
+        .get(
+          `/api/bookings/mine/past?cursor=${encodeURIComponent(tamperedCursor)}`,
+        )
+        .expect(400)
+        .expect({ code: 'VALIDATION_ERROR' });
     });
   });
 

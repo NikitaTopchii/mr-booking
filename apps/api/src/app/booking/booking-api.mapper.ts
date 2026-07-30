@@ -1,6 +1,16 @@
 import type { SafeUser } from '@mr-booking/auth-domain';
-import type { Booking, ScheduleBooking } from '@mr-booking/booking-domain';
-import type { ScheduleBookingDto } from './booking-api.schemas';
+import type {
+  Booking,
+  MyBookingsResult,
+  MyPastBookingsResult,
+  ScheduleBooking,
+} from '@mr-booking/booking-domain';
+import type {
+  MyBookingsDto,
+  MyPastBookingsDto,
+  ScheduleBookingDto,
+} from './booking-api.schemas';
+import { encodeMyBookingsCursor } from './booking-cursor';
 
 export function toScheduleBookingDto(
   booking: ScheduleBooking,
@@ -28,4 +38,26 @@ export function toCreatedBookingDto(
     },
     isMine: true,
   });
+}
+
+export function toMyBookingsDto(result: MyBookingsResult): MyBookingsDto {
+  return {
+    items: result.items.map((booking) => ({
+      ...booking,
+      startsAtUtc: new Date(booking.startsAtUtc).toISOString(),
+      endsAtUtc: new Date(booking.endsAtUtc).toISOString(),
+    })),
+    serverNowUtc: new Date(result.serverNowUtc).toISOString(),
+  };
+}
+
+export function toMyPastBookingsDto(
+  result: MyPastBookingsResult,
+): MyPastBookingsDto {
+  return {
+    ...toMyBookingsDto(result),
+    nextCursor: result.nextCursor
+      ? encodeMyBookingsCursor(result.nextCursor)
+      : null,
+  };
 }
