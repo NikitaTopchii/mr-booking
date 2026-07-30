@@ -2,7 +2,7 @@
 
 import { useLogout } from '@mr-booking/auth-feature-web';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { UserMenu } from './user-menu';
 
 jest.mock('@mr-booking/auth-feature-web', () => ({
@@ -10,11 +10,13 @@ jest.mock('@mr-booking/auth-feature-web', () => ({
 }));
 jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
+  useSearchParams: jest.fn(),
 }));
 
 const logout = jest.fn();
 const useLogoutMock = jest.mocked(useLogout);
 const usePathnameMock = jest.mocked(usePathname);
+const useSearchParamsMock = jest.mocked(useSearchParams);
 
 describe('authenticated user menu', () => {
   beforeAll(() => {
@@ -39,11 +41,35 @@ describe('authenticated user menu', () => {
   beforeEach(() => {
     logout.mockReset();
     usePathnameMock.mockReturnValue('/uk/my-bookings');
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams() as ReturnType<typeof useSearchParams>,
+    );
     useLogoutMock.mockReturnValue({
       submitting: false,
       failed: false,
       logout,
     });
+  });
+
+  it('preserves schedule URL state when changing locale', () => {
+    usePathnameMock.mockReturnValue('/uk/schedule');
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams('roomId=room-1&week=2030-06-03') as ReturnType<
+        typeof useSearchParams
+      >,
+    );
+    renderMenu();
+
+    fireEvent.keyDown(
+      screen.getByRole('button', {
+        name: 'Відкрити меню користувача: Олена Коваль',
+      }),
+      { key: 'Enter' },
+    );
+
+    expect(
+      screen.getByRole('menuitem', { name: 'English' }).getAttribute('href'),
+    ).toBe('/en/schedule?roomId=room-1&week=2030-06-03');
   });
 
   it('shows safe identity, preserves the current route by locale, and reuses logout orchestration', () => {

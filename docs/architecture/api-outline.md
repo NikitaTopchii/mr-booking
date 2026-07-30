@@ -101,7 +101,7 @@ The requested range is an absolute half-open interval `[fromUtc, toUtc)`.
 The HTTP boundary rejects datetimes without timezone information and parses
 valid absolute datetime strings immediately to internal UTC epoch
 milliseconds. Explicit `+` offsets must be URL-encoded in query strings.
-The browser will choose the absolute instants for its browser-local visible
+The browser chooses the absolute instants for its browser-local visible
 week; NestJS does not reinterpret this query in `Europe/Kyiv`. Active
 bookings overlap the range when
 `booking.startsAtUtc < toUtc && fromUtc < booking.endsAtUtc`, so bookings
@@ -141,7 +141,7 @@ canonical UTC ISO 8601 strings with milliseconds and `Z`.
   `DATABASE_BUSY`
 - **Cache:** mutation, `no-store`; revalidate affected lists/schedule
 
-The future transport mapper uses `400` for booking validation codes, `403` for
+The transport mapper uses `400` for booking validation codes, `403` for
 `BOOKING_CANCELLATION_FORBIDDEN`, `404` for missing rooms/bookings, `409` for
 `BOOKING_CONFLICT` and `BOOKING_NOT_CANCELLABLE`, and `503` for
 `DATABASE_BUSY`. Malformed transport input uses `400 VALIDATION_ERROR`.

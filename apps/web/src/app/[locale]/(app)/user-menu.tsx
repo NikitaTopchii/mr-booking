@@ -14,7 +14,7 @@ import {
 } from '@mr-booking/shared-ui';
 import { Check, ChevronDown, Languages, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 export interface UserMenuMessages {
   readonly open: string;
@@ -36,6 +36,7 @@ export interface UserMenuProps {
 
 export function UserMenu({ locale, user, loginHref, messages }: UserMenuProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { submitting, failed, logout } = useLogout(loginHref);
 
   return (
@@ -81,7 +82,7 @@ export function UserMenu({ locale, user, loginHref, messages }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuItem asChild>
           <Link
-            href={replaceLocale(pathname, 'uk')}
+            href={replaceLocale(pathname, searchParams.toString(), 'uk')}
             hrefLang="uk"
             aria-current={locale === 'uk' ? 'page' : undefined}
           >
@@ -93,7 +94,7 @@ export function UserMenu({ locale, user, loginHref, messages }: UserMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link
-            href={replaceLocale(pathname, 'en')}
+            href={replaceLocale(pathname, searchParams.toString(), 'en')}
             hrefLang="en"
             aria-current={locale === 'en' ? 'page' : undefined}
           >
@@ -130,10 +131,14 @@ export function UserMenu({ locale, user, loginHref, messages }: UserMenuProps) {
   );
 }
 
-function replaceLocale(pathname: string, locale: Locale): string {
+function replaceLocale(
+  pathname: string,
+  search: string,
+  locale: Locale,
+): string {
   const segments = pathname.split('/');
   segments[1] = locale;
-  return segments.join('/');
+  return `${segments.join('/')}${search ? `?${search}` : ''}`;
 }
 
 function initials(name: string, locale: Locale): string {

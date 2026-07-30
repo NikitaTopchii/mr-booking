@@ -205,8 +205,10 @@ normalize every booking timestamp to canonical UTC such as
 `2030-06-03T06:00:00.000Z`. Datetimes without timezone information are
 rejected. Query-string datetime values must be URL-encoded when they contain
 an explicit `+` offset.
-The future browser schedule chooses the absolute visible range in the browser
-timezone; booking creation validity is still evaluated in `Europe/Kyiv`.
+The browser schedule chooses its Monday–Sunday URL week in the browser
+timezone, derives the corresponding office slots as absolute instants, and
+sends canonical ISO 8601 range parameters. Booking creation validity is still
+evaluated authoritatively in `Europe/Kyiv`.
 Schedule reads exclude cancelled bookings and return only author ID/name.
 `isMine` is server-derived, and booking-slot rows are never public.
 
@@ -267,41 +269,50 @@ login, and session persistence across a normal Docker Compose restart.
 
 ## Workspace projects
 
-| Project                | Location                    | Nx tags                                         |
-| ---------------------- | --------------------------- | ----------------------------------------------- |
-| `web`                  | `apps/web`                  | `scope:shared,type:app,platform:web`            |
-| `api`                  | `apps/api`                  | `scope:shared,type:app,platform:api`            |
-| `shared-config`        | `libs/shared/config`        | `scope:shared,type:util,platform:shared`        |
-| `shared-database`      | `libs/shared/database`      | `scope:shared,type:infrastructure,platform:api` |
-| `shared-i18n`          | `libs/shared/i18n`          | `scope:shared,type:util,platform:web`           |
-| `shared-ui`            | `libs/shared/ui`            | `scope:shared,type:ui,platform:web`             |
-| `booking-domain`       | `libs/booking/domain`       | `scope:booking,type:domain,platform:shared`     |
-| `booking-data-access`  | `libs/booking/data-access`  | `scope:booking,type:data-access,platform:api`   |
-| `booking-feature`      | `libs/booking/feature`      | `scope:booking,type:feature,platform:api`       |
-| `rooms-domain`         | `libs/rooms/domain`         | `scope:rooms,type:domain,platform:shared`       |
-| `rooms-infrastructure` | `libs/rooms/infrastructure` | `scope:rooms,type:infrastructure,platform:api`  |
-| `rooms-data-access`    | `libs/rooms/data-access`    | `scope:rooms,type:data-access,platform:api`     |
-| `auth-domain`          | `libs/auth/domain`          | `scope:auth,type:domain,platform:shared`        |
-| `auth-infrastructure`  | `libs/auth/infrastructure`  | `scope:auth,type:infrastructure,platform:api`   |
-| `auth-data-access`     | `libs/auth/data-access`     | `scope:auth,type:data-access,platform:api`      |
-| `auth-data-access-web` | `libs/auth/data-access-web` | `scope:auth,type:data-access,platform:web`      |
-| `auth-feature`         | `libs/auth/feature`         | `scope:auth,type:feature,platform:api`          |
-| `auth-feature-web`     | `libs/auth/feature-web`     | `scope:auth,type:feature,platform:web`          |
-| `auth-ui`              | `libs/auth/ui`              | `scope:auth,type:ui,platform:web`               |
-| `workspace-tooling`    | `tools`                     | `scope:shared,type:app,platform:api`            |
+| Project                   | Location                       | Nx tags                                         |
+| ------------------------- | ------------------------------ | ----------------------------------------------- |
+| `web`                     | `apps/web`                     | `scope:shared,type:app,platform:web`            |
+| `api`                     | `apps/api`                     | `scope:shared,type:app,platform:api`            |
+| `shared-config`           | `libs/shared/config`           | `scope:shared,type:util,platform:shared`        |
+| `shared-database`         | `libs/shared/database`         | `scope:shared,type:infrastructure,platform:api` |
+| `shared-i18n`             | `libs/shared/i18n`             | `scope:shared,type:util,platform:web`           |
+| `shared-ui`               | `libs/shared/ui`               | `scope:shared,type:ui,platform:web`             |
+| `booking-domain`          | `libs/booking/domain`          | `scope:booking,type:domain,platform:shared`     |
+| `booking-data-access`     | `libs/booking/data-access`     | `scope:booking,type:data-access,platform:api`   |
+| `booking-feature`         | `libs/booking/feature`         | `scope:booking,type:feature,platform:api`       |
+| `booking-data-access-web` | `libs/booking/data-access-web` | `scope:booking,type:data-access,platform:web`   |
+| `booking-feature-web`     | `libs/booking/feature-web`     | `scope:booking,type:feature,platform:web`       |
+| `booking-ui`              | `libs/booking/ui`              | `scope:booking,type:ui,platform:web`            |
+| `rooms-domain`            | `libs/rooms/domain`            | `scope:rooms,type:domain,platform:shared`       |
+| `rooms-infrastructure`    | `libs/rooms/infrastructure`    | `scope:rooms,type:infrastructure,platform:api`  |
+| `rooms-data-access`       | `libs/rooms/data-access`       | `scope:rooms,type:data-access,platform:api`     |
+| `auth-domain`             | `libs/auth/domain`             | `scope:auth,type:domain,platform:shared`        |
+| `auth-infrastructure`     | `libs/auth/infrastructure`     | `scope:auth,type:infrastructure,platform:api`   |
+| `auth-data-access`        | `libs/auth/data-access`        | `scope:auth,type:data-access,platform:api`      |
+| `auth-data-access-web`    | `libs/auth/data-access-web`    | `scope:auth,type:data-access,platform:web`      |
+| `auth-feature`            | `libs/auth/feature`            | `scope:auth,type:feature,platform:api`          |
+| `auth-feature-web`        | `libs/auth/feature-web`        | `scope:auth,type:feature,platform:web`          |
+| `auth-ui`                 | `libs/auth/ui`                 | `scope:auth,type:ui,platform:web`               |
+| `workspace-tooling`       | `tools`                        | `scope:shared,type:app,platform:api`            |
 
 ## Phase status
 
-Phase 3B completes the authenticated room catalogue, room-range schedule,
-booking creation, and owner cancellation HTTP API with runtime DTO validation,
-stable error mapping, safe author data, and file-backed API integration tests.
-The weekly schedule UI, booking dialog/form, and real My bookings data remain
-deliberately deferred.
+Phase 3C adds the localized interactive weekly schedule. The Server Component
+route passes only its dictionary slice to an SWR-powered client boundary. The
+manual Monday–Sunday grid renders 30-minute Kyiv office slots in the browser
+timezone, persists `roomId` and Monday `week` in the URL, and supports room
+selection, week navigation, creation, booking details, conflict refresh, and
+owner cancellation. Browser responses are runtime-validated and every range
+or mutation timestamp uses absolute ISO 8601 at the HTTP boundary.
+
+Phase 3B completed the authenticated room catalogue, room-range schedule,
+booking creation, and owner cancellation HTTP API. Real My bookings data
+remains deliberately deferred.
 
 Phase 2D completed the authenticated shell and My bookings UI foundation.
 Password recovery/change, OAuth, magic links, MFA, CAPTCHA, roles/admin, email
 verification, account deletion, device management, and logout-all are
-intentionally deferred. Calendar behavior, personal-list SWR, PWA support,
-notifications, Web Push, and recurring bookings are also outside Phase 3B.
+intentionally deferred. Personal-list SWR, PWA support, notifications, Web
+Push, and recurring bookings are outside Phase 3C.
 Login throttling and expired-session cleanup are documented hardening work,
 not placeholder implementations.

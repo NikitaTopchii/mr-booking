@@ -121,7 +121,7 @@ test.describe('authenticated application shell', () => {
       (element) => getComputedStyle(element).transform,
     );
     await mobileNavigation.getByRole('link', { name: 'Schedule' }).click();
-    await expect(page).toHaveURL(/\/en\/schedule$/u);
+    await expect(page).toHaveURL(/\/en\/schedule(?:\?.*)?$/u);
     await expect
       .poll(() =>
         indicator.evaluate((element) => getComputedStyle(element).transform),
@@ -155,5 +155,7 @@ async function signIn(
   await page
     .getByRole('button', { name: locale === 'uk' ? 'Увійти' : 'Sign in' })
     .click();
-  await expect(page).toHaveURL(new RegExp(`/${locale}/schedule$`, 'u'));
+  await expect(page).toHaveURL(
+    new RegExp(`/${locale}/schedule(?:\\?.*)?$`, 'u'),
+  );
 }

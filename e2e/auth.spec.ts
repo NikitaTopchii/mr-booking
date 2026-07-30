@@ -11,7 +11,7 @@ test.describe('authentication journey', () => {
     await page.getByLabel('Пароль').fill('password123');
     await page.getByRole('button', { name: 'Створити акаунт' }).click();
 
-    await expect(page).toHaveURL(/\/uk\/schedule$/u);
+    await expect(page).toHaveURL(/\/uk\/schedule(?:\?.*)?$/u);
     const userMenu = page.getByRole('button', {
       name: 'Відкрити меню користувача: E2E User',
     });
@@ -19,7 +19,7 @@ test.describe('authentication journey', () => {
     await expect(page.getByText(email)).toBeVisible();
     await page.keyboard.press('Escape');
     await page.reload();
-    await expect(page).toHaveURL(/\/uk\/schedule$/u);
+    await expect(page).toHaveURL(/\/uk\/schedule(?:\?.*)?$/u);
     await userMenu.click();
     await expect(page.getByText(email)).toBeVisible();
 
@@ -27,7 +27,7 @@ test.describe('authentication journey', () => {
     await expect(page).toHaveURL(/\/uk\/login$/u);
     expect((await page.request.get('/api/auth/me')).status()).toBe(401);
     await page.goBack();
-    await expect(page).not.toHaveURL(/\/uk\/schedule$/u);
+    await expect(page).not.toHaveURL(/\/uk\/schedule(?:\?.*)?$/u);
     await expect(page.getByText(email)).toHaveCount(0);
     await page.goto('/schedule');
     await expect(page).toHaveURL(/\/uk\/login$/u);
@@ -40,10 +40,10 @@ test.describe('authentication journey', () => {
     await page.getByLabel('Електронна пошта').fill('alice@example.com');
     await page.getByLabel('Пароль').fill('password123');
     await page.getByRole('button', { name: 'Увійти' }).click();
-    await expect(page).toHaveURL(/\/uk\/schedule$/u);
+    await expect(page).toHaveURL(/\/uk\/schedule(?:\?.*)?$/u);
 
     await page.goto('/login');
-    await expect(page).toHaveURL(/\/uk\/schedule$/u);
+    await expect(page).toHaveURL(/\/uk\/schedule(?:\?.*)?$/u);
   });
 
   test('invalid credentials are generic and clear', async ({ page }) => {
@@ -118,7 +118,7 @@ test.describe('authentication journey', () => {
     await page.getByLabel('Email').fill('alice@example.com');
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Sign in' }).click();
-    await expect(page).toHaveURL(/\/en\/schedule$/u);
+    await expect(page).toHaveURL(/\/en\/schedule(?:\?.*)?$/u);
   });
 
   test('language switching preserves the equivalent auth route', async ({

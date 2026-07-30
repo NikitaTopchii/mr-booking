@@ -1,0 +1,19 @@
+{
+  "name": "booking-data-access-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/booking/data-access-web/src",
+  "projectType": "library",
+  "tags": ["scope:booking", "type:data-access", "platform:web"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/booking/data-access-web",
+        "main": "libs/booking/data-access-web/src/index.ts",
+        "tsConfig": "libs/booking/data-access-web/tsconfig.lib.json",
+        "assets": []
+      }
+    }
+  }
+}

@@ -101,10 +101,11 @@ WAL, foreign keys, and a 5000 ms busy timeout are enabled and verified.
   owns the reusable application shell. It composes product identity, primary
   navigation, the read-only user menu, locale switching, and the existing
   logout feature without repeating current-user requests in nested pages.
-- Schedule and My bookings remain Server Component destinations. Small client
-  boundaries own only pathname-aware active navigation, the Radix user menu,
-  and logout interaction.
-- Interactive schedule, availability, and personal lists use SWR.
+- Schedule and My bookings remain Server Component destinations. The schedule
+  passes a localized message slice to a focused Client Component boundary;
+  pathname-aware navigation, the Radix user menu, and logout remain isolated.
+- Interactive schedule and availability use SWR. Personal-list SWR remains
+  deferred until the My bookings data phase.
 - Mutations remain pending until the API confirms success.
 - The API uses the server clock and returns canonical UTC ISO 8601 timestamps.
 - The UI formats instants in the browser timezone.
