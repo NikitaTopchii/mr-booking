@@ -1,12 +1,6 @@
 import { LogoutControl } from '@mr-booking/auth-ui';
+import type { LogoutButtonProps } from './types/auth-feature-web.types';
 import { useLogout } from './use-logout';
-
-export interface LogoutButtonProps {
-  readonly label: string;
-  readonly submittingLabel: string;
-  readonly errorMessage: string;
-  readonly successHref: string;
-}
 
 export function LogoutButton({
   label,

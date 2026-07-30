@@ -1,32 +1,7 @@
-import type { AuthField as AuthFieldName } from '@mr-booking/auth-domain';
 import { Button, Spinner } from '@mr-booking/shared-ui';
-import type { FormEventHandler, RefObject } from 'react';
 import { AuthField } from './auth-field';
 import { AuthFormError } from './auth-form-error';
-
-export type AuthMode = 'login' | 'register';
-
-export interface AuthFormMessages {
-  readonly nameLabel?: string;
-  readonly emailLabel: string;
-  readonly passwordLabel: string;
-  readonly passwordHint?: string;
-  readonly submit: string;
-  readonly submitting: string;
-  readonly switchText: string;
-  readonly switchAction: string;
-}
-
-export interface AuthFormViewProps {
-  readonly mode: AuthMode;
-  readonly messages: AuthFormMessages;
-  readonly switchHref: string;
-  readonly formRef: RefObject<HTMLFormElement | null>;
-  readonly onSubmit: FormEventHandler<HTMLFormElement>;
-  readonly submitting: boolean;
-  readonly fieldErrors: Readonly<Partial<Record<AuthFieldName, string>>>;
-  readonly formError?: string | undefined;
-}
+import type { AuthFormViewProps } from './types/auth-ui.types';
 
 export function AuthFormView({
   mode,

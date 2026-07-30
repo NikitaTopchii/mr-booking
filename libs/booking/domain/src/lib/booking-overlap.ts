@@ -1,8 +1,6 @@
-export interface RoomBookingInterval {
-  readonly roomId: string;
-  readonly startsAtUtc: number;
-  readonly endsAtUtc: number;
-}
+import type { RoomBookingInterval } from './types/booking-overlap.types';
+
+export type { RoomBookingInterval } from './types/booking-overlap.types';
 
 export function bookingIntervalsOverlap(
   first: RoomBookingInterval,

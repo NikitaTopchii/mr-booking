@@ -1,5 +1,7 @@
 export * from './lib/alert';
 export * from './lib/button';
+export type { AlertProps } from './lib/types/alert.types';
+export type { ButtonProps } from './lib/types/button.types';
 export * from './lib/card';
 export * from './lib/dialog';
 export * from './lib/dropdown-menu';

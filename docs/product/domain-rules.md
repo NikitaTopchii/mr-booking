@@ -131,3 +131,16 @@ The server returns a stable, understandable error for every failed rule.
   unstable page offsets.
 - Dates and times are returned as UTC instants and displayed in the browser
   timezone.
+
+## Deterministic demo records
+
+- Six known demo booking IDs use Alice and Bob across Акваріум and Марс on
+  five days, including an adjacent half-open pair.
+- `DEMO_SEED_WEEK_START`, when present, is a valid Monday date in
+  `Europe/Kyiv`. When absent, the next office-local Monday is derived.
+- Demo intervals pass the same title, interval, office-zone, and slot
+  generation policies as application bookings. Their deterministic
+  `createdAtUtc` precedes the reference week.
+- Reseeding replaces only known demo booking IDs inside one immediate
+  transaction. Cascading slot cleanup and regenerated slot ownership remain
+  consistent; unrelated records are never deleted.

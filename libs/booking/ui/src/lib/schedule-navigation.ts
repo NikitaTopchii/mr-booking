@@ -4,11 +4,7 @@ import {
   parseCalendarDate,
   startOfCalendarWeek,
 } from './schedule-time';
-
-export interface ScheduleNavigation {
-  readonly roomId?: string;
-  readonly date: string;
-}
+import type { ScheduleNavigation } from './types/schedule.types';
 
 export function createScheduleSearchParams(
   current: URLSearchParams | string,

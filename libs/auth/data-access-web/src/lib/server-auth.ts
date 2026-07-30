@@ -1,9 +1,9 @@
 import 'server-only';
 
-import type { SafeUser } from '@mr-booking/auth-domain';
 import { parseRuntimeEnvironment } from '@mr-booking/shared-config';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import type { ServerAuthState } from './types/server-auth.types';
 
 const currentUserResponseSchema = z
   .object({
@@ -16,11 +16,6 @@ const currentUserResponseSchema = z
       .strict(),
   })
   .strict();
-
-export type ServerAuthState =
-  | { readonly status: 'authenticated'; readonly user: SafeUser }
-  | { readonly status: 'anonymous' }
-  | { readonly status: 'unavailable' };
 
 export async function resolveServerAuth(): Promise<ServerAuthState> {
   const environment = parseRuntimeEnvironment(process.env);

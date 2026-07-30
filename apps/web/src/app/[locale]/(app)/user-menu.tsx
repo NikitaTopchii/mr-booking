@@ -1,6 +1,5 @@
 'use client';
 
-import type { SafeUser } from '@mr-booking/auth-domain';
 import { useLogout } from '@mr-booking/auth-feature-web';
 import type { Locale } from '@mr-booking/shared-i18n';
 import {
@@ -15,24 +14,7 @@ import {
 import { Check, ChevronDown, Languages, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-
-export interface UserMenuMessages {
-  readonly open: string;
-  readonly signedInAs: string;
-  readonly language: string;
-  readonly logout: string;
-  readonly loggingOut: string;
-  readonly logoutError: string;
-  readonly ukrainian: string;
-  readonly english: string;
-}
-
-export interface UserMenuProps {
-  readonly locale: Locale;
-  readonly user: SafeUser;
-  readonly loginHref: string;
-  readonly messages: UserMenuMessages;
-}
+import type { UserMenuProps } from './types/application-shell.types';
 
 export function UserMenu({ locale, user, loginHref, messages }: UserMenuProps) {
   const pathname = usePathname();

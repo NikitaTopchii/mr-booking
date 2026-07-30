@@ -4,6 +4,17 @@ const nodeEnvironmentSchema = z.enum(['development', 'test', 'production']);
 
 const portSchema = z.coerce.number().int().min(1).max(65_535);
 
+const demoSeedWeekStartSchema = z.preprocess(
+  (value) => (value === '' ? undefined : value),
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/u)
+    .refine(isValidMondayDate, {
+      message: 'must be a valid Monday in YYYY-MM-DD format',
+    })
+    .optional(),
+);
+
 const environmentSchema = z
   .object({
     NODE_ENV: nodeEnvironmentSchema,
@@ -24,6 +35,7 @@ const environmentSchema = z
       .min(1)
       .regex(/^[A-Za-z0-9_-]+$/u),
     SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365),
+    DEMO_SEED_WEEK_START: demoSeedWeekStartSchema,
   })
   .superRefine((environment, context) => {
     if (
@@ -96,4 +108,19 @@ export function parseRuntimeEnvironment(
 
 function isAbsolutePath(path: string): boolean {
   return path.startsWith('/') || /^[A-Za-z]:[\\/]/u.test(path);
+}
+
+function isValidMondayDate(value: string): boolean {
+  const [yearValue, monthValue, dayValue] = value.split('-');
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    candidate.getUTCFullYear() === year &&
+    candidate.getUTCMonth() === month - 1 &&
+    candidate.getUTCDate() === day &&
+    candidate.getUTCDay() === 1
+  );
 }

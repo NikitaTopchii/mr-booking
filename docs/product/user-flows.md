@@ -153,3 +153,17 @@ mutation before the server succeeds.
 - **Navigation:** `date=YYYY-MM-DD` is authoritative, `week` is a normalized
   compatibility value, and room/date deep links remain keyboard/touch
   accessible across reload and browser history.
+
+## 14. Evaluator demo setup
+
+- **Starting state:** migrated clean SQLite database.
+- **Actions:** run `yarn db:seed`, optionally with a Monday
+  `DEMO_SEED_WEEK_START`, then run it again.
+- **Success:** six rooms, Alice, Bob, six stable bookings, and fifteen slot
+  rows exist without duplication. Alice and Bob can log in through the real
+  auth boundary and see own/foreign records.
+- **Errors:** invalid/non-Monday reference dates fail environment validation;
+  slot collisions fail the immediate seed transaction without partial demo
+  movement.
+- **Preservation:** reference-week changes replace only known demo IDs and
+  leave user-created records untouched.

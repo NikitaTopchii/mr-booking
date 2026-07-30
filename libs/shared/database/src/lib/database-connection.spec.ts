@@ -1,11 +1,8 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import {
-  DatabaseConnection,
-  openDatabase,
-  verifySqlitePragmas,
-} from './database-connection';
+import type { DatabaseConnection } from './database-connection';
+import { openDatabase, verifySqlitePragmas } from './database-connection';
 import { applyMigrations, resolveMigrationsFolder } from './migrations';
 
 describe('SQLite foundation', () => {

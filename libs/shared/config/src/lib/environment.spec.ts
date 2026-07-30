@@ -19,6 +19,7 @@ describe('parseRuntimeEnvironment', () => {
       API_INTERNAL_URL: 'http://localhost:3002',
       SESSION_COOKIE_NAME: 'room_booking_session',
       SESSION_TTL_DAYS: 7,
+      DEMO_SEED_WEEK_START: undefined,
     });
   });
 
@@ -57,5 +58,24 @@ describe('parseRuntimeEnvironment', () => {
     expect(() => parseRuntimeEnvironment({ SESSION_TTL_DAYS: '0' })).toThrow(
       EnvironmentValidationError,
     );
+  });
+
+  it('accepts only a valid Monday for the optional demo reference week', () => {
+    expect(
+      parseRuntimeEnvironment({
+        DEMO_SEED_WEEK_START: '2030-06-03',
+      }).DEMO_SEED_WEEK_START,
+    ).toBe('2030-06-03');
+
+    expect(() =>
+      parseRuntimeEnvironment({ DEMO_SEED_WEEK_START: '2030-06-04' }),
+    ).toThrow('DEMO_SEED_WEEK_START');
+    expect(() =>
+      parseRuntimeEnvironment({ DEMO_SEED_WEEK_START: '2030-02-30' }),
+    ).toThrow('DEMO_SEED_WEEK_START');
+    expect(
+      parseRuntimeEnvironment({ DEMO_SEED_WEEK_START: '' })
+        .DEMO_SEED_WEEK_START,
+    ).toBeUndefined();
   });
 });

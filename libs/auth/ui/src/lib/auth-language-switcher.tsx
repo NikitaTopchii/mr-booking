@@ -1,13 +1,5 @@
 import { Button } from '@mr-booking/shared-ui';
-
-export interface AuthLanguageSwitcherProps {
-  readonly label: string;
-  readonly currentLocale: 'uk' | 'en';
-  readonly ukrainianLabel: string;
-  readonly englishLabel: string;
-  readonly ukrainianHref: string;
-  readonly englishHref: string;
-}
+import type { AuthLanguageSwitcherProps } from './types/auth-ui.types';
 
 export function AuthLanguageSwitcher({
   label,

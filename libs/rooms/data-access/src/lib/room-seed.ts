@@ -1,4 +1,4 @@
-import { DatabaseConnection } from '@mr-booking/shared-database';
+import type { DatabaseConnection } from '@mr-booking/shared-database';
 import { rooms } from '@mr-booking/rooms-infrastructure';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 

@@ -1,5 +1,5 @@
+import type { AuthClientError } from './auth-client';
 import {
-  AuthClientError,
   getCurrentUser,
   loginUser,
   logoutSession,

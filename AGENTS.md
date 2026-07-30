@@ -65,6 +65,7 @@ For every implementation task, read:
 
 - `docs/agent-rules/core-engineering.md`;
 - `docs/agent-rules/design-patterns.md`;
+- `docs/agent-rules/type-placement.md`;
 - `docs/hackathon-requirements.md`.
 
 Before editing frontend or web UI code, also read:

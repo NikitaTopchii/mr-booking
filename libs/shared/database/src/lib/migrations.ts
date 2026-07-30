@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { dirname, join, parse, resolve } from 'node:path';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import { DatabaseConnection } from './database-connection';
+import type { DatabaseConnection } from './database-connection';
 
 export function resolveMigrationsFolder(
   startDirectory = process.cwd(),

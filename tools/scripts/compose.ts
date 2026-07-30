@@ -9,9 +9,9 @@ const composeCommands = {
   logs: ['compose', 'logs', '--follow', '--tail=200'],
 } as const;
 
-type ComposeCommand = keyof typeof composeCommands;
-
-function isComposeCommand(value: string | undefined): value is ComposeCommand {
+function isComposeCommand(
+  value: string | undefined,
+): value is keyof typeof composeCommands {
   return value !== undefined && value in composeCommands;
 }
 

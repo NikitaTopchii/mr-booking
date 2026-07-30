@@ -1,4 +1,4 @@
-import type { AppDictionary } from '../dictionary';
+import type { AppDictionary } from '../types/dictionary.types';
 
 export const dictionary = {
   metadata: {

@@ -154,6 +154,13 @@ partial active `(author_user_id, starts_at_utc)` index covers the ownership
 filter and primary ordering, so Phase 3D does not change the schema or UTC
 epoch-millisecond representation.
 
+The deterministic submission seed uses the existing `Booking` and
+`BookingSlot` tables without a seed-only schema. Six stable booking IDs are
+replaced transactionally when their configured reference week changes.
+`ON DELETE CASCADE` removes only their old slot rows before the same domain
+slot generator creates the new ownership rows. User-created bookings and
+slots are not selected by this operation.
+
 ## Deferred bonus extensions
 
 Recurring series, notifications, outbox records, push subscriptions, and

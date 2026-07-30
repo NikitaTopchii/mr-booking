@@ -1,6 +1,28 @@
 import nx from '@nx/eslint-plugin';
 import tseslint from 'typescript-eslint';
 
+const typePlacementAllowedFiles = [
+  '**/types/**',
+  '**/*.types.*',
+  '**/*.contracts.*',
+  '**/*.dto.*',
+  '**/*.model.*',
+  '**/*.schema.*',
+  '**/*.schemas.*',
+  '**/*-contracts.*',
+  '**/*-errors.*',
+  '**/*-ports.*',
+  '**/*-schema.*',
+  '**/*-validation.*',
+  '**/*-commands.*',
+  '**/*-queries.*',
+];
+
+const typePlacementExceptions = [
+  // The inferred public type is intentionally colocated with its Zod schema.
+  'libs/shared/config/src/lib/environment.ts',
+];
+
 export default [
   ...nx.configs['flat/base'],
   ...tseslint.configs.recommended,
@@ -84,6 +106,44 @@ export default [
             },
           ],
           enforceBuildableLibDependency: true,
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+    languageOptions: {
+      parserOptions: {
+        // Keep runtime imports intact when legacy decorator metadata may use them.
+        emitDecoratorMetadata: true,
+        experimentalDecorators: true,
+      },
+    },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          fixStyle: 'separate-type-imports',
+          prefer: 'type-imports',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+    ignores: [...typePlacementAllowedFiles, ...typePlacementExceptions],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Program > TSInterfaceDeclaration',
+          message:
+            'Move top-level interfaces from implementation files to the nearest type-focused module.',
+        },
+        {
+          selector: 'Program > TSTypeAliasDeclaration',
+          message:
+            'Move top-level type aliases from implementation files to the nearest type-focused module.',
         },
       ],
     },

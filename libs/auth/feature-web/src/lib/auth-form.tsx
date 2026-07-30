@@ -10,32 +10,14 @@ import {
   type AuthField,
   type AuthFieldErrorCode,
 } from '@mr-booking/auth-domain';
-import {
-  AuthFormView,
-  type AuthFormMessages,
-  type AuthMode,
-} from '@mr-booking/auth-ui';
+import { AuthFormView } from '@mr-booking/auth-ui';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-
-type FormErrorCode =
-  'INVALID_CREDENTIALS' | 'NETWORK_ERROR' | 'SERVICE_UNAVAILABLE';
-
-export interface AuthFormErrorMessages {
-  readonly invalidCredentials: string;
-  readonly network: string;
-  readonly serviceUnavailable: string;
-  readonly fields: Readonly<Record<AuthFieldErrorCode, string>>;
-}
-
-export interface AuthFormProps {
-  readonly mode: AuthMode;
-  readonly messages: AuthFormMessages;
-  readonly errorMessages: AuthFormErrorMessages;
-  readonly loginHref: string;
-  readonly registerHref: string;
-  readonly successHref: string;
-}
+import type {
+  AuthenticationInput,
+  AuthFormProps,
+  FormErrorCode,
+} from './types/auth-feature-web.types';
 
 export function AuthForm({
   mode,
@@ -170,11 +152,7 @@ export function AuthForm({
 
 function createAuthenticationRequest(
   isRegistration: boolean,
-  input: {
-    readonly name?: string;
-    readonly email: string;
-    readonly password: string;
-  },
+  input: AuthenticationInput,
 ): () => Promise<unknown> {
   if (isRegistration) {
     const validatedInput = parseRegistrationInput(input);

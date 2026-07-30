@@ -15,10 +15,7 @@ import { rooms } from '@mr-booking/rooms-infrastructure';
 import { type DatabaseConnection } from '@mr-booking/shared-database';
 import { and, asc, desc, eq, gt, isNull, lt, lte, or } from 'drizzle-orm';
 import { bookingSlots, bookings, type BookingRecord } from './booking-schema';
-
-interface DatabaseConnectionProvider {
-  readonly connection: DatabaseConnection;
-}
+import type { DatabaseConnectionProvider } from './types/booking-repository.types';
 
 export class DrizzleBookingRepository implements BookingRepository {
   public constructor(

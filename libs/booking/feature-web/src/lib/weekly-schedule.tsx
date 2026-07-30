@@ -7,8 +7,6 @@ import {
   createBooking,
   listRoomBookings,
   listRooms,
-  type CreateBookingInput,
-  type Room,
   type ScheduleBooking,
 } from '@mr-booking/booking-data-access-web';
 import {
@@ -23,11 +21,9 @@ import {
   selectedDateFromUrl,
   startOfCalendarWeek,
   type CalendarDate,
-  type SchedulePresentation,
-  type ScheduleRange,
   type ScheduleSlot,
 } from '@mr-booking/booking-ui';
-import type { AppDictionary, Locale } from '@mr-booking/shared-i18n';
+import type { Locale } from '@mr-booking/shared-i18n';
 import {
   Alert,
   AlertDescription,
@@ -67,23 +63,34 @@ import {
   useState,
   type FormEvent,
   type KeyboardEvent,
-  type ReactNode,
 } from 'react';
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
+import type {
+  BookingDetailsDialogProps,
+  BookingSelection,
+  CancelBookingMutationOptions,
+  CompactContextProps,
+  CreateBookingDialogProps,
+  CreateBookingMutationOptions,
+  DetailProps,
+  ExpandedToolbarProps,
+  IconButtonProps,
+  RoomSelectorProps,
+  ScheduleDatePickerProps,
+  ScheduleDayProps,
+  ScheduleEmptyStateProps,
+  ScheduleErrorStateProps,
+  ScheduleGridProps,
+  ScheduleLoadingProps,
+  ScheduleMessages,
+  SelectedDayHeadingProps,
+  TimeZoneSummaryProps,
+  WeeklyScheduleProps,
+  WeekDateStripProps,
+} from './types/weekly-schedule.types';
 import { useBrowserTimeZone } from './use-browser-time-zone';
 import { useSchedulePresentation } from './use-schedule-presentation';
-
-type ScheduleMessages = AppDictionary['schedule'];
-
-export interface WeeklyScheduleProps {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-}
-
-interface BookingSelection {
-  readonly slot: ScheduleSlot;
-}
 
 export function WeeklySchedule({ locale, messages }: WeeklyScheduleProps) {
   const router = useRouter();
@@ -374,13 +381,7 @@ function RoomSelector({
   room,
   loading,
   onChange,
-}: {
-  readonly messages: ScheduleMessages;
-  readonly rooms: readonly Room[];
-  readonly room: Room | undefined;
-  readonly loading: boolean;
-  readonly onChange: (roomId: string) => void;
-}) {
+}: RoomSelectorProps) {
   return (
     <div className="w-full lg:max-w-sm">
       <Label htmlFor="schedule-room">{messages.roomLabel}</Label>
@@ -426,13 +427,7 @@ function CompactRoomSelector({
   room,
   loading,
   onChange,
-}: {
-  readonly messages: ScheduleMessages;
-  readonly rooms: readonly Room[];
-  readonly room: Room | undefined;
-  readonly loading: boolean;
-  readonly onChange: (roomId: string) => void;
-}) {
+}: RoomSelectorProps) {
   const statusLabel = room
     ? `${messages.mobile.selectedRoom}: ${room.name}`
     : messages.loadingRooms;
@@ -510,18 +505,7 @@ function ExpandedToolbar({
   onPrevious,
   onCurrent,
   onNext,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly rooms: readonly Room[];
-  readonly room: Room | undefined;
-  readonly schedule: ScheduleRange;
-  readonly loadingRooms: boolean;
-  readonly onRoomChange: (roomId: string) => void;
-  readonly onPrevious: () => void;
-  readonly onCurrent: () => void;
-  readonly onNext: () => void;
-}) {
+}: ExpandedToolbarProps) {
   const rangeLabel = `${formatDate(
     requiredDate(schedule.visibleDates, 0),
     locale,
@@ -576,22 +560,7 @@ function CompactContext({
   onNext,
   onOpenCalendar,
   onSelectDate,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly rooms: readonly Room[];
-  readonly room: Room | undefined;
-  readonly selectedDate: CalendarDate;
-  readonly now: number;
-  readonly browserTimeZone: string;
-  readonly loadingRooms: boolean;
-  readonly onRoomChange: (roomId: string) => void;
-  readonly onPrevious: () => void;
-  readonly onCurrent: () => void;
-  readonly onNext: () => void;
-  readonly onOpenCalendar: () => void;
-  readonly onSelectDate: (date: CalendarDate) => void;
-}) {
+}: CompactContextProps) {
   return (
     <div className="grid gap-2 pt-1">
       <CompactRoomSelector
@@ -642,14 +611,7 @@ function WeekDateStrip({
   now,
   browserTimeZone,
   onSelect,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly selectedDate: CalendarDate;
-  readonly now: number;
-  readonly browserTimeZone: string;
-  readonly onSelect: (date: CalendarDate) => void;
-}) {
+}: WeekDateStripProps) {
   const weekStart = startOfCalendarWeek(selectedDate);
   const selectedKey = formatCalendarDate(selectedDate);
   const todayKey = formatCalendarDate(calendarDateAt(now, browserTimeZone));
@@ -714,12 +676,7 @@ function SelectedDayHeading({
   messages,
   selectedDate,
   browserTimeZone,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly selectedDate: CalendarDate;
-  readonly browserTimeZone: string;
-}) {
+}: SelectedDayHeadingProps) {
   return (
     <div className="mt-4">
       <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
@@ -739,13 +696,7 @@ function SelectedDayHeading({
   );
 }
 
-function TimeZoneSummary({
-  messages,
-  browserTimeZone,
-}: {
-  readonly messages: ScheduleMessages;
-  readonly browserTimeZone: string;
-}) {
+function TimeZoneSummary({ messages, browserTimeZone }: TimeZoneSummaryProps) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
       <span className="inline-flex items-center gap-2">
@@ -771,19 +722,7 @@ function ScheduleGrid({
   selectedDate,
   onSelectSlot,
   onSelectBooking,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly schedule: ScheduleRange;
-  readonly presentation: SchedulePresentation;
-  readonly bookings: readonly ScheduleBooking[];
-  readonly now: number;
-  readonly browserTimeZone: string;
-  readonly revalidating: boolean;
-  readonly selectedDate: CalendarDate;
-  readonly onSelectSlot: (slot: ScheduleSlot) => void;
-  readonly onSelectBooking: (booking: ScheduleBooking) => void;
-}) {
+}: ScheduleGridProps) {
   const timeFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(locale, {
@@ -927,22 +866,7 @@ function ScheduleDay({
   compact,
   onSelectSlot,
   onSelectBooking,
-}: {
-  readonly locale: Locale;
-  readonly date: CalendarDate;
-  readonly browserTimeZone: string;
-  readonly slots: readonly ScheduleSlot[];
-  readonly bookings: readonly ScheduleBooking[];
-  readonly rowCount: number;
-  readonly rowHeightRem: number;
-  readonly now: number;
-  readonly messages: ScheduleMessages;
-  readonly timeFormatter: Intl.DateTimeFormat;
-  readonly firstFocusable: string | undefined;
-  readonly compact: boolean;
-  readonly onSelectSlot: (slot: ScheduleSlot) => void;
-  readonly onSelectBooking: (booking: ScheduleBooking) => void;
-}) {
+}: ScheduleDayProps) {
   const first = slots[0];
   const last = slots.at(-1);
   const visibleBookings = bookings.filter(
@@ -1069,16 +993,7 @@ function ScheduleDatePicker({
   browserTimeZone,
   onOpenChange,
   onSelect,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly open: boolean;
-  readonly selectedDate: CalendarDate;
-  readonly now: number;
-  readonly browserTimeZone: string;
-  readonly onOpenChange: (open: boolean) => void;
-  readonly onSelect: (date: CalendarDate) => void;
-}) {
+}: ScheduleDatePickerProps) {
   const [visibleMonth, setVisibleMonth] = useState({
     year: selectedDate.year,
     month: selectedDate.month,
@@ -1182,24 +1097,13 @@ function CreateBookingDialog({
   onOpenChange,
   onCreated,
   onConflict,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly room: Room;
-  readonly selection: BookingSelection | undefined;
-  readonly slots: readonly ScheduleSlot[];
-  readonly bookings: readonly ScheduleBooking[];
-  readonly browserTimeZone: string;
-  readonly onOpenChange: (open: boolean) => void;
-  readonly onCreated: () => Promise<void>;
-  readonly onConflict: () => Promise<void>;
-}) {
+}: CreateBookingDialogProps) {
   const [title, setTitle] = useState('');
   const [endsAt, setEndsAt] = useState('');
   const [formError, setFormError] = useState<string>();
   const mutation = useSWRMutation(
     ['booking', 'create'],
-    (_key, { arg }: { arg: CreateBookingInput }) => createBooking(arg),
+    (_key, { arg }: CreateBookingMutationOptions) => createBooking(arg),
   );
   const slot = selection?.slot;
   const endOptions = useMemo(
@@ -1376,21 +1280,12 @@ function BookingDetailsDialog({
   browserTimeZone,
   onOpenChange,
   onCancelled,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly booking: ScheduleBooking | undefined;
-  readonly room: Room | undefined;
-  readonly now: number;
-  readonly browserTimeZone: string;
-  readonly onOpenChange: (open: boolean) => void;
-  readonly onCancelled: () => Promise<void>;
-}) {
+}: BookingDetailsDialogProps) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
   const mutation = useSWRMutation(
     ['booking', 'cancel'],
-    (_key, { arg }: { arg: string }) => cancelBooking(arg),
+    (_key, { arg }: CancelBookingMutationOptions) => cancelBooking(arg),
   );
   const canCancel =
     Boolean(booking?.isMine) &&
@@ -1505,15 +1400,7 @@ function BookingDetailsDialog({
   );
 }
 
-function IconButton({
-  label,
-  onClick,
-  children,
-}: {
-  readonly label: string;
-  readonly onClick: () => void;
-  readonly children: ReactNode;
-}) {
+function IconButton({ label, onClick, children }: IconButtonProps) {
   return (
     <Button
       type="button"
@@ -1528,13 +1415,7 @@ function IconButton({
   );
 }
 
-function Detail({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: string;
-}) {
+function Detail({ label, value }: DetailProps) {
   return (
     <div className="grid gap-1 border-b border-border pb-3 last:border-0">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -1545,13 +1426,7 @@ function Detail({
   );
 }
 
-function ScheduleLoading({
-  presentation,
-  message,
-}: {
-  readonly presentation: SchedulePresentation | undefined;
-  readonly message: string;
-}) {
+function ScheduleLoading({ presentation, message }: ScheduleLoadingProps) {
   const columns =
     presentation === 'expanded' ? 7 : presentation === 'medium' ? 3 : 1;
   return (
@@ -1577,15 +1452,7 @@ function ScheduleLoading({
   );
 }
 
-function ErrorState({
-  message,
-  retry,
-  onRetry,
-}: {
-  readonly message: string;
-  readonly retry: string;
-  readonly onRetry: () => void;
-}) {
+function ErrorState({ message, retry, onRetry }: ScheduleErrorStateProps) {
   return (
     <Alert variant="destructive" className="mt-4" role="alert">
       <AlertCircle aria-hidden="true" />
@@ -1599,7 +1466,7 @@ function ErrorState({
   );
 }
 
-function EmptyState({ message }: { readonly message: string }) {
+function EmptyState({ message }: ScheduleEmptyStateProps) {
   return (
     <div className="mt-4 grid min-h-64 place-items-center rounded-xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
       {message}

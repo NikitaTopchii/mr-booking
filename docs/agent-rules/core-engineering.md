@@ -21,6 +21,10 @@ with unrelated cleanup.
 
 ## Type safety and naming
 
+Type declarations MUST follow `docs/agent-rules/type-placement.md`.
+Implementation files do not own structural interfaces or type aliases; place
+them at the narrowest type-focused ownership boundary.
+
 Code MUST NOT contain:
 
 - `any` without a documented unavoidable reason;

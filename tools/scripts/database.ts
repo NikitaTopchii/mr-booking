@@ -2,17 +2,17 @@ import {
   Argon2PasswordHasher,
   seedAuthUsers,
 } from '@mr-booking/auth-data-access';
+import { seedDemoBookings } from '@mr-booking/booking-data-access';
 import { applyMigrations, openDatabase } from '@mr-booking/shared-database';
 import { seedRooms } from '@mr-booking/rooms-data-access';
 import { parseRuntimeEnvironment } from '@mr-booking/shared-config';
 import { loadRootEnvironmentFile } from '@mr-booking/shared-config/node';
 
 const supportedCommands = ['validate', 'migrate', 'seed'] as const;
-type DatabaseCommand = (typeof supportedCommands)[number];
 
 function isDatabaseCommand(
   value: string | undefined,
-): value is DatabaseCommand {
+): value is (typeof supportedCommands)[number] {
   return supportedCommands.some((command) => command === value);
 }
 
@@ -43,7 +43,13 @@ async function run(): Promise<void> {
 
     seedRooms(connection);
     await seedAuthUsers(connection, new Argon2PasswordHasher());
-    process.stdout.write('Deterministic room and auth seed completed.\n');
+    const demoSeed = seedDemoBookings(
+      connection,
+      environment.DEMO_SEED_WEEK_START,
+    );
+    process.stdout.write(
+      `Deterministic room, auth, and booking seed completed for ${demoSeed.weekStart}.\n`,
+    );
   } finally {
     connection.close();
   }

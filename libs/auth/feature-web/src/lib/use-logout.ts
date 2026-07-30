@@ -4,12 +4,7 @@ import {
 } from '@mr-booking/auth-data-access-web/client';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-
-export interface LogoutState {
-  readonly submitting: boolean;
-  readonly failed: boolean;
-  readonly logout: () => Promise<void>;
-}
+import type { LogoutState } from './types/auth-feature-web.types';
 
 export function useLogout(successHref: string): LogoutState {
   const router = useRouter();

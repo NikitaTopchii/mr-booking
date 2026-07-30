@@ -1,5 +1,6 @@
 import { defaultLocale, hasLocale, type Locale } from '@mr-booking/shared-i18n';
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const localeCookieName = 'mr_booking_locale';
 const localeLikeSegment = /^[a-z]{2}$/u;

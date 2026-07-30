@@ -1,13 +1,16 @@
 import {
   authFieldErrorCodes,
-  type AuthErrorCode,
   type AuthField,
   type AuthFieldErrorCode,
   type LoginInput,
   type RegistrationInput,
-  type SafeUser,
 } from '@mr-booking/auth-domain';
 import { z } from 'zod';
+import type {
+  AuthenticationResponse,
+  AuthClientErrorCode,
+  AuthFieldErrorPayload,
+} from './types/auth-client.types';
 
 const authFieldErrorCodeSchema = z.enum(authFieldErrorCodes);
 const safeUserSchema = z
@@ -69,12 +72,6 @@ const apiErrorSchema = z.union([
   duplicateEmailErrorSchema,
   formErrorSchema,
 ]);
-
-export interface AuthenticationResponse {
-  readonly user: SafeUser;
-}
-
-export type AuthClientErrorCode = AuthErrorCode | 'NETWORK_ERROR';
 
 export class AuthClientError extends Error {
   public constructor(
@@ -187,13 +184,7 @@ async function parseErrorResponse(
 }
 
 function compactFieldErrors(
-  fields:
-    | {
-        readonly name?: AuthFieldErrorCode | undefined;
-        readonly email?: AuthFieldErrorCode | undefined;
-        readonly password?: AuthFieldErrorCode | undefined;
-      }
-    | undefined,
+  fields: AuthFieldErrorPayload | undefined,
 ): Partial<Record<AuthField, AuthFieldErrorCode>> {
   const compacted: Partial<Record<AuthField, AuthFieldErrorCode>> = {};
 

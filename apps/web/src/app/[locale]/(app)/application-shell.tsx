@@ -1,17 +1,8 @@
-import type { SafeUser } from '@mr-booking/auth-domain';
-import type { AppDictionary, Locale } from '@mr-booking/shared-i18n';
 import { localizedRoute } from '@mr-booking/shared-i18n';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 import { ApplicationNavigation } from './application-navigation';
+import type { ApplicationShellProps } from './types/application-shell.types';
 import { UserMenu } from './user-menu';
-
-export interface ApplicationShellProps {
-  readonly locale: Locale;
-  readonly user: SafeUser;
-  readonly dictionary: AppDictionary;
-  readonly children: ReactNode;
-}
 
 export function ApplicationShell({
   locale,

@@ -1,5 +1,7 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import type { OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuthSeedService } from '@mr-booking/auth-data-access';
+import { DemoBookingSeedService } from '@mr-booking/booking-data-access';
 import { RoomSeedService } from '@mr-booking/rooms-data-access';
 import { parseRuntimeEnvironment } from '@mr-booking/shared-config';
 
@@ -8,6 +10,7 @@ export class FoundationStartupService implements OnApplicationBootstrap {
   public constructor(
     private readonly roomSeedService: RoomSeedService,
     private readonly authSeedService: AuthSeedService,
+    private readonly demoBookingSeedService: DemoBookingSeedService,
   ) {}
 
   public async onApplicationBootstrap(): Promise<void> {
@@ -16,6 +19,7 @@ export class FoundationStartupService implements OnApplicationBootstrap {
     if (environment.SEED_ON_START) {
       this.roomSeedService.seed();
       await this.authSeedService.seed();
+      this.demoBookingSeedService.seed(environment.DEMO_SEED_WEEK_START);
     }
   }
 }

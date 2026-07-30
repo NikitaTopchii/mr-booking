@@ -23,6 +23,7 @@ import { AuthExceptionFilter } from './auth-exception.filter';
 import { CurrentUser } from './auth-request';
 import { SessionAuthGuard } from './session-auth.guard';
 import { SessionCookieService } from './session-cookie.service';
+import type { CurrentUserResponse } from './types/auth-request.types';
 
 @Controller('auth')
 @UseFilters(AuthExceptionFilter)
@@ -90,9 +91,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(SessionAuthGuard)
   @Header('Cache-Control', 'private, no-store')
-  public currentUser(@CurrentUser() user: SafeUser): {
-    readonly user: SafeUser;
-  } {
+  public currentUser(@CurrentUser() user: SafeUser): CurrentUserResponse {
     return { user };
   }
 }

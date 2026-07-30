@@ -1,7 +1,9 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { parseRuntimeEnvironment } from '@mr-booking/shared-config';
 import { loadRootEnvironmentFile } from '@mr-booking/shared-config/node';
-import { DatabaseConnection, openDatabase } from './database-connection';
+import type { DatabaseConnection } from './database-connection';
+import { openDatabase } from './database-connection';
 import { applyMigrations } from './migrations';
 
 @Injectable()

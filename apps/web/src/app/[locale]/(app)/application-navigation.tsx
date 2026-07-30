@@ -4,18 +4,7 @@ import { cn } from '@mr-booking/shared-ui';
 import { CalendarDays, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-export interface ApplicationNavigationProps {
-  readonly label: string;
-  readonly schedule: {
-    readonly href: string;
-    readonly label: string;
-  };
-  readonly myBookings: {
-    readonly href: string;
-    readonly label: string;
-  };
-}
+import type { ApplicationNavigationProps } from './types/application-shell.types';
 
 export function ApplicationNavigation({
   label,

@@ -5,14 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@mr-booking/shared-ui';
-import type { ReactNode } from 'react';
-
-export interface AuthCardProps {
-  readonly title: string;
-  readonly description: string;
-  readonly languageSwitcher: ReactNode;
-  readonly children: ReactNode;
-}
+import type { AuthCardProps } from './types/auth-ui.types';
 
 export function AuthCard({
   title,

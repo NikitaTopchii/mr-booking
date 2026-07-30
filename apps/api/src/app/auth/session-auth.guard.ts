@@ -7,7 +7,7 @@ import { QueryBus } from '@nestjs/cqrs';
 import { UnauthenticatedError, type SafeUser } from '@mr-booking/auth-domain';
 import { GetCurrentUserQuery } from '@mr-booking/auth-feature';
 import type { Request } from 'express';
-import type { AuthenticatedRequest } from './auth-request';
+import type { AuthenticatedRequest } from './types/auth-request.types';
 import { SessionCookieService } from './session-cookie.service';
 
 @Injectable()

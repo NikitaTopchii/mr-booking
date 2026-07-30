@@ -10,10 +10,12 @@ import {
   DrizzleBookingScheduleReader,
   DrizzleMyBookingsReader,
 } from './booking-repository';
+import { DemoBookingSeedService } from './demo-booking-seed.service';
 
 @Module({
   imports: [DatabaseModule],
   providers: [
+    DemoBookingSeedService,
     {
       provide: DrizzleBookingRepository,
       inject: [DatabaseService],
@@ -45,6 +47,11 @@ import {
       useExisting: DrizzleMyBookingsReader,
     },
   ],
-  exports: [BOOKING_REPOSITORY, BOOKING_SCHEDULE_READER, MY_BOOKINGS_READER],
+  exports: [
+    DemoBookingSeedService,
+    BOOKING_REPOSITORY,
+    BOOKING_SCHEDULE_READER,
+    MY_BOOKINGS_READER,
+  ],
 })
 export class BookingDataAccessModule {}

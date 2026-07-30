@@ -5,6 +5,13 @@ import {
   InvalidBookingDurationError,
   InvalidBookingIntervalError,
 } from './booking-errors';
+import {
+  validatedBookingInterval,
+  type BookingInterval,
+  type OfficeDateTime,
+} from './types/booking-interval.contracts';
+
+export type { BookingInterval } from './types/booking-interval.contracts';
 
 export const OFFICE_TIME_ZONE = 'Europe/Kyiv';
 export const BOOKING_SLOT_MILLISECONDS = 30 * 60 * 1000;
@@ -13,7 +20,6 @@ export const MAXIMUM_BOOKING_DURATION_MILLISECONDS = 4 * 60 * 60 * 1000;
 export const OFFICE_OPENING_MINUTE = 9 * 60;
 export const OFFICE_CLOSING_MINUTE = 19 * 60;
 
-const validatedBookingInterval = Symbol('validatedBookingInterval');
 const officeDateTimeFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: OFFICE_TIME_ZONE,
   calendar: 'gregory',
@@ -26,21 +32,6 @@ const officeDateTimeFormatter = new Intl.DateTimeFormat('en-CA', {
   minute: '2-digit',
   second: '2-digit',
 });
-
-export interface BookingInterval {
-  readonly startsAtUtc: number;
-  readonly endsAtUtc: number;
-  readonly [validatedBookingInterval]: true;
-}
-
-interface OfficeDateTime {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-  readonly hour: number;
-  readonly minute: number;
-  readonly second: number;
-}
 
 export function validateBookingInterval(
   startsAtUtc: number,

@@ -1,19 +1,19 @@
 # MR Booking
 
-MR Booking is an Nx monorepo for the UA-SKILLS meeting-room booking
-application. The current foundation combines password/session authentication
-with the authoritative booking HTTP and persistence core:
+MR Booking is a submission-ready UA-SKILLS meeting-room booking application.
+Employees can register or sign in, inspect a room schedule in their browser
+timezone, create a valid booking, cancel their own future booking, and review
+upcoming or paginated past bookings:
 
 ```text
 Browser -> Caddy -> Next.js web -> NestJS API -> SQLite
 ```
 
-The current phase includes registration with automatic login, login, logout,
-server-restored protected routes, Argon2id password hashes, opaque
-database-backed sessions, deterministic users and rooms, health checks,
-race-safe booking commands, authenticated room/schedule/booking endpoints,
-the interactive weekly calendar, the cursor-paginated My bookings page,
-Docker images, and quality gates.
+The mandatory product is implemented in TypeScript with Next.js, NestJS,
+SQLite, Drizzle, SWR, Tailwind, Radix/shadcn primitives, and a repository-owned
+manual calendar. Implemented bonuses are one-command Docker Compose startup,
+database-enforced race protection, booking API integration coverage, and the
+complete compact/mobile schedule.
 
 ## Prerequisites
 
@@ -39,12 +39,24 @@ The checked-in example contains safe local-development defaults. Production
 configuration must provide every variable and an absolute `DATABASE_PATH`;
 invalid configuration fails before either application starts.
 
-Authentication adds:
+Runtime variables:
 
-| Variable              | Local default          | Purpose                             |
-| --------------------- | ---------------------- | ----------------------------------- |
-| `SESSION_COOKIE_NAME` | `room_booking_session` | HttpOnly opaque-session cookie name |
-| `SESSION_TTL_DAYS`    | `7`                    | Fixed session lifetime in days      |
+| Variable               | Example/default           | Purpose                                              |
+| ---------------------- | ------------------------- | ---------------------------------------------------- |
+| `NODE_ENV`             | `development`             | Runtime mode                                         |
+| `APP_PORT`             | `3000`                    | Public Docker gateway port                           |
+| `WEB_INTERNAL_PORT`    | `3001`                    | Next.js internal/local port                          |
+| `API_INTERNAL_PORT`    | `3002`                    | NestJS internal/local port                           |
+| `DATABASE_PATH`        | `.data/mr-booking.sqlite` | API-owned SQLite file; absolute in production        |
+| `SEED_ON_START`        | `true`                    | Run deterministic rooms/users/bookings at API start  |
+| `DEMO_SEED_WEEK_START` | blank                     | Optional Kyiv Monday (`YYYY-MM-DD`) for demo records |
+| `OFFICE_TIME_ZONE`     | `Europe/Kyiv`             | Fixed office policy zone                             |
+| `OFFICE_OPEN_TIME`     | `09:00`                   | Fixed office opening boundary                        |
+| `OFFICE_CLOSE_TIME`    | `19:00`                   | Fixed office closing boundary                        |
+| `WEB_ORIGIN`           | `http://localhost:3000`   | Public application origin                            |
+| `API_INTERNAL_URL`     | `http://localhost:3002`   | Server-side NestJS URL                               |
+| `SESSION_COOKIE_NAME`  | `room_booking_session`    | HttpOnly opaque-session cookie name                  |
+| `SESSION_TTL_DAYS`     | `7`                       | Fixed session lifetime in days                       |
 
 The production cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, scoped to `/`,
 and has explicit max-age and expiry. The raw 256-bit token is never persisted:
@@ -117,7 +129,7 @@ Generate a SQL migration after an intentional schema change:
 yarn db:generate
 ```
 
-Apply committed migrations and run the idempotent room/auth seed:
+Apply committed migrations and run the complete idempotent demo seed:
 
 ```bash
 yarn db:migrate
@@ -136,9 +148,18 @@ account or resetting its password:
 | Alice | `alice@example.com` | `password123` |
 | Bob   | `bob@example.com`   | `password123` |
 
-Passwords are seeded through the same production Argon2id adapter. Phase 3A
-adds the booking schema but intentionally does not seed demo bookings; those
-arrive with the schedule and personal-list integration.
+Passwords are seeded through the production Argon2id adapter. Six stable demo
+bookings then exercise Alice and Bob, Акваріум and Марс, five weekdays,
+owned/foreign styling, My Bookings, and adjacent 10:00–11:00 / 11:00–12:00
+intervals. Each booking is accompanied by the same authoritative 30-minute
+slot rows used by normal booking creation.
+
+Set `DEMO_SEED_WEEK_START` to a valid Monday such as `2030-06-03` for a fixed
+review week. When it is blank, the seed selects the next Monday in
+`Europe/Kyiv`, keeping the schedule immediately usable. Re-running the seed
+replaces only the six known demo booking IDs; it never deletes unrelated
+users, rooms, bookings, or slots. Changing the reference week moves only those
+known records.
 
 ## Authentication behavior
 
@@ -238,11 +259,13 @@ curl --cookie cookie.txt \
   'http://localhost:3000/api/bookings/mine/past?limit=20&cursor=RETURNED_CURSOR'
 ```
 
-The authoritative booking rules remain:
+The authoritative booking rules are:
 
 - titles are trimmed, Unicode-preserving, required, and limited to 100
   characters;
-- absolute instants are integer UTC epoch milliseconds;
+- public HTTP timestamps are absolute ISO 8601 strings and responses are
+  canonical UTC with `Z`;
+- absolute instants are stored internally as integer UTC epoch milliseconds;
 - the server clock requires a strictly future start;
 - office policy is evaluated in `Europe/Kyiv`, every day from 09:00 through
   19:00;
@@ -288,10 +311,51 @@ cannot import API-only database code, generic database infrastructure cannot
 depend on feature libraries, and cross-library imports go through public
 entry points.
 
-Phase 2C release verification also covers a clean Docker image build, public
-gateway registration and login, production cookie attributes, current-user
-lookup, protected rendering, browser reload, logout/revocation, Alice and Bob
-login, and session persistence across a normal Docker Compose restart.
+The full gate executes unit/component suites, file-backed integration suites,
+Playwright E2E, lint, typecheck, production builds, and Prettier sequentially.
+`npm test` is not a placeholder: it invokes the Nx test target and includes
+the mandatory adjacent, partial-overlap, exact-overlap, containment,
+different-room, and neighbouring-day interval cases.
+
+## Implemented and deferred bonuses
+
+Implemented and verified in repository tests:
+
+- unique 30-minute room-slot ownership and `BEGIN IMMEDIATE` allow exactly
+  one winner under concurrent booking requests;
+- authenticated booking API integration tests cover creation, validation,
+  conflict, safe DTOs, ownership, cancellation, and personal reads;
+- the enhanced mobile schedule provides a one-day phone timeline, date strip,
+  month picker, bottom sheets, safe-area clearance, and a three-day tablet
+  view.
+
+Docker Compose source is present for the API, web, and public Caddy gateway
+with an API-owned persistent SQLite volume. `docker compose config --quiet`
+passes. The current Phase 4A environment could not reconnect to its Colima
+Docker socket, so a fresh image build/start/restart smoke remains unverified
+in this review despite earlier project-phase gateway evidence.
+
+Deferred to later bonus phases:
+
+- development email confirmation;
+- room-capacity filtering;
+- recurring weekly bookings;
+- end-of-booking in-app notifications;
+- installable/offline PWA and Web Push.
+
+## Known limitations
+
+- The SQLite deployment deliberately supports one API writer process and is
+  not horizontally scalable.
+- Office hours apply every calendar day because the specification defines no
+  closed weekdays.
+- Expired sessions are rejected but do not yet have scheduled cleanup.
+- Login throttling is not implemented.
+- Cancelled records remain persisted for integrity but are excluded from the
+  default schedule and personal lists.
+- Past-booking cursors are process-keyed and become invalid after an API
+  restart.
+- Dark mode is not claimed; the verified submission theme is light.
 
 ## Workspace projects
 
@@ -321,27 +385,16 @@ login, and session persistence across a normal Docker Compose restart.
 | `auth-ui`                 | `libs/auth/ui`                 | `scope:auth,type:ui,platform:web`               |
 | `workspace-tooling`       | `tools`                        | `scope:shared,type:app,platform:api`            |
 
-## Phase status
+## Responsive schedule and timezone responsibilities
 
-Phase 3C.1 adapts the localized interactive schedule without changing its API
-or domain. Below 640px it renders one selected day with a seven-day strip,
-secondary month picker, sticky context, and mobile booking/details sheets.
-From 640–1023px it renders the selected date plus two days; from 1024px it
-retains the Monday–Sunday grid. All modes share one selected room/date model,
-one SWR resource, and server-confirmed mutations. The shell reserves a
-tokenized bottom-navigation and safe-area inset so the final slot remains
-reachable.
+Below 640px the schedule renders one browser-local day with a seven-day strip,
+month picker, sticky context, and mobile booking/details sheets. From
+640–1023px it renders the selected day plus two days. From 1024px it renders
+the full Monday–Sunday week. All modes share one selected room/date model and
+one range-specific SWR resource; they do not fetch all presentations at once.
 
-Phase 3D integrates authoritative upcoming and cursor-paginated past bookings,
-browser-local booking cards, schedule deep links, and owner cancellation.
-
-Phase 3B completed the authenticated room catalogue, room-range schedule,
-booking creation, and owner cancellation HTTP API.
-
-Phase 2D completed the authenticated shell and My bookings UI foundation.
-Password recovery/change, OAuth, magic links, MFA, CAPTCHA, roles/admin, email
-verification, account deletion, device management, and logout-all are
-intentionally deferred. PWA support, notifications, Web Push, and recurring
-bookings remain outside the implemented phases.
-Login throttling and expired-session cleanup are documented hardening work,
-not placeholder implementations.
+The browser timezone controls all visible schedule and My Bookings labels.
+The API receives and returns absolute ISO timestamps, stores UTC instants, and
+always validates slot alignment and 09:00–19:00 office policy in
+`Europe/Kyiv`. When browser and office zones differ, booking surfaces show
+both responsibilities explicitly.

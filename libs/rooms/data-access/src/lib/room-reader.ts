@@ -1,11 +1,7 @@
 import type { Room, RoomReader } from '@mr-booking/rooms-domain';
 import { rooms } from '@mr-booking/rooms-infrastructure';
-import type { DatabaseConnection } from '@mr-booking/shared-database';
 import { asc, eq } from 'drizzle-orm';
-
-interface DatabaseConnectionProvider {
-  readonly connection: DatabaseConnection;
-}
+import type { DatabaseConnectionProvider } from './types/room-reader.types';
 
 export class DrizzleRoomReader implements RoomReader {
   public constructor(

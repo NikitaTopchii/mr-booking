@@ -1,9 +1,9 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { DatabaseConnection } from '@mr-booking/shared-database';
 import {
   applyMigrations,
-  DatabaseConnection,
   openDatabase,
   resolveMigrationsFolder,
 } from '@mr-booking/shared-database';

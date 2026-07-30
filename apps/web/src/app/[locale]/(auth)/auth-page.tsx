@@ -3,19 +3,10 @@ import {
   AuthCard,
   AuthLanguageSwitcher,
   type AuthFormMessages,
-  type AuthMode,
 } from '@mr-booking/auth-ui';
-import {
-  localizedRoute,
-  type AppDictionary,
-  type Locale,
-} from '@mr-booking/shared-i18n';
+import { localizedRoute, type AppDictionary } from '@mr-booking/shared-i18n';
 import { getDictionary } from '@mr-booking/shared-i18n/server';
-
-export interface AuthPageProps {
-  readonly locale: Locale;
-  readonly mode: AuthMode;
-}
+import type { AuthPageProps } from './types/auth-page.types';
 
 export async function AuthPage({ locale, mode }: AuthPageProps) {
   const dictionary = await getDictionary(locale);

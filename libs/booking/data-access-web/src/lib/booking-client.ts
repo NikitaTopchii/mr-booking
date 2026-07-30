@@ -1,88 +1,22 @@
-import { z } from 'zod';
-
-const absoluteDateTimeSchema = z.iso.datetime({ offset: true });
-const canonicalUtcDateTimeSchema = z.iso
-  .datetime()
-  .refine((value) => new Date(value).toISOString() === value);
-const roomSchema = z
-  .object({
-    id: z.string().min(1),
-    name: z.string().min(1),
-    floor: z.number().int(),
-    capacity: z.number().int().positive(),
-  })
-  .strict();
-const bookingSchema = z
-  .object({
-    id: z.string().min(1),
-    roomId: z.string().min(1),
-    title: z.string(),
-    startsAtUtc: canonicalUtcDateTimeSchema,
-    endsAtUtc: canonicalUtcDateTimeSchema,
-    author: z
-      .object({
-        id: z.string().min(1),
-        name: z.string().min(1),
-      })
-      .strict(),
-    isMine: z.boolean(),
-  })
-  .strict();
-const roomsResponseSchema = z.object({ rooms: z.array(roomSchema) }).strict();
-const bookingsResponseSchema = z
-  .object({ bookings: z.array(bookingSchema) })
-  .strict();
-const bookingResponseSchema = z.object({ booking: bookingSchema }).strict();
-const myBookingSchema = z
-  .object({
-    id: z.string().min(1),
-    title: z.string(),
-    startsAtUtc: canonicalUtcDateTimeSchema,
-    endsAtUtc: canonicalUtcDateTimeSchema,
-    room: roomSchema,
-    status: z.enum(['UPCOMING', 'IN_PROGRESS', 'PAST']),
-    canCancel: z.boolean(),
-  })
-  .strict();
-const myBookingsResponseSchema = z
-  .object({
-    items: z.array(myBookingSchema),
-    serverNowUtc: canonicalUtcDateTimeSchema,
-  })
-  .strict();
-const myPastBookingsResponseSchema = myBookingsResponseSchema
-  .extend({
-    nextCursor: z.string().min(1).nullable(),
-  })
-  .strict();
-const apiErrorSchema = z
-  .object({
-    code: z.string().min(1),
-  })
-  .passthrough();
-
-export type Room = z.infer<typeof roomSchema>;
-export type ScheduleBooking = z.infer<typeof bookingSchema>;
-export type MyBooking = z.infer<typeof myBookingSchema>;
-export type MyBookingsResponse = z.infer<typeof myBookingsResponseSchema>;
-export type MyPastBookingsResponse = z.infer<
-  typeof myPastBookingsResponseSchema
->;
-
-export interface BookingRange {
-  readonly fromUtc: string;
-  readonly toUtc: string;
-}
-
-export interface CreateBookingInput {
-  readonly roomId: string;
-  readonly title: string;
-  readonly startsAtUtc: string;
-  readonly endsAtUtc: string;
-}
-
-export type BookingClientErrorCode =
-  'UNAUTHENTICATED' | 'NETWORK_ERROR' | 'INVALID_RESPONSE' | string;
+import type { z } from 'zod';
+import {
+  absoluteDateTimeSchema,
+  apiErrorSchema,
+  bookingResponseSchema,
+  bookingsResponseSchema,
+  myBookingsResponseSchema,
+  myPastBookingsResponseSchema,
+  roomsResponseSchema,
+} from './booking-client.schemas';
+import type {
+  BookingClientErrorCode,
+  BookingRange,
+  CreateBookingInput,
+  MyBookingsResponse,
+  MyPastBookingsResponse,
+  Room,
+  ScheduleBooking,
+} from './types/booking-client.types';
 
 export class BookingClientError extends Error {
   public constructor(

@@ -160,3 +160,20 @@ palette replacement, Roboto import, morphing/blur effects, long animations,
 adaptive desktop sidebar, and speculative loading skeletons were rejected.
 They conflict with the frozen design direction, current tokens, performance,
 the two-item information architecture, or the absence of a booking request.
+
+## Phase 4A submission review
+
+The UI/UX skill was run against an accessible, mobile-first meeting-room
+product and followed with a focused accessibility/touch/loading search.
+Accepted recommendations were the 375/768/1024/1440 responsive audit,
+44×44px touch targets, visible focus, loading feedback, duplicate-submit
+prevention, no body horizontal scrolling, safe-area clearance, restrained
+motion, and high-contrast token usage. These align with the implemented
+adaptive schedule and were retained rather than triggering a redesign.
+
+The generated external Atkinson font, new sky/green palette, single-column
+marketing-page structure, and dark-mode suggestion were rejected. They would
+replace the established token system or describe a landing page rather than
+the authenticated scheduling workspace. Decorative animation, a second icon
+system, and a ready-made calendar were also rejected for accessibility,
+performance, repository-stack, and specification reasons.

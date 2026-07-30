@@ -1,4 +1,5 @@
 import {
+  type BookingRange,
   createBooking,
   listRoomBookings,
   listRooms,
@@ -23,7 +24,7 @@ jest.mock('@mr-booking/booking-data-access-web', () => {
     BookingClientError,
     bookingKeys: {
       rooms: () => ['booking', 'rooms'],
-      schedule: (roomId: string, range: { fromUtc: string; toUtc: string }) => [
+      schedule: (roomId: string, range: BookingRange) => [
         'booking',
         'schedule',
         roomId,

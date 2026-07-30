@@ -34,6 +34,7 @@ import {
   RegisterUserCommand,
 } from './auth-commands';
 import { GetCurrentUserQuery } from './auth-queries';
+import type { IssuedSession } from './types/auth-handler.types';
 
 export const AUTH_SESSION_TTL_MILLISECONDS = Symbol(
   'AUTH_SESSION_TTL_MILLISECONDS',
@@ -49,16 +50,7 @@ abstract class SessionIssuingHandler {
     protected readonly sessionTtlMilliseconds: number,
   ) {}
 
-  protected issueSession(userId: string): {
-    readonly rawSessionToken: string;
-    readonly session: {
-      readonly id: string;
-      readonly userId: string;
-      readonly tokenHash: string;
-      readonly createdAtUtc: number;
-      readonly expiresAtUtc: number;
-    };
-  } {
+  protected issueSession(userId: string): IssuedSession {
     const createdAtUtc = this.clock.now();
     const rawSessionToken = this.tokenGenerator.generate();
 

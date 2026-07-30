@@ -1,11 +1,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import type { ProjectConfiguration } from './types/module-boundaries.types';
 
 const workspaceRoot = resolve(__dirname, '../..');
-
-interface ProjectConfiguration {
-  readonly tags: readonly string[];
-}
 
 function readProject(path: string): ProjectConfiguration {
   return JSON.parse(

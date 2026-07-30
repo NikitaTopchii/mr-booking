@@ -1,16 +1,5 @@
-import type { AuthField as AuthFieldName } from '@mr-booking/auth-domain';
 import { Input, Label } from '@mr-booking/shared-ui';
-import type { HTMLInputTypeAttribute } from 'react';
-
-export interface AuthFieldProps {
-  readonly name: AuthFieldName;
-  readonly label: string;
-  readonly type?: HTMLInputTypeAttribute;
-  readonly autoComplete: string;
-  readonly hint?: string | undefined;
-  readonly error?: string | undefined;
-  readonly disabled?: boolean;
-}
+import type { AuthFieldProps } from './types/auth-ui.types';
 
 export function AuthField({
   name,

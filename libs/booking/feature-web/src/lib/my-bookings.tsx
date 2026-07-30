@@ -13,7 +13,6 @@ import {
   createScheduleBookingHref,
   MyBookingCard,
 } from '@mr-booking/booking-ui';
-import type { AppDictionary, Locale } from '@mr-booking/shared-i18n';
 import {
   Alert,
   AlertDescription,
@@ -29,27 +28,26 @@ import {
   DialogTitle,
   Spinner,
 } from '@mr-booking/shared-ui';
-import {
-  AlertCircle,
-  CalendarPlus,
-  History,
-  type LucideIcon,
-} from 'lucide-react';
+import { AlertCircle, CalendarPlus, History } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import useSWRInfinite from 'swr/infinite';
 import useSWRMutation from 'swr/mutation';
+import type {
+  BookingListProps,
+  BookingSectionProps,
+  CancelBookingMutationOptions,
+  CancellationDialogProps,
+  MyBookingsEmptyStateProps,
+  MyBookingsErrorStateProps,
+  MyBookingsLoadingStateProps,
+  MyBookingsProps,
+} from './types/my-bookings.types';
 import { useBrowserTimeZone } from './use-browser-time-zone';
 
 const PAST_PAGE_SIZE = 20;
-type Messages = AppDictionary['myBookings'];
-
-export interface MyBookingsProps {
-  readonly locale: Locale;
-  readonly messages: Messages;
-}
 
 export function MyBookings({ locale, messages }: MyBookingsProps) {
   const router = useRouter();
@@ -76,7 +74,7 @@ export function MyBookings({ locale, messages }: MyBookingsProps) {
   );
   const cancellation = useSWRMutation(
     ['booking', 'mine', 'cancel'],
-    (_key, { arg }: { arg: string }) => cancelBooking(arg),
+    (_key, { arg }: CancelBookingMutationOptions) => cancelBooking(arg),
   );
   const pastItems = deduplicateBookings(
     past.data?.flatMap(({ items }) => items) ?? [],
@@ -284,12 +282,7 @@ function BookingSection({
   title,
   icon: Icon,
   children,
-}: {
-  readonly id: string;
-  readonly title: string;
-  readonly icon: LucideIcon;
-  readonly children: ReactNode;
-}) {
+}: BookingSectionProps) {
   return (
     <Card aria-labelledby={`${id}-title`}>
       <CardHeader className="border-b border-border">
@@ -312,13 +305,7 @@ function BookingList({
   browserTimeZone,
   messages,
   onCancel,
-}: {
-  readonly bookings: readonly MyBooking[];
-  readonly locale: Locale;
-  readonly browserTimeZone: string;
-  readonly messages: Messages;
-  readonly onCancel: (booking: MyBooking) => void;
-}) {
+}: BookingListProps) {
   return (
     <ul className="grid gap-3">
       {bookings.map((booking) => (
@@ -356,16 +343,7 @@ function CancellationDialog({
   pending,
   onOpenChange,
   onConfirm,
-}: {
-  readonly booking: MyBooking | undefined;
-  readonly locale: Locale;
-  readonly browserTimeZone: string;
-  readonly messages: Messages;
-  readonly error: string | undefined;
-  readonly pending: boolean;
-  readonly onOpenChange: (open: boolean) => void;
-  readonly onConfirm: () => void;
-}) {
+}: CancellationDialogProps) {
   const localTime = booking
     ? new Intl.DateTimeFormat(locale, {
         timeZone: browserTimeZone,
@@ -424,7 +402,7 @@ function CancellationDialog({
   );
 }
 
-function LoadingState({ message }: { readonly message: string }) {
+function LoadingState({ message }: MyBookingsLoadingStateProps) {
   return (
     <div
       className="flex min-h-40 items-center justify-center gap-3 text-sm text-muted-foreground"
@@ -436,15 +414,7 @@ function LoadingState({ message }: { readonly message: string }) {
   );
 }
 
-function ErrorState({
-  message,
-  retry,
-  onRetry,
-}: {
-  readonly message: string;
-  readonly retry: string;
-  readonly onRetry: () => void;
-}) {
+function ErrorState({ message, retry, onRetry }: MyBookingsErrorStateProps) {
   return (
     <Alert variant="destructive">
       <AlertCircle aria-hidden="true" />
@@ -458,15 +428,7 @@ function ErrorState({
   );
 }
 
-function EmptyState({
-  title,
-  description,
-  action,
-}: {
-  readonly title: string;
-  readonly description: string;
-  readonly action?: { readonly href: string; readonly label: string };
-}) {
+function EmptyState({ title, description, action }: MyBookingsEmptyStateProps) {
   return (
     <div className="flex min-h-48 flex-col items-center justify-center text-center">
       <h3 className="font-semibold">{title}</h3>

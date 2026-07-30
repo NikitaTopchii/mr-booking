@@ -12,6 +12,7 @@ import type { SuperAgentTest } from 'supertest';
 import request from 'supertest';
 import { z } from 'zod';
 import { AppModule } from '../app.module';
+import type { InsertBookingInput } from './types/booking-controller-test.types';
 
 const halfHour = 30 * 60 * 1000;
 const hour = 2 * halfHour;
@@ -779,15 +780,7 @@ describe('rooms and bookings API', () => {
       .parse(response.body).user.id;
   }
 
-  function insertBooking(input: {
-    readonly id: string;
-    readonly authorUserId: string;
-    readonly roomId: string;
-    readonly title: string;
-    readonly startsAtUtc: number;
-    readonly endsAtUtc: number;
-    readonly cancelledAtUtc?: number;
-  }): void {
+  function insertBooking(input: InsertBookingInput): void {
     databaseService.connection.drizzle
       .insert(bookings)
       .values({

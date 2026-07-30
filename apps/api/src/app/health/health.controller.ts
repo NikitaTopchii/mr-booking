@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { SqliteHealthIndicator } from '@mr-booking/shared-database';
+import type { LivenessResponse } from './types/health.types';
 
 @Controller('health')
 export class HealthController {
@@ -10,7 +11,7 @@ export class HealthController {
   ) {}
 
   @Get('live')
-  public liveness(): { readonly status: 'ok' } {
+  public liveness(): LivenessResponse {
     return { status: 'ok' };
   }
 

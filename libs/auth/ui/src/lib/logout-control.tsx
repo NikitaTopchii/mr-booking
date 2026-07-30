@@ -1,13 +1,6 @@
 import { Button } from '@mr-booking/shared-ui';
 import { LogOut } from 'lucide-react';
-
-export interface LogoutControlProps {
-  readonly label: string;
-  readonly submittingLabel: string;
-  readonly submitting: boolean;
-  readonly error?: string | undefined;
-  readonly onLogout: () => void;
-}
+import type { LogoutControlProps } from './types/auth-ui.types';
 
 export function LogoutControl({
   label,

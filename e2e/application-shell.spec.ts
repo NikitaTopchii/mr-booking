@@ -9,7 +9,7 @@ test.describe('authenticated application shell', () => {
     await expect(page).toHaveURL(/\/en\/login$/u);
   });
 
-  test('renders Ukrainian identity, navigation, empty states, reload, and localized logout', async ({
+  test('renders Ukrainian identity, seeded bookings, reload, and localized logout', async ({
     page,
   }) => {
     await signIn(page, 'uk');
@@ -20,7 +20,9 @@ test.describe('authenticated application shell', () => {
       page.getByRole('heading', { level: 1, name: 'Мої бронювання' }),
     ).toBeVisible();
     await expect(
-      page.getByText('Майбутніх бронювань поки немає.'),
+      page.getByRole('link', {
+        name: 'Відкрити в розкладі: Weekly planning',
+      }),
     ).toBeVisible();
     await expect(
       page.getByText('Минулі бронювання з’являться тут.'),
@@ -55,8 +57,13 @@ test.describe('authenticated application shell', () => {
       page.getByRole('heading', { level: 1, name: 'My bookings' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('link', { name: 'View schedule' }),
-    ).toHaveAttribute('href', '/en/schedule');
+      page.getByRole('link', {
+        name: 'Open in schedule: Weekly planning',
+      }),
+    ).toHaveAttribute(
+      'href',
+      /\/en\/schedule\?date=\d{4}-\d{2}-\d{2}&week=\d{4}-\d{2}-\d{2}&roomId=room-aquarium/u,
+    );
   });
 
   test('keeps navigation and the keyboard-operable user menu usable across target widths', async ({

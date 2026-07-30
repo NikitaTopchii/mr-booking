@@ -1,16 +1,13 @@
 import { resolveServerAuth } from '@mr-booking/auth-data-access-web/server';
 import { localizedRoute } from '@mr-booking/shared-i18n';
 import { redirect } from 'next/navigation';
-import type { ReactNode } from 'react';
-import { requireLocale, type LocaleRouteParams } from '../locale';
+import { requireLocale } from '../locale';
+import type { LocaleLayoutProps } from '../types/locale-route.types';
 
 export default async function AuthLayout({
   children,
   params,
-}: {
-  readonly children: ReactNode;
-  readonly params: Promise<LocaleRouteParams>;
-}) {
+}: LocaleLayoutProps) {
   const locale = await requireLocale(params);
   const auth = await resolveServerAuth();
 

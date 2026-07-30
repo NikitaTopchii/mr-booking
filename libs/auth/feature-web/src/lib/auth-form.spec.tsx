@@ -3,8 +3,10 @@ import {
   loginUser,
   registerUser,
 } from '@mr-booking/auth-data-access-web/client';
+import type { AuthFormMessages } from '@mr-booking/auth-ui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { AuthForm, type AuthFormErrorMessages } from './auth-form';
+import { AuthForm } from './auth-form';
+import type { AuthFormErrorMessages } from './types/auth-feature-web.types';
 
 jest.mock('@mr-booking/auth-data-access-web/client', () => ({
   AuthClientError: jest.requireActual('@mr-booking/auth-data-access-web/client')
@@ -258,14 +260,7 @@ function renderLogin(
   return render(loginForm(messages));
 }
 
-function loginForm(messages: {
-  readonly emailLabel: string;
-  readonly passwordLabel: string;
-  readonly submit: string;
-  readonly submitting: string;
-  readonly switchText: string;
-  readonly switchAction: string;
-}) {
+function loginForm(messages: AuthFormMessages) {
   return (
     <AuthForm
       mode="login"

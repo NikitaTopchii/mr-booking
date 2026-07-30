@@ -1,8 +1,9 @@
 import 'server-only';
 
 import { cache } from 'react';
-import type { AppDictionary } from './dictionary';
-import { hasLocale, type Locale } from './locales';
+import { hasLocale } from './locales';
+import type { AppDictionary } from './types/dictionary.types';
+import type { Locale } from './types/locale.contracts';
 
 const dictionaryLoaders: Record<Locale, () => Promise<AppDictionary>> = {
   uk: () => import('./dictionaries/uk').then((module) => module.dictionary),

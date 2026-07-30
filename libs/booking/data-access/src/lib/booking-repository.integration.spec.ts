@@ -16,6 +16,7 @@ import {
   DrizzleMyBookingsReader,
 } from './booking-repository';
 import { bookingSlots, bookings } from './booking-schema';
+import type { ConcurrentBookingResult } from './types/booking-repository-test.types';
 
 jest.setTimeout(15_000);
 
@@ -472,11 +473,6 @@ function countRows(
       .from(table)
       .get()?.count ?? 0
   );
-}
-
-interface ConcurrentBookingResult {
-  readonly status: 'created' | 'BOOKING_CONFLICT' | 'unexpected';
-  readonly bookingId: string;
 }
 
 function createConcurrentBookingInsert(

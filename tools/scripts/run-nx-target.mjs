@@ -12,6 +12,12 @@ if (!target || unexpectedArguments.length > 0) {
 }
 
 const nxCommand = process.platform === 'win32' ? 'nx.cmd' : 'nx';
+const targetEnvironment = { ...process.env, CI: 'true' };
+
+if (target === 'build') {
+  targetEnvironment.NODE_ENV = 'production';
+}
+
 const discovery = spawnSync(
   nxCommand,
   ['show', 'projects', `--with-target=${target}`, '--json'],
@@ -58,7 +64,7 @@ const result = spawnSync(
   ],
   {
     stdio: 'inherit',
-    env: { ...process.env, CI: 'true' },
+    env: targetEnvironment,
   },
 );
 

@@ -9,6 +9,7 @@ import {
   type BookingScheduleReader,
   type BookingClock,
   type MyBooking,
+  type MyBookingRecord,
   type MyBookingsReader,
   type MyBookingsResult,
   type MyPastBookingsResult,
@@ -148,18 +149,7 @@ export class GetMyPastBookingsHandler implements IQueryHandler<
 }
 
 function classifyMyBooking(
-  booking: {
-    readonly id: string;
-    readonly title: string;
-    readonly startsAtUtc: number;
-    readonly endsAtUtc: number;
-    readonly room: {
-      readonly id: string;
-      readonly name: string;
-      readonly floor: number;
-      readonly capacity: number;
-    };
-  },
+  booking: MyBookingRecord,
   serverNowUtc: number,
 ): MyBooking {
   if (booking.endsAtUtc <= serverNowUtc) {
