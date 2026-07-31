@@ -5,10 +5,22 @@ import {
   cancelBooking,
   type ScheduleBooking,
 } from '@mr-booking/booking-data-access-web';
+import {
+  createFeatureErrorFactory,
+  defaultFeatureErrorReporter,
+  systemFeatureErrorClock,
+} from '@mr-booking/shared-feature-error';
 import type { Locale } from '@mr-booking/shared-i18n';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWRMutation from 'swr/mutation';
-import { mapScheduleClientError } from '../errors/schedule-client-error.mapper';
+import { bookingClientErrorStatus } from '../errors/booking-client-error.context';
+import { classifyBookingCancellationError } from '../errors/booking-cancellation-error.classifier';
+import { bookingCancellationErrorCatalog } from '../errors/booking-cancellation-error.catalog';
+import type {
+  BookingCancellationFeatureError,
+  BookingCancellationErrorContext,
+  ScheduleErrorDependencies,
+} from '../errors/schedule-error.types';
 import type {
   BookingCancellationState,
   ScheduleDataState,
@@ -18,16 +30,37 @@ export function useBookingCancellation({
   locale,
   data,
   nowUtc,
+  errorDependencies,
 }: {
   readonly locale: Locale;
   readonly data: ScheduleDataState;
   readonly nowUtc: number;
+  readonly errorDependencies?: ScheduleErrorDependencies;
 }): BookingCancellationState {
   const redirectIfAuthExpired = useAuthExpiryRedirect(locale);
+  const errorClock = errorDependencies?.clock ?? systemFeatureErrorClock;
+  const errorReporter =
+    errorDependencies?.reporter ?? defaultFeatureErrorReporter;
+  const errorFactory = useMemo(
+    () =>
+      createFeatureErrorFactory<
+        'weeklySchedule',
+        'cancelBooking',
+        typeof bookingCancellationErrorCatalog,
+        BookingCancellationErrorContext
+      >({
+        feature: 'weeklySchedule',
+        operation: 'cancelBooking',
+        catalog: bookingCancellationErrorCatalog,
+        clock: errorClock,
+        reporter: errorReporter,
+      }),
+    [errorClock, errorReporter],
+  );
+  const operationAttempt = useRef(0);
   const [booking, setBooking] = useState<ScheduleBooking>();
   const [confirming, setConfirming] = useState(false);
-  const [error, setError] =
-    useState<ReturnType<typeof mapScheduleClientError>>();
+  const [error, setError] = useState<BookingCancellationFeatureError>();
   const [notice, setNotice] = useState<'cancelled'>();
   const mutation = useSWRMutation(
     ['booking', 'cancel'],
@@ -44,6 +77,8 @@ export function useBookingCancellation({
 
   const openBooking = useCallback((selected: ScheduleBooking) => {
     setBooking(selected);
+    setError(undefined);
+    setConfirming(false);
     setNotice(undefined);
   }, []);
   const closeBooking = useCallback(() => {
@@ -54,17 +89,33 @@ export function useBookingCancellation({
   }, [mutation.isMutating]);
   const confirmCancellation = useCallback(async () => {
     if (!booking || !canCancel) return;
+    const attempt = ++operationAttempt.current;
+    setError(undefined);
     try {
       await mutation.trigger(booking.id);
       await data.revalidateSchedule();
       setBooking(undefined);
       setConfirming(false);
+      setError(undefined);
       setNotice('cancelled');
     } catch (cause) {
-      redirectIfAuthExpired(cause);
-      setError(mapScheduleClientError(cause));
+      if (redirectIfAuthExpired(cause)) return;
+      const status = bookingClientErrorStatus(cause);
+      const context: BookingCancellationErrorContext = {
+        bookingId: booking.id,
+        roomId: booking.roomId,
+        operationAttempt: attempt,
+        ...(status === undefined ? {} : { status }),
+      };
+      setError(
+        errorFactory.create({
+          code: classifyBookingCancellationError(cause),
+          context,
+          cause,
+        }),
+      );
     }
-  }, [booking, canCancel, data, mutation, redirectIfAuthExpired]);
+  }, [booking, canCancel, data, errorFactory, mutation, redirectIfAuthExpired]);
 
   return {
     booking,

@@ -93,6 +93,24 @@ components, pure view-model functions, and feature-owned error and formatting
 modules. This rule does not require a separate file for every small JSX
 fragment.
 
+Feature error handling MUST classify transport or runtime failures at the
+feature boundary into operation-specific typed errors. Creation, cancellation,
+and query workflows MUST derive their code unions from feature-owned catalogs;
+unrelated operations MUST NOT share a broad error union. Catalogs own stable
+message keys, severity, retryability, and telemetry codes, while localized text
+is resolved only at the presentation boundary. Generic factory mechanics and
+the replaceable reporter port belong in `@mr-booking/shared-feature-error` and
+MUST remain free of booking policy, UI, routing, SWR, and localized strings.
+
+Feature errors MUST record the feature, operation, injected UTC clock time,
+and only safe operational context. Context MUST NOT contain titles, names,
+emails, credentials, cookies, authorization data, request/response bodies, or
+stack traces. Request IDs are preserved only when a trusted server response
+actually supplies one; clients MUST NOT fabricate them. The current default
+reporter emits structured metadata during development and does not claim or
+provide remote telemetry transport. Query reporting MUST be guarded by stable
+failure identity so one unchanged SWR failure is not reported on every render.
+
 ## Review and verification
 
 When this rule causes a refactor, tests MUST cover behavior at the new ownership

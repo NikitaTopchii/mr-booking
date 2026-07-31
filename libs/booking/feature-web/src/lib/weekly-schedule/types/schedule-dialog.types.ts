@@ -3,7 +3,10 @@ import type {
   ScheduleBooking,
 } from '@mr-booking/booking-data-access-web';
 import type { Locale } from '@mr-booking/shared-i18n';
-import type { ScheduleMessages } from './schedule-feature.types';
+import type {
+  BookingCreationState,
+  ScheduleMessages,
+} from './schedule-feature.types';
 
 export interface ScheduleDialogBaseProps {
   readonly locale: Locale;
@@ -22,4 +25,10 @@ export interface BookingDetailsDialogProps extends ScheduleDialogBaseProps {
   readonly onRequestConfirmation: () => void;
   readonly onDismissConfirmation: () => void;
   readonly onConfirmCancellation: () => void;
+}
+
+export interface CreateBookingDialogProps extends ScheduleDialogBaseProps {
+  readonly room: Room;
+  readonly creation: BookingCreationState;
+  readonly errorMessage: string | undefined;
 }

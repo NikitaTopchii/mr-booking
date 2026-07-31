@@ -12,6 +12,7 @@ import {
   ScheduleErrorState,
   ScheduleLoading,
 } from './components/schedule-states';
+import { resolveFeatureErrorMessage } from './errors/resolve-schedule-error-message';
 
 export function WeeklyScheduleView({
   locale,
@@ -23,12 +24,20 @@ export function WeeklyScheduleView({
   creation,
   cancellation,
 }: WeeklyScheduleViewProps) {
-  const scheduleError = data.scheduleError
-    ? messages.errors.schedule
+  const roomsError = data.roomsError
+    ? resolveFeatureErrorMessage(data.roomsError, messages.errors)
     : undefined;
-  const roomsError = data.roomsError ? messages.errors.rooms : undefined;
-  const dialogError = cancellation.error
-    ? errorMessage(cancellation.error, messages)
+  const scheduleError = data.scheduleError
+    ? resolveFeatureErrorMessage(data.scheduleError, messages.errors)
+    : undefined;
+  const creationErrorMessage = creation.error
+    ? resolveFeatureErrorMessage(creation.error, messages.errors.creation)
+    : undefined;
+  const cancellationErrorMessage = cancellation.error
+    ? resolveFeatureErrorMessage(
+        cancellation.error,
+        messages.errors.cancellation,
+      )
     : undefined;
   return (
     <main
@@ -151,6 +160,7 @@ export function WeeklyScheduleView({
           room={data.selectedRoom}
           browserTimeZone={browserTimeZone}
           creation={creation}
+          errorMessage={creationErrorMessage}
         />
       ) : null}
       <BookingDetailsDialog
@@ -162,7 +172,7 @@ export function WeeklyScheduleView({
         confirming={cancellation.confirming}
         canCancel={cancellation.canCancel}
         pending={cancellation.pending}
-        error={dialogError}
+        error={cancellationErrorMessage}
         onClose={cancellation.closeBooking}
         onRequestConfirmation={cancellation.requestConfirmation}
         onDismissConfirmation={cancellation.dismissConfirmation}
@@ -170,28 +180,4 @@ export function WeeklyScheduleView({
       />
     </main>
   );
-}
-
-function errorMessage(
-  kind: NonNullable<WeeklyScheduleViewProps['cancellation']['error']>,
-  messages: WeeklyScheduleViewProps['messages'],
-): string {
-  switch (kind) {
-    case 'conflict':
-      return messages.errors.conflict;
-    case 'past':
-      return messages.errors.past;
-    case 'outsideOfficeHours':
-      return messages.errors.outsideHours;
-    case 'invalidDuration':
-      return messages.errors.duration;
-    case 'validation':
-      return messages.errors.validation;
-    case 'forbidden':
-      return messages.errors.forbidden;
-    case 'notFound':
-      return messages.errors.notFound;
-    default:
-      return messages.errors.generic;
-  }
 }

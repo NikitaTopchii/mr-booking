@@ -7,10 +7,29 @@ import {
   listRooms,
 } from '@mr-booking/booking-data-access-web';
 import { createPresentationRange } from '@mr-booking/booking-ui';
+import {
+  createFeatureErrorFactory,
+  defaultFeatureErrorReporter,
+  systemFeatureErrorClock,
+} from '@mr-booking/shared-feature-error';
 import type { Locale } from '@mr-booking/shared-i18n';
 import useSWR from 'swr';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSchedulePresentation } from '../../use-schedule-presentation';
+import { bookingClientErrorStatus } from '../errors/booking-client-error.context';
+import { classifyRoomQueryError } from '../errors/room-query-error.classifier';
+import { roomQueryErrorCatalog } from '../errors/room-query-error.catalog';
+import { classifyScheduleQueryError } from '../errors/schedule-query-error.classifier';
+import { scheduleQueryErrorCatalog } from '../errors/schedule-query-error.catalog';
+import type {
+  RoomQueryErrorContext,
+  ScheduleErrorDependencies,
+  ScheduleQueryErrorContext,
+} from '../errors/schedule-error.types';
+import type {
+  RoomQueryFeatureError,
+  ScheduleQueryFeatureError,
+} from '../errors/schedule-error.types';
 import type {
   ScheduleDataState,
   ScheduleNavigationState,
@@ -20,17 +39,60 @@ export function useScheduleData({
   locale,
   navigation,
   browserTimeZone,
+  errorDependencies,
 }: {
   readonly locale: Locale;
   readonly navigation: ScheduleNavigationState;
   readonly browserTimeZone: string;
+  readonly errorDependencies?: ScheduleErrorDependencies;
 }): ScheduleDataState {
   const presentation = useSchedulePresentation();
   const redirectIfAuthExpired = useAuthExpiryRedirect(locale);
+  const errorClock = errorDependencies?.clock ?? systemFeatureErrorClock;
+  const errorReporter =
+    errorDependencies?.reporter ?? defaultFeatureErrorReporter;
+  const roomErrorFactory = useMemo(
+    () =>
+      createFeatureErrorFactory<
+        'weeklySchedule',
+        'loadRooms',
+        typeof roomQueryErrorCatalog,
+        RoomQueryErrorContext
+      >({
+        feature: 'weeklySchedule',
+        operation: 'loadRooms',
+        catalog: roomQueryErrorCatalog,
+        clock: errorClock,
+        reporter: errorReporter,
+      }),
+    [errorClock, errorReporter],
+  );
+  const scheduleErrorFactory = useMemo(
+    () =>
+      createFeatureErrorFactory<
+        'weeklySchedule',
+        'loadSchedule',
+        typeof scheduleQueryErrorCatalog,
+        ScheduleQueryErrorContext
+      >({
+        feature: 'weeklySchedule',
+        operation: 'loadSchedule',
+        catalog: scheduleQueryErrorCatalog,
+        clock: errorClock,
+        reporter: errorReporter,
+      }),
+    [errorClock, errorReporter],
+  );
   const roomsQuery = useSWR(bookingKeys.rooms(), listRooms, {
     revalidateOnFocus: false,
-    onError: redirectIfAuthExpired,
   });
+  const [roomsError, setRoomsError] = useState<RoomQueryFeatureError>();
+  const [scheduleError, setScheduleError] =
+    useState<ScheduleQueryFeatureError>();
+  const reportedRoomsFailure = useRef<unknown>(undefined);
+  const reportedScheduleFailure = useRef<unknown>(undefined);
+  const roomsAttempt = useRef(0);
+  const scheduleAttempt = useRef(0);
   const rooms = roomsQuery.data ?? [];
   const selectedRoom =
     rooms.find(({ id }) => id === navigation.requestedRoomId) ?? rooms[0];
@@ -51,8 +113,80 @@ export function useScheduleData({
       : null;
   const scheduleQuery = useSWR(scheduleKey, fetchRoomBookingsByKey, {
     keepPreviousData: false,
-    onError: redirectIfAuthExpired,
   });
+
+  useEffect(() => {
+    const cause = roomsQuery.error;
+    if (!cause) {
+      reportedRoomsFailure.current = undefined;
+      setRoomsError(undefined);
+      return;
+    }
+    if (reportedRoomsFailure.current === cause) return;
+    reportedRoomsFailure.current = cause;
+    if (redirectIfAuthExpired(cause)) {
+      setRoomsError(undefined);
+      return;
+    }
+    const status = bookingClientErrorStatus(cause);
+    const context: RoomQueryErrorContext = {
+      operationAttempt: ++roomsAttempt.current,
+      ...(status === undefined ? {} : { status }),
+    };
+    setRoomsError(
+      roomErrorFactory.create({
+        code: classifyRoomQueryError(cause),
+        context,
+        cause,
+      }),
+    );
+  }, [redirectIfAuthExpired, roomErrorFactory, roomsQuery.error]);
+
+  useEffect(() => {
+    const cause = scheduleQuery.error;
+    if (!cause) {
+      reportedScheduleFailure.current = undefined;
+      setScheduleError(undefined);
+      return;
+    }
+    if (reportedScheduleFailure.current === cause) return;
+    reportedScheduleFailure.current = cause;
+    if (redirectIfAuthExpired(cause)) {
+      setScheduleError(undefined);
+      return;
+    }
+    if (!selectedRoom) {
+      setScheduleError(undefined);
+      return;
+    }
+    const status = bookingClientErrorStatus(cause);
+    const context: ScheduleQueryErrorContext = {
+      roomId: selectedRoom.id,
+      operationAttempt: ++scheduleAttempt.current,
+      ...(status === undefined ? {} : { status }),
+    };
+    setScheduleError(
+      scheduleErrorFactory.create({
+        code: classifyScheduleQueryError(cause),
+        context,
+        cause,
+      }),
+    );
+  }, [
+    redirectIfAuthExpired,
+    scheduleErrorFactory,
+    scheduleQuery.error,
+    selectedRoom,
+  ]);
+
+  const retryRooms = useCallback(() => {
+    setRoomsError(undefined);
+    void roomsQuery.mutate();
+  }, [roomsQuery]);
+  const retrySchedule = useCallback(() => {
+    setScheduleError(undefined);
+    void scheduleQuery.mutate();
+  }, [scheduleQuery]);
 
   useEffect(() => {
     if (
@@ -73,10 +207,10 @@ export function useScheduleData({
     isLoadingRooms: roomsQuery.isLoading,
     isLoadingSchedule: scheduleQuery.isLoading,
     isRevalidating: scheduleQuery.isValidating,
-    roomsError: Boolean(roomsQuery.error),
-    scheduleError: Boolean(scheduleQuery.error),
-    retryRooms: () => void roomsQuery.mutate(),
-    retrySchedule: () => void scheduleQuery.mutate(),
+    roomsError,
+    scheduleError,
+    retryRooms,
+    retrySchedule,
     revalidateSchedule: scheduleQuery.mutate,
   };
 }

@@ -2,15 +2,27 @@
 
 import { useAuthExpiryRedirect } from '@mr-booking/auth-ui';
 import { createBooking } from '@mr-booking/booking-data-access-web';
+import {
+  createFeatureErrorFactory,
+  defaultFeatureErrorReporter,
+  systemFeatureErrorClock,
+} from '@mr-booking/shared-feature-error';
 import type { Locale } from '@mr-booking/shared-i18n';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWRMutation from 'swr/mutation';
 import type { ScheduleSlot } from '@mr-booking/booking-ui';
 import {
   createBookingEndOptions,
   defaultBookingEnd,
 } from '../model/create-booking-end-options';
-import { mapScheduleClientError } from '../errors/schedule-client-error.mapper';
+import { bookingClientErrorStatus } from '../errors/booking-client-error.context';
+import { classifyBookingCreationError } from '../errors/booking-creation-error.classifier';
+import { bookingCreationErrorCatalog } from '../errors/booking-creation-error.catalog';
+import type {
+  BookingCreationErrorContext,
+  BookingCreationFeatureError,
+  ScheduleErrorDependencies,
+} from '../errors/schedule-error.types';
 import type {
   BookingCreationState,
   BookingSelection,
@@ -20,16 +32,37 @@ import type {
 export function useBookingCreation({
   locale,
   data,
+  errorDependencies,
 }: {
   readonly locale: Locale;
   readonly data: ScheduleDataState;
+  readonly errorDependencies?: ScheduleErrorDependencies;
 }): BookingCreationState {
   const redirectIfAuthExpired = useAuthExpiryRedirect(locale);
+  const errorClock = errorDependencies?.clock ?? systemFeatureErrorClock;
+  const errorReporter =
+    errorDependencies?.reporter ?? defaultFeatureErrorReporter;
+  const errorFactory = useMemo(
+    () =>
+      createFeatureErrorFactory<
+        'weeklySchedule',
+        'createBooking',
+        typeof bookingCreationErrorCatalog,
+        BookingCreationErrorContext
+      >({
+        feature: 'weeklySchedule',
+        operation: 'createBooking',
+        catalog: bookingCreationErrorCatalog,
+        clock: errorClock,
+        reporter: errorReporter,
+      }),
+    [errorClock, errorReporter],
+  );
+  const operationAttempt = useRef(0);
   const [selection, setSelection] = useState<BookingSelection>();
   const [title, setTitle] = useState('');
   const [endsAt, setEndsAt] = useState('');
-  const [error, setError] =
-    useState<ReturnType<typeof mapScheduleClientError>>();
+  const [error, setError] = useState<BookingCreationFeatureError>();
   const [notice, setNotice] = useState<'created'>();
   const mutation = useSWRMutation(
     ['booking', 'create'],
@@ -80,17 +113,34 @@ export function useBookingCreation({
     setError(undefined);
   }, [mutation.isMutating]);
   const submit = useCallback(async () => {
-    if (!selection || !data.selectedRoom) return;
+    if (!selection || !data.selectedRoom || !data.presentation) return;
+    const attempt = ++operationAttempt.current;
     const normalizedTitle = title.trim();
-    if (!normalizedTitle || !endOptions.includes(endsAt)) {
-      setError('validation');
+    const contextBase = {
+      roomId: data.selectedRoom.id,
+      startsAtUtc: new Date(selection.slot.startsAtUtc).toISOString(),
+      endsAtUtc: endsAt,
+      presentation: data.presentation,
+      operationAttempt: attempt,
+    };
+    if (!normalizedTitle) {
+      setError(
+        errorFactory.create({ code: 'invalidTitle', context: contextBase }),
+      );
       return;
     }
+    if (!endOptions.includes(endsAt)) {
+      setError(
+        errorFactory.create({ code: 'invalidDuration', context: contextBase }),
+      );
+      return;
+    }
+    setError(undefined);
     try {
       await mutation.trigger({
         roomId: data.selectedRoom.id,
         title: normalizedTitle,
-        startsAtUtc: new Date(selection.slot.startsAtUtc).toISOString(),
+        startsAtUtc: contextBase.startsAtUtc,
         endsAtUtc: endsAt,
       });
       await data.revalidateSchedule();
@@ -100,10 +150,15 @@ export function useBookingCreation({
       setError(undefined);
       setNotice('created');
     } catch (cause) {
-      redirectIfAuthExpired(cause);
-      const kind = mapScheduleClientError(cause);
-      setError(kind);
-      if (kind === 'conflict') {
+      if (redirectIfAuthExpired(cause)) return;
+      const code = classifyBookingCreationError(cause);
+      const status = bookingClientErrorStatus(cause);
+      const context: BookingCreationErrorContext = {
+        ...contextBase,
+        ...(status === undefined ? {} : { status }),
+      };
+      setError(errorFactory.create({ code, context, cause }));
+      if (code === 'conflict') {
         await data.revalidateSchedule();
       }
     }
@@ -111,7 +166,9 @@ export function useBookingCreation({
     data,
     endOptions,
     endsAt,
+    errorFactory,
     mutation,
+    operationAttempt,
     redirectIfAuthExpired,
     selection,
     title,
@@ -129,10 +186,12 @@ export function useBookingCreation({
     close,
     setTitle: (value) => {
       setNotice(undefined);
+      setError(undefined);
       setTitle(value);
     },
     setEnd: (value) => {
       setNotice(undefined);
+      setError(undefined);
       setEndsAt(value);
     },
     submit: () => void submit(),

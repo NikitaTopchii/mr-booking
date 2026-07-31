@@ -155,14 +155,25 @@ export const dictionary = {
     errors: {
       rooms: 'We could not load meeting rooms.',
       schedule: 'We could not load this schedule.',
-      conflict: 'That time was just booked. The schedule has been refreshed.',
-      past: 'Bookings must start in the future.',
-      outsideHours: 'Choose a time within office hours.',
-      duration: 'Bookings must use 30-minute time slots.',
-      validation: 'Check the booking details and try again.',
-      forbidden: 'Only the booking owner can cancel it.',
-      notFound: 'That booking is no longer available.',
-      generic: 'Something went wrong. Please try again.',
+      roomNotFound: 'This room is no longer available. Choose another room.',
+      creation: {
+        conflict:
+          'This time was just booked by someone else. Choose another slot.',
+        startNotInFuture: 'Bookings must start in the future.',
+        outsideHours: 'Choose a time within office hours.',
+        invalidDuration: 'Choose a valid booking duration.',
+        invalidSlotAlignment: 'Choose a time aligned to a 30-minute slot.',
+        invalidTitle: 'Enter a meeting title.',
+        validation: 'Check the booking details and try again.',
+        roomNotFound: 'This room is no longer available. Choose another room.',
+        generic: 'We could not create the booking. Please try again.',
+      },
+      cancellation: {
+        notCancellable: 'This booking can no longer be cancelled.',
+        forbidden: 'Only the booking owner can cancel it.',
+        notFound: 'This booking no longer exists. Refresh and try again.',
+        generic: 'We could not cancel this booking. Please try again.',
+      },
     },
   },
   myBookings: {

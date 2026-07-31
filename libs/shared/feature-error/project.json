@@ -1,0 +1,25 @@
+{
+  "name": "shared-feature-error",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/feature-error/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util", "platform:shared"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared/feature-error",
+        "main": "libs/shared/feature-error/src/index.ts",
+        "tsConfig": "libs/shared/feature-error/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/shared/feature-error/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

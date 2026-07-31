@@ -123,14 +123,24 @@ const messages: AppDictionary['schedule'] = {
   errors: {
     rooms: 'Rooms failed',
     schedule: 'Schedule failed',
-    conflict: 'Conflict',
-    past: 'Past',
-    outsideHours: 'Outside hours',
-    duration: 'Duration',
-    validation: 'Validation',
-    forbidden: 'Forbidden',
-    notFound: 'Not found',
-    generic: 'Generic error',
+    roomNotFound: 'Room not found',
+    creation: {
+      conflict: 'Conflict',
+      startNotInFuture: 'Past',
+      outsideHours: 'Outside hours',
+      invalidDuration: 'Duration',
+      invalidSlotAlignment: 'Slot alignment',
+      invalidTitle: 'Title invalid',
+      validation: 'Validation',
+      roomNotFound: 'Room not found',
+      generic: 'Generic error',
+    },
+    cancellation: {
+      notCancellable: 'Not cancellable',
+      forbidden: 'Forbidden',
+      notFound: 'Not found',
+      generic: 'Generic cancellation error',
+    },
   },
 };
 
@@ -199,6 +209,29 @@ describe('weekly schedule', () => {
     ).toBeDefined();
     expect(screen.getByLabelText('Meeting title')).toBeDefined();
     expect(screen.getByText('Duration')).toBeDefined();
+  });
+
+  it('reports a room query failure once and renders its safe message', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation();
+    jest
+      .mocked(listRooms)
+      .mockRejectedValueOnce(
+        new BookingClientError('SERVICE_UNAVAILABLE', 503),
+      );
+
+    renderSchedule();
+
+    expect(await screen.findByText('Rooms failed')).toBeDefined();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      '[feature-error]',
+      expect.objectContaining({
+        feature: 'weeklySchedule',
+        operation: 'loadRooms',
+        context: expect.objectContaining({ operationAttempt: 1 }),
+      }),
+    );
+    warn.mockRestore();
   });
 
   it('renders exactly three days at medium width', async () => {

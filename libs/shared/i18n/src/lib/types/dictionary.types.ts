@@ -146,14 +146,24 @@ export interface AppDictionary {
     readonly errors: {
       readonly rooms: string;
       readonly schedule: string;
-      readonly conflict: string;
-      readonly past: string;
-      readonly outsideHours: string;
-      readonly duration: string;
-      readonly validation: string;
-      readonly forbidden: string;
-      readonly notFound: string;
-      readonly generic: string;
+      readonly roomNotFound: string;
+      readonly creation: {
+        readonly conflict: string;
+        readonly startNotInFuture: string;
+        readonly outsideHours: string;
+        readonly invalidDuration: string;
+        readonly invalidSlotAlignment: string;
+        readonly invalidTitle: string;
+        readonly validation: string;
+        readonly roomNotFound: string;
+        readonly generic: string;
+      };
+      readonly cancellation: {
+        readonly notCancellable: string;
+        readonly forbidden: string;
+        readonly notFound: string;
+        readonly generic: string;
+      };
     };
   };
   readonly myBookings: {

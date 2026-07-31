@@ -9,7 +9,12 @@ import type {
   ScheduleSlot,
 } from '@mr-booking/booking-ui';
 import type { AppDictionary, Locale } from '@mr-booking/shared-i18n';
-import type { ScheduleErrorKind } from '../errors/schedule-client-error.mapper';
+import type {
+  BookingCancellationFeatureError,
+  BookingCreationFeatureError,
+  RoomQueryFeatureError,
+  ScheduleQueryFeatureError,
+} from '../errors/schedule-error.types';
 
 export type ScheduleMessages = AppDictionary['schedule'];
 
@@ -54,8 +59,8 @@ export interface ScheduleDataState {
   readonly isLoadingRooms: boolean;
   readonly isLoadingSchedule: boolean;
   readonly isRevalidating: boolean;
-  readonly roomsError: boolean;
-  readonly scheduleError: boolean;
+  readonly roomsError: RoomQueryFeatureError | undefined;
+  readonly scheduleError: ScheduleQueryFeatureError | undefined;
   readonly retryRooms: () => void;
   readonly retrySchedule: () => void;
   readonly revalidateSchedule: () => Promise<unknown>;
@@ -71,7 +76,7 @@ export interface BookingCreationState {
   readonly endsAt: string;
   readonly endOptions: readonly string[];
   readonly pending: boolean;
-  readonly error: ScheduleErrorKind | undefined;
+  readonly error: BookingCreationFeatureError | undefined;
   readonly notice: 'created' | undefined;
   readonly openForSlot: (slot: ScheduleSlot) => void;
   readonly close: () => void;
@@ -85,7 +90,7 @@ export interface BookingCancellationState {
   readonly confirming: boolean;
   readonly canCancel: boolean;
   readonly pending: boolean;
-  readonly error: ScheduleErrorKind | undefined;
+  readonly error: BookingCancellationFeatureError | undefined;
   readonly notice: 'cancelled' | undefined;
   readonly openBooking: (booking: ScheduleBooking) => void;
   readonly closeBooking: () => void;

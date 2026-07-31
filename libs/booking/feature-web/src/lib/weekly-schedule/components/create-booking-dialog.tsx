@@ -17,18 +17,12 @@ import {
 } from '@mr-booking/shared-ui';
 import { AlertCircle } from 'lucide-react';
 import { BOOKING_SLOT_MILLISECONDS } from '@mr-booking/booking-domain';
-import type { Room } from '@mr-booking/booking-data-access-web';
-import type { Locale } from '@mr-booking/shared-i18n';
 import { AdaptiveDialogContent } from './adaptive-dialog-content';
 import {
   formatScheduleInstant,
   formatScheduleTimeRange,
 } from '../formatting/schedule-date-time.formatter';
-import type { ScheduleErrorKind } from '../errors/schedule-client-error.mapper';
-import type {
-  BookingCreationState,
-  ScheduleMessages,
-} from '../types/schedule-feature.types';
+import type { CreateBookingDialogProps } from '../types/schedule-dialog.types';
 
 export function CreateBookingDialog({
   locale,
@@ -36,17 +30,9 @@ export function CreateBookingDialog({
   room,
   browserTimeZone,
   creation,
-}: {
-  readonly locale: Locale;
-  readonly messages: ScheduleMessages;
-  readonly room: Room;
-  readonly browserTimeZone: string;
-  readonly creation: BookingCreationState;
-}) {
+  errorMessage,
+}: CreateBookingDialogProps) {
   const slot = creation.selection?.slot;
-  const errorMessage = creation.error
-    ? messageForError(creation.error, messages)
-    : undefined;
   const quickDurations = [
     [1, messages.duration.thirtyMinutes],
     [2, messages.duration.oneHour],
@@ -176,28 +162,4 @@ export function CreateBookingDialog({
       </AdaptiveDialogContent>
     </Dialog>
   );
-}
-
-function messageForError(
-  error: ScheduleErrorKind,
-  messages: ScheduleMessages,
-): string {
-  switch (error) {
-    case 'conflict':
-      return messages.errors.conflict;
-    case 'past':
-      return messages.errors.past;
-    case 'outsideOfficeHours':
-      return messages.errors.outsideHours;
-    case 'invalidDuration':
-      return messages.errors.duration;
-    case 'validation':
-      return messages.errors.validation;
-    case 'forbidden':
-      return messages.errors.forbidden;
-    case 'notFound':
-      return messages.errors.notFound;
-    default:
-      return messages.errors.generic;
-  }
 }

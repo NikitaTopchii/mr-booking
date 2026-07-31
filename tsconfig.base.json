@@ -24,6 +24,9 @@
       "@mr-booking/shared-database": ["./libs/shared/database/src/index.ts"],
       "@mr-booking/shared-ui": ["./libs/shared/ui/src/index.ts"],
       "@mr-booking/shared-i18n": ["./libs/shared/i18n/src/index.ts"],
+      "@mr-booking/shared-feature-error": [
+        "./libs/shared/feature-error/src/index.ts"
+      ],
       "@mr-booking/shared-i18n/server": ["./libs/shared/i18n/src/server.ts"],
       "@mr-booking/booking-domain": ["./libs/booking/domain/src/index.ts"],
       "@mr-booking/booking-data-access": [
