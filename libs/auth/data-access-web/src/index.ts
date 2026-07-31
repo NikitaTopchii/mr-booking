@@ -1,5 +1,5 @@
 export type {
   AuthClientErrorCode,
   AuthenticationResponse,
-} from './lib/auth-client';
+} from './lib/types/auth-client.types';
 export { AuthClientError } from './lib/auth-client';

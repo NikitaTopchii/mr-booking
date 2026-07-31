@@ -1,17 +1,17 @@
-import type { PasswordHasher } from '@mr-booking/auth-domain';
+import { DEMO_USER_IDS, type PasswordHasher } from '@mr-booking/auth-domain';
 import { users } from '@mr-booking/auth-infrastructure';
 import type { DatabaseConnection } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
 
 const seededUsers = [
   {
-    id: 'user-alice',
+    id: DEMO_USER_IDS.alice,
     name: 'Alice',
     email: 'alice@example.com',
     normalizedEmail: 'alice@example.com',
   },
   {
-    id: 'user-bob',
+    id: DEMO_USER_IDS.bob,
     name: 'Bob',
     email: 'bob@example.com',
     normalizedEmail: 'bob@example.com',

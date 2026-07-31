@@ -10,28 +10,16 @@ import {
   type BookingInterval,
   type OfficeDateTime,
 } from './types/booking-interval.contracts';
+import { getOfficeDateTimeParts } from './office-date-time';
 
 export type { BookingInterval } from './types/booking-interval.contracts';
+export { OFFICE_TIME_ZONE } from './office-date-time';
 
-export const OFFICE_TIME_ZONE = 'Europe/Kyiv';
 export const BOOKING_SLOT_MILLISECONDS = 30 * 60 * 1000;
 export const MINIMUM_BOOKING_DURATION_MILLISECONDS = BOOKING_SLOT_MILLISECONDS;
 export const MAXIMUM_BOOKING_DURATION_MILLISECONDS = 4 * 60 * 60 * 1000;
 export const OFFICE_OPENING_MINUTE = 9 * 60;
 export const OFFICE_CLOSING_MINUTE = 19 * 60;
-
-const officeDateTimeFormatter = new Intl.DateTimeFormat('en-CA', {
-  timeZone: OFFICE_TIME_ZONE,
-  calendar: 'gregory',
-  numberingSystem: 'latn',
-  hourCycle: 'h23',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-});
 
 export function validateBookingInterval(
   startsAtUtc: number,
@@ -96,34 +84,7 @@ function isValidEpochMilliseconds(value: number): boolean {
 }
 
 function toOfficeDateTime(epochMilliseconds: number): OfficeDateTime {
-  const values = new Map(
-    officeDateTimeFormatter
-      .formatToParts(new Date(epochMilliseconds))
-      .filter((part) => part.type !== 'literal')
-      .map((part) => [part.type, Number(part.value)]),
-  );
-
-  return {
-    year: requiredPart(values, 'year'),
-    month: requiredPart(values, 'month'),
-    day: requiredPart(values, 'day'),
-    hour: requiredPart(values, 'hour'),
-    minute: requiredPart(values, 'minute'),
-    second: requiredPart(values, 'second'),
-  };
-}
-
-function requiredPart(
-  values: ReadonlyMap<string, number>,
-  key: string,
-): number {
-  const value = values.get(key);
-
-  if (value === undefined || !Number.isInteger(value)) {
-    throw new InvalidBookingIntervalError();
-  }
-
-  return value;
+  return getOfficeDateTimeParts(epochMilliseconds);
 }
 
 function isAlignedBoundary(

@@ -6,8 +6,10 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@mr-booking/auth-domain": "0.0.1",
     "@mr-booking/auth-infrastructure": "0.0.1",
     "@mr-booking/booking-domain": "0.0.1",
+    "@mr-booking/rooms-domain": "0.0.1",
     "@mr-booking/rooms-infrastructure": "0.0.1",
     "@mr-booking/shared-database": "0.0.1",
     "@nestjs/common": "11.1.28",

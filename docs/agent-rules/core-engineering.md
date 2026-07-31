@@ -51,6 +51,17 @@ Search before creating a parallel component, service, utility, contract, or
 policy. Reuse or extend an existing responsibility when it remains cohesive.
 Do not hide meaningful behavior behind generic helpers.
 
+Evaluate large modules by independent reasons to change, not line count alone.
+Seed implementations MUST separate declarative definitions, pure validated
+plan construction, persistence, and orchestration. General timezone conversion
+belongs to the owning date/time abstraction, never inside a feature or seed.
+
+Stable seed IDs MUST use named constants owned by their authoritative scope;
+cross-scope seed definitions import those contracts instead of duplicating raw
+ID strings or selecting IDs by array position. Authoritative validation time
+and persisted creation time are distinct concepts and MUST use separately
+named values.
+
 ## Dependency policy
 
 Before adding a dependency, check:

@@ -6,12 +6,15 @@ import {
   seedAuthUsers,
   users,
 } from '@mr-booking/auth-data-access';
+import { DEMO_USER_IDS } from '@mr-booking/auth-domain';
 import {
+  DEMO_BOOKING_IDS,
   bookingSlots,
   bookings,
   demoBookingIds,
   seedDemoBookings,
 } from '@mr-booking/booking-data-access';
+import { DEMO_ROOM_IDS } from '@mr-booking/rooms-domain';
 import {
   type DatabaseConnection,
   applyMigrations,
@@ -21,6 +24,7 @@ import { deterministicRooms, seedRooms } from '@mr-booking/rooms-data-access';
 import { eq, notInArray } from 'drizzle-orm';
 
 describe('complete deterministic demo seed', () => {
+  const validationNowUtc = Date.parse('2029-01-01T00:00:00.000Z');
   let directory: string;
   let databasePath: string;
   let connection: DatabaseConnection;
@@ -41,7 +45,7 @@ describe('complete deterministic demo seed', () => {
     const passwordHasher = new Argon2PasswordHasher();
     seedRooms(connection);
     await seedAuthUsers(connection, passwordHasher);
-    const result = seedDemoBookings(connection, '2030-06-03');
+    const result = seedDemoBookings(connection, '2030-06-03', validationNowUtc);
 
     expect(result).toEqual({
       weekStart: '2030-06-03',
@@ -56,12 +60,12 @@ describe('complete deterministic demo seed', () => {
     const alice = connection.drizzle
       .select()
       .from(users)
-      .where(eq(users.id, 'user-alice'))
+      .where(eq(users.id, DEMO_USER_IDS.alice))
       .get();
     const bob = connection.drizzle
       .select()
       .from(users)
-      .where(eq(users.id, 'user-bob'))
+      .where(eq(users.id, DEMO_USER_IDS.bob))
       .get();
     expect(
       alice && (await passwordHasher.verify(alice.passwordHash, 'password123')),
@@ -102,7 +106,7 @@ describe('complete deterministic demo seed', () => {
 
     const adjacent = seededBookings.filter(
       ({ roomId, startsAtUtc }) =>
-        roomId === 'room-aquarium' &&
+        roomId === DEMO_ROOM_IDS.aquarium &&
         startsAtUtc < Date.parse('2030-06-04T00:00:00.000Z'),
     );
     expect(adjacent).toHaveLength(2);
@@ -117,7 +121,7 @@ describe('complete deterministic demo seed', () => {
   it('is idempotent, preserves user records, and moves only known demos', async () => {
     seedRooms(connection);
     await seedAuthUsers(connection, new Argon2PasswordHasher());
-    seedDemoBookings(connection, '2030-06-03');
+    seedDemoBookings(connection, '2030-06-03', validationNowUtc);
 
     connection.drizzle
       .insert(users)
@@ -134,7 +138,7 @@ describe('complete deterministic demo seed', () => {
       .insert(bookings)
       .values({
         id: 'user-created-booking',
-        roomId: 'room-kyiv',
+        roomId: DEMO_ROOM_IDS.kyiv,
         authorUserId: 'user-created',
         title: 'Preserved booking',
         startsAtUtc: Date.parse('2031-01-06T07:00:00.000Z'),
@@ -148,12 +152,12 @@ describe('complete deterministic demo seed', () => {
       .values([
         {
           bookingId: 'user-created-booking',
-          roomId: 'room-kyiv',
+          roomId: DEMO_ROOM_IDS.kyiv,
           slotStartsAtUtc: Date.parse('2031-01-06T07:00:00.000Z'),
         },
         {
           bookingId: 'user-created-booking',
-          roomId: 'room-kyiv',
+          roomId: DEMO_ROOM_IDS.kyiv,
           slotStartsAtUtc: Date.parse('2031-01-06T07:30:00.000Z'),
         },
       ])
@@ -161,12 +165,34 @@ describe('complete deterministic demo seed', () => {
 
     seedRooms(connection);
     await seedAuthUsers(connection, new Argon2PasswordHasher());
-    seedDemoBookings(connection, '2030-06-03');
+    const originalRowIds = readDemoBookingRowIds(connection);
+    connection.sqlite
+      .prepare(
+        'UPDATE bookings SET title = ?, cancelled_at_utc = ? WHERE id = ?',
+      )
+      .run(
+        'Changed demo title',
+        validationNowUtc,
+        DEMO_BOOKING_IDS.alicePlanning,
+      );
+
+    seedDemoBookings(connection, '2030-06-03', validationNowUtc);
 
     expect(countRows(connection, 'rooms')).toBe(6);
     expect(countRows(connection, 'users')).toBe(3);
     expect(countRows(connection, 'bookings')).toBe(7);
     expect(countRows(connection, 'booking_slots')).toBe(17);
+    expect(readDemoBookingRowIds(connection)).toEqual(originalRowIds);
+    expect(
+      connection.drizzle
+        .select()
+        .from(bookings)
+        .where(eq(bookings.id, DEMO_BOOKING_IDS.alicePlanning))
+        .get(),
+    ).toMatchObject({
+      title: 'Weekly planning',
+      cancelledAtUtc: null,
+    });
 
     const firstReferenceStarts = connection.drizzle
       .select({ id: bookings.id, startsAtUtc: bookings.startsAtUtc })
@@ -175,7 +201,7 @@ describe('complete deterministic demo seed', () => {
       .orderBy(bookings.id)
       .all();
 
-    seedDemoBookings(connection, '2030-06-10');
+    seedDemoBookings(connection, '2030-06-10', validationNowUtc);
 
     const secondReferenceStarts = connection.drizzle
       .select({ id: bookings.id, startsAtUtc: bookings.startsAtUtc })
@@ -202,6 +228,61 @@ describe('complete deterministic demo seed', () => {
     expect(connection.sqlite.pragma('foreign_key_check')).toEqual([]);
   });
 
+  it('rolls back the complete plan when a user booking owns a target slot', async () => {
+    seedRooms(connection);
+    await seedAuthUsers(connection, new Argon2PasswordHasher());
+    seedDemoBookings(connection, '2030-06-03', validationNowUtc);
+    const originalDemoBookings = connection.drizzle
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, DEMO_BOOKING_IDS.alicePlanning))
+      .all();
+    const conflictingSlotStartsAtUtc = Date.parse('2030-06-10T07:00:00.000Z');
+
+    connection.drizzle
+      .insert(bookings)
+      .values({
+        id: 'user-created-conflict',
+        roomId: DEMO_ROOM_IDS.aquarium,
+        authorUserId: DEMO_USER_IDS.alice,
+        title: 'User-owned target slot',
+        startsAtUtc: conflictingSlotStartsAtUtc,
+        endsAtUtc: conflictingSlotStartsAtUtc + 30 * 60 * 1_000,
+        createdAtUtc: validationNowUtc,
+        cancelledAtUtc: null,
+      })
+      .run();
+    connection.drizzle
+      .insert(bookingSlots)
+      .values({
+        bookingId: 'user-created-conflict',
+        roomId: DEMO_ROOM_IDS.aquarium,
+        slotStartsAtUtc: conflictingSlotStartsAtUtc,
+      })
+      .run();
+
+    expect(() =>
+      seedDemoBookings(connection, '2030-06-10', validationNowUtc),
+    ).toThrow('Unable to persist the deterministic demo booking seed');
+    expect(
+      connection.drizzle
+        .select()
+        .from(bookings)
+        .where(eq(bookings.id, DEMO_BOOKING_IDS.alicePlanning))
+        .all(),
+    ).toEqual(originalDemoBookings);
+    expect(
+      connection.drizzle
+        .select()
+        .from(bookings)
+        .where(eq(bookings.id, 'user-created-conflict'))
+        .get(),
+    ).toMatchObject({ title: 'User-owned target slot' });
+    expect(countDemoSlots(connection)).toBe(15);
+    expect(countOrphanSlots(connection)).toBe(0);
+    expect(connection.sqlite.pragma('foreign_key_check')).toEqual([]);
+  });
+
   it('derives the next Kyiv Monday when no reference week is configured', async () => {
     seedRooms(connection);
     await seedAuthUsers(connection, new Argon2PasswordHasher());
@@ -222,6 +303,69 @@ function countRows(
 ): number {
   const result = connection.sqlite
     .prepare(`SELECT count(*) AS count FROM ${tableName}`)
-    .get() as { readonly count: number };
+    .get();
+  return readCount(result);
+}
+
+function readDemoBookingRowIds(
+  connection: DatabaseConnection,
+): readonly number[] {
+  const rows = connection.sqlite
+    .prepare(
+      `SELECT rowid FROM bookings WHERE id IN (${demoBookingIds
+        .map(() => '?')
+        .join(', ')}) ORDER BY id`,
+    )
+    .all(...demoBookingIds);
+
+  return rows.map((row) => {
+    if (
+      typeof row !== 'object' ||
+      row === null ||
+      !('rowid' in row) ||
+      typeof row.rowid !== 'number'
+    ) {
+      throw new Error('Expected a numeric booking rowid');
+    }
+
+    return row.rowid;
+  });
+}
+
+function countDemoSlots(connection: DatabaseConnection): number {
+  const result = connection.sqlite
+    .prepare(
+      `SELECT count(*) AS count FROM booking_slots WHERE booking_id IN (${demoBookingIds
+        .map(() => '?')
+        .join(', ')})`,
+    )
+    .get(...demoBookingIds);
+
+  return readCount(result);
+}
+
+function countOrphanSlots(connection: DatabaseConnection): number {
+  const result = connection.sqlite
+    .prepare(
+      `SELECT count(*) AS count
+       FROM booking_slots AS slots
+       LEFT JOIN bookings AS booking ON booking.id = slots.booking_id
+       WHERE booking.id IS NULL`,
+    )
+    .get();
+
+  return readCount(result);
+}
+
+function readCount(result: unknown): number {
+  if (
+    typeof result !== 'object' ||
+    result === null ||
+    !('count' in result) ||
+    typeof result.count !== 'number'
+  ) {
+    throw new Error('Expected a numeric row count');
+  }
+
   return result.count;
 }
