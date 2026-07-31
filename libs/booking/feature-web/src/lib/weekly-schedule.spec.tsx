@@ -1,4 +1,5 @@
 import {
+  BookingClientError,
   type BookingRange,
   createBooking,
   listRoomBookings,
@@ -20,6 +21,7 @@ jest.mock('@mr-booking/booking-data-access-web', () => {
     }
   }
 
+  const listRoomBookings = jest.fn();
   return {
     BookingClientError,
     bookingKeys: {
@@ -33,7 +35,11 @@ jest.mock('@mr-booking/booking-data-access-web', () => {
       ],
     },
     listRooms: jest.fn(),
-    listRoomBookings: jest.fn(),
+    listRoomBookings,
+    fetchRoomBookingsByKey: jest.fn((key: readonly unknown[]) => {
+      const [, , , fromUtc, toUtc] = key;
+      return listRoomBookings('room-1', { fromUtc, toUtc });
+    }),
     createBooking: jest.fn(),
     cancelBooking: jest.fn(),
   };
@@ -340,6 +346,55 @@ describe('weekly schedule', () => {
     await waitFor(() => expect(listRoomBookings).toHaveBeenCalledTimes(2));
   });
 
+  it('keeps the creation form and its values after a booking conflict', async () => {
+    jest
+      .mocked(createBooking)
+      .mockRejectedValueOnce(new BookingClientError('BOOKING_CONFLICT', 409));
+    renderSchedule();
+    const available = await screen.findAllByRole('gridcell', {
+      name: /Available/u,
+    });
+    const firstAvailable = available[0];
+    if (!firstAvailable) throw new Error('Expected an available slot');
+    fireEvent.click(firstAvailable);
+    const title = await screen.findByLabelText('Meeting title');
+    fireEvent.change(title, { target: { value: 'Keep this title' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Book room' }));
+
+    await waitFor(() => expect(createBooking).toHaveBeenCalledTimes(1));
+    expect(
+      screen.getByRole('dialog', { name: 'Book a meeting room' }),
+    ).toBeDefined();
+    expect(
+      (screen.getByLabelText('Meeting title') as HTMLInputElement).value,
+    ).toBe('Keep this title');
+    expect(await screen.findByText('Conflict')).toBeDefined();
+    await waitFor(() => expect(listRoomBookings).toHaveBeenCalledTimes(2));
+  });
+
+  it('moves medium-grid focus by row and column independently', async () => {
+    viewportWidth = 768;
+    renderSchedule();
+    await screen.findByRole('combobox', { name: 'Select meeting room' });
+    await screen.findAllByRole('gridcell');
+    const firstDayFirstSlot = document.querySelector<HTMLButtonElement>(
+      'button[role="gridcell"][data-column="0"][data-row="0"]',
+    );
+    if (!firstDayFirstSlot) throw new Error('Expected the first grid cell');
+    firstDayFirstSlot.focus();
+
+    fireEvent.keyDown(firstDayFirstSlot, { key: 'ArrowRight' });
+    const nextDaySameRow = document.querySelector<HTMLButtonElement>(
+      'button[role="gridcell"][data-column="1"][data-row="0"]',
+    );
+    expect(document.activeElement).toBe(nextDaySameRow);
+
+    if (!nextDaySameRow) throw new Error('Expected the adjacent grid cell');
+    fireEvent.keyDown(nextDaySameRow, { key: 'ArrowDown' });
+    expect(document.activeElement?.getAttribute('data-column')).toBe('1');
+    expect(document.activeElement?.getAttribute('data-row')).toBe('1');
+  });
+
   it('normalizes invalid week URL state to the browser-local Monday', async () => {
     jest
       .mocked(useSearchParams)
@@ -352,6 +407,7 @@ describe('weekly schedule', () => {
         { scroll: false },
       ),
     );
+    expect(router.replace).toHaveBeenCalledTimes(1);
     await screen.findByRole('combobox', { name: 'Select meeting room' });
   });
 });

@@ -23,6 +23,14 @@ export type MyPastBookingsKey = readonly [
   limit: number,
 ];
 
+export type ScheduleBookingsKey = readonly [
+  'booking',
+  'schedule',
+  roomId: string,
+  fromUtc: string,
+  toUtc: string,
+];
+
 export interface BookingRange {
   readonly fromUtc: string;
   readonly toUtc: string;

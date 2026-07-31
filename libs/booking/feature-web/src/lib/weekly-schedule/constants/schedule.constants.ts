@@ -1,0 +1,4 @@
+export const SCHEDULE_CLOCK_INTERVAL_MS = 60_000;
+export const MAX_BOOKING_SLOT_COUNT = 8;
+export const COMPACT_ROW_HEIGHT_REM = 4.25;
+export const STANDARD_ROW_HEIGHT_REM = 3.5;

@@ -16,6 +16,7 @@ import type {
   MyPastBookingsKey,
   MyPastBookingsResponse,
   Room,
+  ScheduleBookingsKey,
   ScheduleBooking,
 } from './types/booking-client.types';
 
@@ -32,7 +33,13 @@ export class BookingClientError extends Error {
 export const bookingKeys = {
   rooms: () => ['booking', 'rooms'] as const,
   schedule: (roomId: string, range: BookingRange) =>
-    ['booking', 'schedule', roomId, range.fromUtc, range.toUtc] as const,
+    [
+      'booking',
+      'schedule',
+      roomId,
+      range.fromUtc,
+      range.toUtc,
+    ] as ScheduleBookingsKey,
   mineUpcoming: () => ['booking', 'mine', 'upcoming'] as const,
   minePast: (cursor: string | null, limit: number) =>
     ['booking', 'mine', 'past', cursor, limit] as MyPastBookingsKey,
@@ -71,6 +78,13 @@ export async function listRoomBookings(
   return parseResponse(response, bookingsResponseSchema).then(
     ({ bookings }) => bookings,
   );
+}
+
+export function fetchRoomBookingsByKey(
+  key: ScheduleBookingsKey,
+): Promise<readonly ScheduleBooking[]> {
+  const [, , roomId, fromUtc, toUtc] = key;
+  return listRoomBookings(roomId, { fromUtc, toUtc });
 }
 
 export async function createBooking(

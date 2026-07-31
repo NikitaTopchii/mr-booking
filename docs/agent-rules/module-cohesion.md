@@ -84,6 +84,15 @@ expiry routing belongs to the authentication UI boundary, while feature hooks
 decide when to invoke it. Cache invalidation after a mutation MUST target only
 the authoritative affected resources.
 
+A complex client feature MUST NOT combine several remote queries, mutation
+workflows, router normalization, auth-expiry policy, backend error-code
+mapping, substantial adaptive presentation, and calendar algorithms in one
+implementation module. Prefer a small feature orchestrator, focused
+data/navigation/mutation hooks, a presentation-safe view, cohesive UI
+components, pure view-model functions, and feature-owned error and formatting
+modules. This rule does not require a separate file for every small JSX
+fragment.
+
 ## Review and verification
 
 When this rule causes a refactor, tests MUST cover behavior at the new ownership

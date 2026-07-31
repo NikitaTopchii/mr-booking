@@ -8,5 +8,6 @@ export type {
   MyPastBookingsKey,
   MyPastBookingsResponse,
   Room,
+  ScheduleBookingsKey,
   ScheduleBooking,
 } from './lib/types/booking-client.types';

@@ -1,8 +1,10 @@
 import {
   BookingClientError,
+  bookingKeys,
   cancelBooking,
   createBooking,
   fetchMyPastBookingsPage,
+  fetchRoomBookingsByKey,
   isScheduleKeyForRoom,
   listMyPastBookings,
   listMyUpcomingBookings,
@@ -54,6 +56,23 @@ describe('booking browser client', () => {
 
     expect(jest.mocked(fetch).mock.calls[0]?.[0]).toBe(
       '/api/rooms/room%2F1/bookings?fromUtc=2030-06-03T07%3A00%3A00.000Z&toUtc=2030-06-10T07%3A00%3A00.000Z',
+    );
+  });
+
+  it('decodes a typed schedule cache key without UI tuple handling', async () => {
+    jest
+      .mocked(fetch)
+      .mockResolvedValue(new Response(JSON.stringify({ bookings: [] })));
+
+    await fetchRoomBookingsByKey(
+      bookingKeys.schedule('room-1', {
+        fromUtc: '2030-06-03T07:00:00.000Z',
+        toUtc: '2030-06-10T07:00:00.000Z',
+      }),
+    );
+
+    expect(jest.mocked(fetch).mock.calls[0]?.[0]).toContain(
+      '/api/rooms/room-1/bookings?fromUtc=',
     );
   });
 
