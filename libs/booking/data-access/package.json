@@ -12,6 +12,7 @@
     "@mr-booking/rooms-domain": "0.0.1",
     "@mr-booking/rooms-infrastructure": "0.0.1",
     "@mr-booking/shared-database": "0.0.1",
+    "@mr-booking/shared-date-time": "0.0.1",
     "@nestjs/common": "11.1.28",
     "drizzle-orm": "0.45.2",
     "tslib": "2.8.1"

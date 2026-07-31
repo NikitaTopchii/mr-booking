@@ -1,8 +1,8 @@
+import { Argon2PasswordHasher } from './argon2-password-hasher';
 import {
-  Argon2PasswordHasher,
   CryptoSessionTokenGenerator,
   Sha256SessionTokenHasher,
-} from './security-adapters';
+} from './session-token-adapters';
 
 describe('authentication security adapters', () => {
   it('generates independent tokens with at least 256 bits of entropy', () => {

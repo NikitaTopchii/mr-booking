@@ -5,11 +5,9 @@ import {
   MY_BOOKINGS_READER,
 } from '@mr-booking/booking-domain';
 import { DatabaseModule, DatabaseService } from '@mr-booking/shared-database';
-import {
-  DrizzleBookingRepository,
-  DrizzleBookingScheduleReader,
-  DrizzleMyBookingsReader,
-} from './booking-repository';
+import { DrizzleBookingRepository } from './booking-repository';
+import { DrizzleBookingScheduleReader } from './booking-schedule-reader';
+import { DrizzleMyBookingsReader } from './my-bookings-reader';
 import { DemoBookingSeedService } from './demo-booking-seed.service';
 
 @Module({

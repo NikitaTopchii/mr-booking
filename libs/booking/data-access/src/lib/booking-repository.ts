@@ -3,17 +3,10 @@ import {
   DatabaseBusyError,
   type Booking,
   type BookingRepository,
-  type BookingScheduleReader,
-  type BookingScheduleRecord,
   type BookingWriteTransaction,
-  type MyBookingRecord,
-  type MyBookingsReader,
-  type MyPastBookingsCursor,
 } from '@mr-booking/booking-domain';
-import { users } from '@mr-booking/auth-infrastructure';
-import { rooms } from '@mr-booking/rooms-infrastructure';
 import { type DatabaseConnection } from '@mr-booking/shared-database';
-import { and, asc, desc, eq, gt, isNull, lt, lte, or } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { bookingSlots, bookings, type BookingRecord } from './booking-schema';
 import type { DatabaseConnectionProvider } from './types/booking-repository.types';
 
@@ -38,145 +31,6 @@ export class DrizzleBookingRepository implements BookingRepository {
 
       throw error;
     }
-  }
-}
-
-export class DrizzleBookingScheduleReader implements BookingScheduleReader {
-  public constructor(
-    private readonly databaseService: DatabaseConnectionProvider,
-  ) {}
-
-  public findActiveOverlappingRoomBookings(
-    roomId: string,
-    fromUtc: number,
-    toUtc: number,
-  ): readonly BookingScheduleRecord[] {
-    return this.databaseService.connection.drizzle
-      .select({
-        id: bookings.id,
-        roomId: bookings.roomId,
-        title: bookings.title,
-        startsAtUtc: bookings.startsAtUtc,
-        endsAtUtc: bookings.endsAtUtc,
-        authorId: users.id,
-        authorName: users.name,
-      })
-      .from(bookings)
-      .innerJoin(users, eq(bookings.authorUserId, users.id))
-      .where(
-        and(
-          eq(bookings.roomId, roomId),
-          isNull(bookings.cancelledAtUtc),
-          lt(bookings.startsAtUtc, toUtc),
-          gt(bookings.endsAtUtc, fromUtc),
-        ),
-      )
-      .orderBy(
-        asc(bookings.startsAtUtc),
-        asc(bookings.endsAtUtc),
-        asc(bookings.id),
-      )
-      .all()
-      .map((record) => ({
-        id: record.id,
-        roomId: record.roomId,
-        title: record.title,
-        startsAtUtc: record.startsAtUtc,
-        endsAtUtc: record.endsAtUtc,
-        author: {
-          id: record.authorId,
-          name: record.authorName,
-        },
-      }));
-  }
-}
-
-export class DrizzleMyBookingsReader implements MyBookingsReader {
-  public constructor(
-    private readonly databaseService: DatabaseConnectionProvider,
-  ) {}
-
-  public findUpcoming(
-    authenticatedUserId: string,
-    serverNowUtc: number,
-  ): readonly MyBookingRecord[] {
-    return this.selectMyBookings(
-      and(
-        eq(bookings.authorUserId, authenticatedUserId),
-        isNull(bookings.cancelledAtUtc),
-        gt(bookings.endsAtUtc, serverNowUtc),
-      ),
-      'ascending',
-    );
-  }
-
-  public findPast(
-    authenticatedUserId: string,
-    serverNowUtc: number,
-    cursor: MyPastBookingsCursor | null,
-    requestedCount: number,
-  ): readonly MyBookingRecord[] {
-    const cursorCondition = cursor
-      ? or(
-          lt(bookings.startsAtUtc, cursor.startsAtUtc),
-          and(
-            eq(bookings.startsAtUtc, cursor.startsAtUtc),
-            lt(bookings.id, cursor.bookingId),
-          ),
-        )
-      : undefined;
-
-    return this.selectMyBookings(
-      and(
-        eq(bookings.authorUserId, authenticatedUserId),
-        isNull(bookings.cancelledAtUtc),
-        lte(bookings.endsAtUtc, serverNowUtc),
-        cursorCondition,
-      ),
-      'descending',
-      requestedCount,
-    );
-  }
-
-  private selectMyBookings(
-    condition: ReturnType<typeof and>,
-    order: 'ascending' | 'descending',
-    limit?: number,
-  ): readonly MyBookingRecord[] {
-    const direction = order === 'ascending' ? asc : desc;
-    const query = this.databaseService.connection.drizzle
-      .select({
-        id: bookings.id,
-        title: bookings.title,
-        startsAtUtc: bookings.startsAtUtc,
-        endsAtUtc: bookings.endsAtUtc,
-        roomId: rooms.id,
-        roomName: rooms.name,
-        roomFloor: rooms.floor,
-        roomCapacity: rooms.capacity,
-      })
-      .from(bookings)
-      .innerJoin(rooms, eq(bookings.roomId, rooms.id))
-      .where(condition)
-      .orderBy(direction(bookings.startsAtUtc), direction(bookings.id))
-      .$dynamic();
-
-    if (limit !== undefined) {
-      query.limit(limit);
-    }
-
-    return query.all().map((record) => ({
-      id: record.id,
-      title: record.title,
-      startsAtUtc: record.startsAtUtc,
-      endsAtUtc: record.endsAtUtc,
-      room: {
-        id: record.roomId,
-        name: record.roomName,
-        floor: record.roomFloor,
-        capacity: record.roomCapacity,
-      },
-    }));
   }
 }
 

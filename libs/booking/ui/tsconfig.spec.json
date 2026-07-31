@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../../dist/out-tsc",
-    "rootDir": ".",
+    "rootDir": "../../..",
     "jsx": "react-jsx",
     "module": "commonjs",
     "moduleResolution": "bundler",

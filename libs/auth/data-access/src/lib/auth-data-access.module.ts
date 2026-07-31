@@ -9,13 +9,13 @@ import {
 } from '@mr-booking/auth-domain';
 import { DrizzleAuthRepository } from './auth-repository';
 import { AuthSeedService } from './auth-seed.service';
+import { Argon2PasswordHasher } from './argon2-password-hasher';
 import {
-  Argon2PasswordHasher,
   CryptoSessionTokenGenerator,
   Sha256SessionTokenHasher,
-  SystemClock,
-  UuidGenerator,
-} from './security-adapters';
+} from './session-token-adapters';
+import { SystemClock } from './system-clock';
+import { UuidGenerator } from './uuid-generator';
 
 const authPortProviders = [
   {

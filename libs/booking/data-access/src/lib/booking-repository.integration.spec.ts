@@ -11,10 +11,8 @@ import {
   openDatabase,
 } from '@mr-booking/shared-database';
 import { eq, sql } from 'drizzle-orm';
-import {
-  DrizzleBookingRepository,
-  DrizzleMyBookingsReader,
-} from './booking-repository';
+import { DrizzleBookingRepository } from './booking-repository';
+import { DrizzleMyBookingsReader } from './my-bookings-reader';
 import { bookingSlots, bookings } from './booking-schema';
 import type { ConcurrentBookingResult } from './types/booking-repository-test.types';
 

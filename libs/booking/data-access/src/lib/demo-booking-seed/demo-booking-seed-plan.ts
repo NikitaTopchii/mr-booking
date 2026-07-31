@@ -1,15 +1,18 @@
 import {
   BookingStartNotInFutureError,
-  addOfficeCalendarDays,
-  formatOfficeCalendarDate,
   generateBookingSlotStarts,
   getOfficeCalendarDate,
-  isOfficeCalendarMonday,
+  getNextOfficeWeekStart,
+  isOfficeWeekStart,
   normalizeBookingTitle,
-  parseOfficeCalendarDate,
   validateBookingInterval,
 } from '@mr-booking/booking-domain';
 import type { OfficeCalendarDate } from '@mr-booking/booking-domain';
+import {
+  addCalendarDays,
+  formatCalendarDate,
+  parseCalendarDate,
+} from '@mr-booking/shared-date-time';
 import type {
   CreateDemoBookingSeedPlanInput,
   DemoBookingSeedBookingRecord,
@@ -45,7 +48,7 @@ export function resolveDemoSeedWeekStart(
     return parseConfiguredDemoWeekStart(configuredWeekStart);
   }
 
-  return getNextOfficeWeekStart(nowUtc);
+  return getNextOfficeWeekStart(getOfficeCalendarDate(nowUtc));
 }
 
 export function createDemoBookingSeedPlan({
@@ -55,7 +58,7 @@ export function createDemoBookingSeedPlan({
   toUtcInstant,
 }: CreateDemoBookingSeedPlanInput): DemoBookingSeedPlan {
   const createdAtUtc = toUtcInstant({
-    date: addOfficeCalendarDays(weekStart, -1),
+    date: addCalendarDays(weekStart, -1),
     hour: DEMO_CREATED_AT_LOCAL_HOUR,
     minute: 0,
   });
@@ -63,7 +66,7 @@ export function createDemoBookingSeedPlan({
   const demoBookingSlotRecords: DemoBookingSeedSlotRecord[] = [];
 
   for (const definition of definitions) {
-    const bookingDate = addOfficeCalendarDays(weekStart, definition.dayOffset);
+    const bookingDate = addCalendarDays(weekStart, definition.dayOffset);
     const startsAtUtc = toUtcInstant({
       date: bookingDate,
       hour: definition.startHour,
@@ -73,7 +76,7 @@ export function createDemoBookingSeedPlan({
       definition.startHour * MINUTES_PER_HOUR +
       definition.startMinute +
       definition.durationMinutes;
-    const endDate = addOfficeCalendarDays(
+    const endDate = addCalendarDays(
       bookingDate,
       Math.floor(endLocalMinutes / MINUTES_PER_DAY),
     );
@@ -124,7 +127,7 @@ export function createDemoBookingSeedPlan({
     bookings: demoBookingRecords,
     bookingSlots: demoBookingSlotRecords,
     summary: {
-      weekStart: formatOfficeCalendarDate(weekStart),
+      weekStart: formatCalendarDate(weekStart),
       bookingCount: demoBookingRecords.length,
       slotCount: demoBookingSlotRecords.length,
     },
@@ -132,21 +135,11 @@ export function createDemoBookingSeedPlan({
 }
 
 function parseConfiguredDemoWeekStart(value: string): OfficeCalendarDate {
-  const weekStart = parseOfficeCalendarDate(value);
+  const weekStart = parseCalendarDate(value);
 
-  if (!weekStart || !isOfficeCalendarMonday(weekStart)) {
+  if (!weekStart || !isOfficeWeekStart(weekStart)) {
     throw new DemoBookingSeedConfigurationError('DEMO_SEED_INVALID_WEEK_START');
   }
 
   return weekStart;
-}
-
-function getNextOfficeWeekStart(nowUtc: number): OfficeCalendarDate {
-  const officeToday = getOfficeCalendarDate(nowUtc);
-  const currentDay = new Date(
-    Date.UTC(officeToday.year, officeToday.month - 1, officeToday.day),
-  ).getUTCDay();
-  const daysUntilNextMonday = currentDay === 1 ? 7 : (8 - currentDay) % 7;
-
-  return addOfficeCalendarDays(officeToday, daysUntilNextMonday);
 }

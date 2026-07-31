@@ -20,6 +20,7 @@
     "paths": {
       "@mr-booking/shared-config": ["./libs/shared/config/src/index.ts"],
       "@mr-booking/shared-config/node": ["./libs/shared/config/src/node.ts"],
+      "@mr-booking/shared-date-time": ["./libs/shared/date-time/src/index.ts"],
       "@mr-booking/shared-database": ["./libs/shared/database/src/index.ts"],
       "@mr-booking/shared-ui": ["./libs/shared/ui/src/index.ts"],
       "@mr-booking/shared-i18n": ["./libs/shared/i18n/src/index.ts"],

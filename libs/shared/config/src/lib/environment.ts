@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import {
+  getCalendarWeekday,
+  parseCalendarDate,
+} from '@mr-booking/shared-date-time';
 
 const nodeEnvironmentSchema = z.enum(['development', 'test', 'production']);
 
@@ -111,16 +115,6 @@ function isAbsolutePath(path: string): boolean {
 }
 
 function isValidMondayDate(value: string): boolean {
-  const [yearValue, monthValue, dayValue] = value.split('-');
-  const year = Number(yearValue);
-  const month = Number(monthValue);
-  const day = Number(dayValue);
-  const candidate = new Date(Date.UTC(year, month - 1, day));
-
-  return (
-    candidate.getUTCFullYear() === year &&
-    candidate.getUTCMonth() === month - 1 &&
-    candidate.getUTCDate() === day &&
-    candidate.getUTCDay() === 1
-  );
+  const date = parseCalendarDate(value);
+  return date !== undefined && getCalendarWeekday(date) === 1;
 }

@@ -1,15 +1,18 @@
 import {
-  addCalendarDays,
-  createPresentationRange,
   selectedDateFromUrl,
-  createScheduleWeek,
+  startOfLocalWeek,
+} from './schedule-calendar-policy';
+import { createPresentationRange, createScheduleWeek } from './schedule-range';
+import {
   currentTimePosition,
+  overlapsAbsoluteRange,
+} from './schedule-indicators';
+import { zonedDateTimeToEpoch } from './schedule-zoned-time';
+import {
+  addCalendarDays,
   formatCalendarDate,
   parseCalendarDate,
-  startOfLocalWeek,
-  overlapsAbsoluteRange,
-  zonedDateTimeToEpoch,
-} from './schedule-time';
+} from '@mr-booking/shared-date-time';
 
 describe('schedule time', () => {
   it('strictly parses calendar dates and adds days across boundaries', () => {

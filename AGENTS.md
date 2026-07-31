@@ -64,6 +64,7 @@ the agent MAY choose the simplest option and MUST report the assumption.
 For every implementation task, read:
 
 - `docs/agent-rules/core-engineering.md`;
+- `docs/agent-rules/module-cohesion.md`;
 - `docs/agent-rules/design-patterns.md`;
 - `docs/agent-rules/type-placement.md`;
 - `docs/hackathon-requirements.md`.

@@ -13,7 +13,7 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import { DrizzleAuthRepository } from './auth-repository';
 import { seedAuthUsers } from './auth-seed';
-import { Argon2PasswordHasher } from './security-adapters';
+import { Argon2PasswordHasher } from './argon2-password-hasher';
 
 describe('Drizzle authentication persistence', () => {
   let directory: string;

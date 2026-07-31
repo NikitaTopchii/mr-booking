@@ -14,6 +14,12 @@
         "tsConfig": "libs/booking/ui/tsconfig.lib.json",
         "assets": []
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/booking/ui/tsconfig.lib.json --noEmit"
+      }
     }
   }
 }

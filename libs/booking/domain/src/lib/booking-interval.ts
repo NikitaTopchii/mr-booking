@@ -10,10 +10,10 @@ import {
   type BookingInterval,
   type OfficeDateTime,
 } from './types/booking-interval.contracts';
-import { getOfficeDateTimeParts } from './office-date-time';
+import { getOfficeDateTimeParts } from './office-time';
 
 export type { BookingInterval } from './types/booking-interval.contracts';
-export { OFFICE_TIME_ZONE } from './office-date-time';
+export { OFFICE_TIME_ZONE } from './office-time';
 
 export const BOOKING_SLOT_MILLISECONDS = 30 * 60 * 1000;
 export const MINIMUM_BOOKING_DURATION_MILLISECONDS = BOOKING_SLOT_MILLISECONDS;

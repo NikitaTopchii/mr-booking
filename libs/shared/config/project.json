@@ -18,7 +18,7 @@
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc -p libs/shared/config/tsconfig.lib.json --noEmit"
+        "command": "tsc -p libs/shared/config/tsconfig.lib.json --noEmit --rootDir ."
       }
     }
   }

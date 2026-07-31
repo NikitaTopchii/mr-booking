@@ -51,10 +51,9 @@ Search before creating a parallel component, service, utility, contract, or
 policy. Reuse or extend an existing responsibility when it remains cohesive.
 Do not hide meaningful behavior behind generic helpers.
 
-Evaluate large modules by independent reasons to change, not line count alone.
-Seed implementations MUST separate declarative definitions, pure validated
-plan construction, persistence, and orchestration. General timezone conversion
-belongs to the owning date/time abstraction, never inside a feature or seed.
+Apply the module ownership, candidate-classification, and utility-bag rules in
+`docs/agent-rules/module-cohesion.md`. Size is a review signal, never sufficient
+evidence for a split.
 
 Stable seed IDs MUST use named constants owned by their authoritative scope;
 cross-scope seed definitions import those contracts instead of duplicating raw

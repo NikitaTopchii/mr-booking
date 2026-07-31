@@ -1,8 +1,6 @@
-export interface CalendarDate {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-}
+import type { CalendarDate } from '@mr-booking/shared-date-time';
+
+export type { CalendarDate } from '@mr-booking/shared-date-time';
 
 export interface ScheduleSlot {
   readonly id: string;

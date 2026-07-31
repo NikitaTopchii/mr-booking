@@ -5,11 +5,22 @@ export * from './lib/booking-overlap';
 export * from './lib/booking-ports';
 export * from './lib/booking-slots';
 export * from './lib/booking-title';
-export * from './lib/office-date-time';
+export {
+  InvalidOfficeDateTimeError,
+  OFFICE_TIME_ZONE,
+  getOfficeCalendarDate,
+  getOfficeDateTimeParts,
+  officeDateTimeToUtcInstant,
+} from './lib/office-time';
+export {
+  getNextOfficeWeekStart,
+  isOfficeWeekStart,
+  startOfOfficeWeek,
+} from './lib/office-week';
 export type { BookingInterval } from './lib/types/booking-interval.contracts';
 export type { RoomBookingInterval } from './lib/types/booking-overlap.types';
 export type {
   OfficeCalendarDate,
   OfficeDateTimeInput,
   OfficeDateTimeParts,
-} from './lib/types/office-date-time.contracts';
+} from './lib/types/office-time.types';

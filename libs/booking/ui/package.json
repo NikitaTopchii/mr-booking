@@ -6,6 +6,8 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@mr-booking/booking-domain": "0.0.1",
+    "@mr-booking/shared-date-time": "0.0.1",
     "@mr-booking/shared-ui": "0.0.1",
     "lucide-react": "1.27.0",
     "next": "16.2.12",

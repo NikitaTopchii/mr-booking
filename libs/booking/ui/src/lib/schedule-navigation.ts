@@ -1,9 +1,9 @@
 import {
-  calendarDateAt,
   formatCalendarDate,
   parseCalendarDate,
-  startOfCalendarWeek,
-} from './schedule-time';
+} from '@mr-booking/shared-date-time';
+import { startOfOfficeWeek } from '@mr-booking/booking-domain';
+import { calendarDateAt } from './schedule-zoned-time';
 import type { ScheduleNavigation } from './types/schedule.types';
 
 export function createScheduleSearchParams(
@@ -15,7 +15,7 @@ export function createScheduleSearchParams(
   );
   const selectedDate = parseRequiredDate(navigation.date);
   query.set('date', formatCalendarDate(selectedDate));
-  query.set('week', formatCalendarDate(startOfCalendarWeek(selectedDate)));
+  query.set('week', formatCalendarDate(startOfOfficeWeek(selectedDate)));
   if (navigation.roomId) query.set('roomId', navigation.roomId);
   return query;
 }

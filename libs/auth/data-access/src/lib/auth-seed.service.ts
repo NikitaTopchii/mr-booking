@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '@mr-booking/shared-database';
-import { Argon2PasswordHasher } from './security-adapters';
+import { Argon2PasswordHasher } from './argon2-password-hasher';
 import { seedAuthUsers } from './auth-seed';
 
 @Injectable()

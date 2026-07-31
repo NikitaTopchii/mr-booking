@@ -9,9 +9,9 @@ import {
   listRooms,
   type ScheduleBooking,
 } from '@mr-booking/booking-data-access-web';
+import { BOOKING_SLOT_MILLISECONDS } from '@mr-booking/booking-domain';
 import {
   OFFICE_TIME_ZONE,
-  SLOT_DURATION_MS,
   addCalendarDays,
   calendarDateAt,
   createPresentationRange,
@@ -923,7 +923,7 @@ function ScheduleDay({
           1,
           Math.min(
             slots.length - row,
-            Math.ceil((endsAt - visibleStart) / SLOT_DURATION_MS),
+            Math.ceil((endsAt - visibleStart) / BOOKING_SLOT_MILLISECONDS),
           ),
         );
         const timeRange = formatTimeRange(
@@ -1213,7 +1213,7 @@ function CreateBookingDialog({
               {quickDurations.map(([slotCount, label]) => {
                 const value = slot
                   ? new Date(
-                      slot.startsAtUtc + slotCount * SLOT_DURATION_MS,
+                      slot.startsAtUtc + slotCount * BOOKING_SLOT_MILLISECONDS,
                     ).toISOString()
                   : '';
                 const valid = endOptions.includes(value);
