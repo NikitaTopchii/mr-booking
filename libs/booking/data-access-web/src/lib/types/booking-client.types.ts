@@ -15,6 +15,14 @@ export type MyPastBookingsResponse = z.infer<
   typeof myPastBookingsResponseSchema
 >;
 
+export type MyPastBookingsKey = readonly [
+  'booking',
+  'mine',
+  'past',
+  cursor: string | null,
+  limit: number,
+];
+
 export interface BookingRange {
   readonly fromUtc: string;
   readonly toUtc: string;

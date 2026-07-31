@@ -2,6 +2,7 @@ import {
   BookingClientError,
   cancelBooking,
   createBooking,
+  fetchMyPastBookingsPage,
   isScheduleKeyForRoom,
   listMyPastBookings,
   listMyUpcomingBookings,
@@ -153,6 +154,30 @@ describe('booking browser client', () => {
     );
     expect(jest.mocked(fetch).mock.calls[1]?.[0]).toBe(
       '/api/bookings/mine/past?limit=10&cursor=cursor%2Fvalue',
+    );
+  });
+
+  it('fetches a past page through the typed SWR key contract', async () => {
+    jest.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          items: [],
+          serverNowUtc: '2030-06-03T09:00:00.000Z',
+          nextCursor: null,
+        }),
+      ),
+    );
+
+    await fetchMyPastBookingsPage([
+      'booking',
+      'mine',
+      'past',
+      'opaque/cursor',
+      12,
+    ]);
+
+    expect(jest.mocked(fetch).mock.calls[0]?.[0]).toBe(
+      '/api/bookings/mine/past?limit=12&cursor=opaque%2Fcursor',
     );
   });
 

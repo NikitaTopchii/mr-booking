@@ -6,6 +6,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@mr-booking/auth-ui": "0.0.1",
     "@mr-booking/booking-domain": "0.0.1",
     "@mr-booking/booking-data-access-web": "0.0.1",
     "@mr-booking/booking-ui": "0.0.1",

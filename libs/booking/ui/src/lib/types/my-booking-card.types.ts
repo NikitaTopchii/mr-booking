@@ -28,5 +28,5 @@ export interface MyBookingCardProps {
   readonly locale: string;
   readonly browserTimeZone: string;
   readonly messages: MyBookingCardMessages;
-  readonly onCancel: () => void;
+  readonly onCancel?: () => void;
 }

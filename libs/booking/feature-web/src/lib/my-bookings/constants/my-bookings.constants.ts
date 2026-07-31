@@ -1,0 +1,1 @@
+export const PAST_BOOKINGS_PAGE_SIZE = 20;

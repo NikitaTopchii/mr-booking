@@ -15,7 +15,7 @@ import {
 } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { SWRConfig } from 'swr';
-import { MyBookings } from './my-bookings';
+import { MyBookings } from './my-bookings/my-bookings';
 
 jest.mock('@mr-booking/booking-data-access-web', () => {
   class BookingClientError extends Error {
@@ -26,6 +26,7 @@ jest.mock('@mr-booking/booking-data-access-web', () => {
       super(code);
     }
   }
+  const listMyPastBookings = jest.fn();
   return {
     BookingClientError,
     bookingKeys: {
@@ -40,7 +41,11 @@ jest.mock('@mr-booking/booking-data-access-web', () => {
     },
     isScheduleKeyForRoom: jest.fn(() => false),
     listMyUpcomingBookings: jest.fn(),
-    listMyPastBookings: jest.fn(),
+    listMyPastBookings,
+    fetchMyPastBookingsPage: jest.fn((key: readonly unknown[]) => {
+      const [, , , cursor, limit] = key;
+      return listMyPastBookings(cursor, limit);
+    }),
     cancelBooking: jest.fn(),
   };
 });
@@ -150,6 +155,7 @@ describe('my bookings', () => {
     const dialog = screen.getByRole('dialog', { name: 'Cancel booking?' });
     expect(dialog).toBeDefined();
     expect(within(dialog).getByText('Aquarium')).toBeDefined();
+    expect(within(dialog).getByText(/Jun 3, 2030 · .+–.+/)).toBeDefined();
     fireEvent.click(
       screen.getByRole('button', { name: 'Confirm cancellation' }),
     );
@@ -158,9 +164,10 @@ describe('my bookings', () => {
       expect(cancelBooking).toHaveBeenCalledWith('upcoming-1'),
     );
     expect(await screen.findByText('Booking cancelled.')).toBeDefined();
+    expect(listMyPastBookings).toHaveBeenCalledTimes(1);
   });
 
-  it('loads and deduplicates cursor pages without discarding existing history', async () => {
+  it('loads unique cursor pages without discarding existing history', async () => {
     jest
       .mocked(listMyPastBookings)
       .mockResolvedValueOnce({
@@ -169,7 +176,7 @@ describe('my bookings', () => {
         nextCursor: 'next-page',
       })
       .mockResolvedValueOnce({
-        items: [pastBooking('past-1'), pastBooking('past-2')],
+        items: [pastBooking('past-2')],
         serverNowUtc: '2030-06-03T06:00:00.000Z',
         nextCursor: null,
       });
@@ -177,7 +184,7 @@ describe('my bookings', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Load more' }));
     expect(await screen.findByText('Past past-2')).toBeDefined();
-    expect(screen.getAllByText('Past past-1')).toHaveLength(1);
+    expect(screen.getAllByText(/Past past-/)).toHaveLength(2);
     expect(listMyPastBookings).toHaveBeenLastCalledWith('next-page', 20);
   });
 
@@ -190,6 +197,36 @@ describe('my bookings', () => {
     expect(await screen.findByText('Upcoming error')).toBeDefined();
     expect(await screen.findByText('Past past-1')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeDefined();
+  });
+
+  it('keeps loaded history visible and offers retry when a later page fails', async () => {
+    jest
+      .mocked(listMyPastBookings)
+      .mockResolvedValueOnce({
+        items: [pastBooking('past-1')],
+        serverNowUtc: '2030-06-03T06:00:00.000Z',
+        nextCursor: 'next-page',
+      })
+      .mockRejectedValueOnce(new BookingClientError('NETWORK_ERROR'));
+    renderMyBookings();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Load more' }));
+
+    expect(await screen.findByText('Load more error')).toBeDefined();
+    expect(screen.getByText('Past past-1')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeDefined();
+  });
+
+  it('redirects centrally when a query reports an expired session', async () => {
+    jest
+      .mocked(listMyUpcomingBookings)
+      .mockRejectedValue(new BookingClientError('UNAUTHENTICATED', 401));
+    renderMyBookings();
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/en/login'),
+    );
+    expect(await screen.findByText('Past past-1')).toBeDefined();
   });
 
   it('shows a stale cancellation cutoff error and refreshes upcoming', async () => {
@@ -215,7 +252,13 @@ describe('my bookings', () => {
 
 function renderMyBookings() {
   return render(
-    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+    <SWRConfig
+      value={{
+        provider: () => new Map(),
+        dedupingInterval: 0,
+        shouldRetryOnError: false,
+      }}
+    >
       <MyBookings locale="en" messages={messages} />
     </SWRConfig>,
   );

@@ -75,6 +75,15 @@ view-level composition and share local state. Split them only when a subview has
 an independent contract, lifecycle, ownership, or reason to change. Do not turn
 feature code into a directory of one-function files.
 
+Client feature screens that combine independently changing remote queries,
+mutations, and substantial presentation SHOULD expose narrow feature-local
+hooks and a presentation-safe view contract. Data-access libraries own typed
+cache keys and fetchers that decode those keys; feature views MUST NOT depend on
+tuple positions, SWR response objects, or transport errors. Shared session
+expiry routing belongs to the authentication UI boundary, while feature hooks
+decide when to invoke it. Cache invalidation after a mutation MUST target only
+the authoritative affected resources.
+
 ## Review and verification
 
 When this rule causes a refactor, tests MUST cover behavior at the new ownership

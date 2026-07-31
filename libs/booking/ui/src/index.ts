@@ -25,6 +25,8 @@ export {
 } from '@mr-booking/shared-date-time';
 export { startOfOfficeWeek as startOfCalendarWeek } from '@mr-booking/booking-domain';
 export * from './lib/my-booking-card';
+export * from './lib/format-booking-date-time-range';
+export type { FormatBookingDateTimeRangeInput } from './lib/types/booking-date-time.types';
 export type {
   MyBookingCardMessages,
   MyBookingCardProps,

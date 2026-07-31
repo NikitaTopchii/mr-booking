@@ -2,6 +2,7 @@ import { Button } from '@mr-booking/shared-ui';
 import { Clock3, MapPin, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { JSX } from 'react';
+import { formatBookingDateTimeRange } from './format-booking-date-time-range';
 import type { MyBookingCardProps } from './types/my-booking-card.types';
 
 export function MyBookingCard({
@@ -12,18 +13,6 @@ export function MyBookingCard({
   messages,
   onCancel,
 }: MyBookingCardProps): JSX.Element {
-  const dateFormatter = new Intl.DateTimeFormat(locale, {
-    timeZone: browserTimeZone,
-    dateStyle: 'medium',
-  });
-  const timeFormatter = new Intl.DateTimeFormat(locale, {
-    timeZone: browserTimeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  const startsAtUtc = Date.parse(booking.startsAtUtc);
-  const endsAtUtc = Date.parse(booking.endsAtUtc);
-
   return (
     <li>
       <article className="flex flex-col gap-4 rounded-lg border border-border bg-background p-4 transition-colors hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between">
@@ -47,9 +36,12 @@ export function MyBookingCard({
           <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
               <Clock3 aria-hidden="true" className="size-4" />
-              {dateFormatter.format(startsAtUtc)} ·{' '}
-              {timeFormatter.format(startsAtUtc)}–
-              {timeFormatter.format(endsAtUtc)}
+              {formatBookingDateTimeRange({
+                startsAtUtc: booking.startsAtUtc,
+                endsAtUtc: booking.endsAtUtc,
+                locale,
+                timeZone: browserTimeZone,
+              })}
             </span>
             <span>
               {messages.floor} {booking.room.floor}
@@ -60,7 +52,7 @@ export function MyBookingCard({
             </span>
           </p>
         </Link>
-        {booking.canCancel ? (
+        {booking.canCancel && onCancel ? (
           <Button
             type="button"
             variant="destructive"

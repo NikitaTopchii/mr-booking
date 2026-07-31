@@ -5,6 +5,7 @@ export type {
   CreateBookingInput,
   MyBooking,
   MyBookingsResponse,
+  MyPastBookingsKey,
   MyPastBookingsResponse,
   Room,
   ScheduleBooking,

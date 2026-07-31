@@ -13,6 +13,7 @@ import type {
   BookingRange,
   CreateBookingInput,
   MyBookingsResponse,
+  MyPastBookingsKey,
   MyPastBookingsResponse,
   Room,
   ScheduleBooking,
@@ -34,7 +35,7 @@ export const bookingKeys = {
     ['booking', 'schedule', roomId, range.fromUtc, range.toUtc] as const,
   mineUpcoming: () => ['booking', 'mine', 'upcoming'] as const,
   minePast: (cursor: string | null, limit: number) =>
-    ['booking', 'mine', 'past', cursor, limit] as const,
+    ['booking', 'mine', 'past', cursor, limit] as MyPastBookingsKey,
 };
 
 export function isScheduleKeyForRoom(key: unknown, roomId: string): boolean {
@@ -113,6 +114,13 @@ export async function listMyPastBookings(
     { method: 'GET' },
   );
   return parseResponse(response, myPastBookingsResponseSchema);
+}
+
+export function fetchMyPastBookingsPage(
+  key: MyPastBookingsKey,
+): Promise<MyPastBookingsResponse> {
+  const [, , , cursor, limit] = key;
+  return listMyPastBookings(cursor, limit);
 }
 
 async function request(endpoint: string, init: RequestInit): Promise<Response> {

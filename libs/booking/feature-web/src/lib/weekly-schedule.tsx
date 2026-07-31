@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuthExpiryRedirect } from '@mr-booking/auth-ui';
 import {
   BookingClientError,
   bookingKeys,
@@ -94,6 +95,7 @@ import { useSchedulePresentation } from './use-schedule-presentation';
 
 export function WeeklySchedule({ locale, messages }: WeeklyScheduleProps) {
   const router = useRouter();
+  const redirectIfAuthExpired = useAuthExpiryRedirect(locale);
   const searchParams = useSearchParams();
   const browserTimeZone = useBrowserTimeZone();
   const presentation = useSchedulePresentation();
@@ -173,8 +175,8 @@ export function WeeklySchedule({ locale, messages }: WeeklyScheduleProps) {
 
   useEffect(() => {
     const error = roomsQuery.error ?? scheduleQuery.error;
-    if (isUnauthenticated(error)) router.replace(`/${locale}/login`);
-  }, [locale, roomsQuery.error, router, scheduleQuery.error]);
+    redirectIfAuthExpired(error);
+  }, [redirectIfAuthExpired, roomsQuery.error, scheduleQuery.error]);
 
   const selectDate = (date: CalendarDate) => {
     setNotice(undefined);
@@ -1565,13 +1567,6 @@ function requiredDate(
   const date = dates[index];
   if (!date) throw new Error('MISSING_VISIBLE_DATE');
   return date;
-}
-
-function isUnauthenticated(error: unknown): boolean {
-  return (
-    error instanceof BookingClientError &&
-    (error.code === 'UNAUTHENTICATED' || error.status === 401)
-  );
 }
 
 function errorMessage(error: unknown, messages: ScheduleMessages): string {
