@@ -116,7 +116,7 @@ export function CreateBookingDialog({
                     type="button"
                     size="sm"
                     variant={creation.endsAt === value ? 'default' : 'outline'}
-                    disabled={!valid}
+                    disabled={!valid || creation.reconciling}
                     onClick={() => creation.setEnd(value)}
                   >
                     {label}
@@ -128,7 +128,7 @@ export function CreateBookingDialog({
           <div className="grid gap-2">
             <Label htmlFor="booking-end">{messages.duration.custom}</Label>
             <Select value={creation.endsAt} onValueChange={creation.setEnd}>
-              <SelectTrigger id="booking-end">
+              <SelectTrigger id="booking-end" disabled={creation.reconciling}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -154,7 +154,14 @@ export function CreateBookingDialog({
             <Button type="button" variant="outline" onClick={creation.close}>
               {messages.cancel}
             </Button>
-            <Button type="submit" disabled={creation.pending}>
+            <Button
+              type="submit"
+              disabled={
+                creation.pending ||
+                creation.reconciling ||
+                creation.endOptions.length === 0
+              }
+            >
               {creation.pending ? messages.creating : messages.create}
             </Button>
           </DialogFooter>

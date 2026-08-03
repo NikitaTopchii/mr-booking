@@ -206,6 +206,7 @@ export function useScheduleData({
     bookings: scheduleQuery.data ?? [],
     isLoadingRooms: roomsQuery.isLoading,
     isLoadingSchedule: scheduleQuery.isLoading,
+    hasScheduleData: scheduleQuery.data !== undefined,
     isRevalidating: scheduleQuery.isValidating,
     roomsError,
     scheduleError,

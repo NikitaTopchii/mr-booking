@@ -22,6 +22,7 @@ export function WeeklySchedule({
   const creation = useBookingCreation({
     locale,
     data,
+    nowUtc: clock.nowUtc,
     ...(onVerificationRequired ? { onVerificationRequired } : {}),
   });
   const cancellation = useBookingCancellation({

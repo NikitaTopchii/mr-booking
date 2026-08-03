@@ -38,6 +38,8 @@ export function ScheduleDay({
             data-row={row}
             type="button"
             role="gridcell"
+            data-slot-id={slot.id}
+            data-starts-at-utc={slot.startsAtUtc}
             tabIndex={slot.id === firstFocusable ? 0 : -1}
             disabled={disabled}
             aria-label={`${formatScheduleCalendarDate(day.date, locale, { dateStyle: 'full' })}, ${timeFormatter.format(slot.startsAtUtc)} – ${disabled ? messages.unavailable : messages.available}`}

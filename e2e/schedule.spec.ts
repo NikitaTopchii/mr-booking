@@ -46,13 +46,46 @@ test.describe('interactive weekly schedule', () => {
     await expect(
       page.locator('[data-schedule-presentation="compact"]'),
     ).toBeVisible();
+    const previousWeek = new URL(page.url()).searchParams.get('week');
     await page.getByRole('button', { name: 'Next week' }).click();
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('week'))
+      .not.toBe(previousWeek);
+    await expect(
+      page.locator('[data-schedule-presentation="compact"]'),
+    ).toHaveAttribute('aria-busy', 'false');
     const title = `E2E schedule ${Date.now()}`;
-    const availableSlot = page
-      .getByRole('gridcell', { name: /Available/u })
-      .first();
+    const availableSlots = page.getByRole('gridcell', { name: /Available/u });
+    const lateSlotId = await availableSlots.evaluateAll((cells) => {
+      const formatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Kyiv',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      });
+      return cells
+        .map((cell) => {
+          const startsAtUtc = Number(cell.getAttribute('data-starts-at-utc'));
+          const parts = formatter.formatToParts(startsAtUtc);
+          return {
+            id: cell.getAttribute('data-slot-id'),
+            hour: parts.find((part) => part.type === 'hour')?.value,
+            minute: parts.find((part) => part.type === 'minute')?.value,
+          };
+        })
+        .find(({ hour, minute }) => hour === '18' && minute === '30')?.id;
+    });
+    expect(lateSlotId).toBeTruthy();
+    const availableSlot = page.locator(`[data-slot-id="${lateSlotId ?? ''}"]`);
     await expect(availableSlot).toBeVisible();
     await availableSlot.click();
+    await expect(page.getByRole('button', { name: '30 min' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: '1 hour' })).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: '1.5 hours' }),
+    ).toBeDisabled();
+    await expect(page.getByRole('button', { name: '2 hours' })).toBeDisabled();
+    await expect(page.getByRole('alert')).toHaveCount(0);
     await page.getByLabel('Meeting title').fill(title);
     await page.getByRole('button', { name: 'Book room' }).click();
 
@@ -69,6 +102,111 @@ test.describe('interactive weekly schedule', () => {
 
     await expect(page.getByText('Booking cancelled.')).toBeVisible();
     await expect(booking).toHaveCount(0);
+  });
+
+  test('keeps the form open and reconciles duration after a booking conflict', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const previousWeek = new URL(page.url()).searchParams.get('week');
+    await page.getByRole('button', { name: 'Next week' }).click();
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('week'))
+      .not.toBe(previousWeek);
+    await expect(
+      page.locator('[data-schedule-presentation="compact"]'),
+    ).toHaveAttribute('aria-busy', 'false');
+
+    const availableSlots = page.getByRole('gridcell', { name: /Available/u });
+    const slotId = await availableSlots.evaluateAll((cells) => {
+      const formatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Kyiv',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      });
+      return cells
+        .map((cell) => {
+          const startsAtUtc = Number(cell.getAttribute('data-starts-at-utc'));
+          const parts = formatter.formatToParts(startsAtUtc);
+          return {
+            id: cell.getAttribute('data-slot-id'),
+            hour: parts.find((part) => part.type === 'hour')?.value,
+            minute: parts.find((part) => part.type === 'minute')?.value,
+          };
+        })
+        .find(({ hour, minute }) => hour === '17' && minute === '30')?.id;
+    });
+    expect(slotId).toBeTruthy();
+    const slot = page.locator(`[data-slot-id="${slotId ?? ''}"]`);
+    const startsAtUtc = Number(await slot.getAttribute('data-starts-at-utc'));
+    const roomId = new URL(page.url()).searchParams.get('roomId');
+    if (!roomId || !Number.isFinite(startsAtUtc)) {
+      throw new Error('Expected a selected room and valid slot');
+    }
+    await slot.click();
+    const title = `E2E conflict ${Date.now()}`;
+    await page.getByLabel('Meeting title').fill(title);
+    await page.getByRole('button', { name: '1 hour' }).click();
+
+    const browser = page.context().browser();
+    if (!browser) throw new Error('Expected a browser context');
+    const bobContext = await browser.newContext({
+      baseURL: new URL(page.url()).origin,
+    });
+    try {
+      const bobPage = await bobContext.newPage();
+      await bobPage.goto('/en/login');
+      await bobPage.getByLabel('Email').fill('bob@example.com');
+      await bobPage.getByLabel('Password').fill('password123');
+      await bobPage.getByRole('button', { name: 'Sign in' }).click();
+      await expect(
+        bobPage.getByRole('heading', { name: 'Weekly schedule' }),
+      ).toBeVisible();
+      const response = await bobPage.evaluate(
+        async ({ roomId: selectedRoomId, startsAt }) => {
+          const result = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              roomId: selectedRoomId,
+              title: 'E2E conflicting booking',
+              startsAtUtc: new Date(startsAt + 30 * 60_000).toISOString(),
+              endsAtUtc: new Date(startsAt + 60 * 60_000).toISOString(),
+            }),
+          });
+          const body = (await result.json()) as { booking?: { id?: string } };
+          return { status: result.status, bookingId: body.booking?.id };
+        },
+        { roomId, startsAt: startsAtUtc },
+      );
+      expect(response.status).toBe(201);
+      if (!response.bookingId)
+        throw new Error('Expected a conflicting booking');
+
+      await page.getByRole('button', { name: 'Book room' }).click();
+      await expect(page.getByText('Conflict')).toBeVisible();
+      await expect(page.getByLabel('Meeting title')).toHaveValue(title);
+      await expect(page.getByRole('button', { name: '30 min' })).toBeEnabled();
+      await page.getByRole('button', { name: '30 min' }).click();
+      await page.getByRole('button', { name: 'Book room' }).click();
+      await expect(page.getByText('Booking created.')).toBeVisible();
+      const createdBooking = page.getByRole('button', {
+        name: new RegExp(`${title}.*Your booking`, 'u'),
+      });
+      await expect(createdBooking).toBeVisible();
+      await createdBooking.click();
+      await page.getByRole('button', { name: 'Cancel booking' }).click();
+      await expect(page.getByText(/release the room/u)).toBeVisible();
+      await page.getByRole('button', { name: 'Cancel booking' }).click();
+      await expect(page.getByText('Booking cancelled.')).toBeVisible();
+      await expect(createdBooking).toHaveCount(0);
+      await bobPage.evaluate(async (bookingId) => {
+        await fetch(`/api/bookings/${bookingId}`, { method: 'DELETE' });
+      }, response.bookingId);
+    } finally {
+      await bobContext.close();
+    }
   });
 
   test('keeps the manual grid usable at required viewport sizes', async ({

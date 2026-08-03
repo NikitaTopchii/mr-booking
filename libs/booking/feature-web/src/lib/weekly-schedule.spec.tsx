@@ -5,6 +5,7 @@ import {
   listRoomBookings,
   listRooms,
 } from '@mr-booking/booking-data-access-web';
+import { getOfficeDateTimeParts } from '@mr-booking/booking-domain';
 import type { AppDictionary } from '@mr-booking/shared-i18n';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -329,6 +330,45 @@ describe('weekly schedule', () => {
         .getByRole('button', { name: '1.5 hours' })
         .hasAttribute('disabled'),
     ).toBe(true);
+  });
+
+  it('selects the only valid 30-minute duration for an 18:30 office slot', async () => {
+    renderSchedule();
+    const lateSlot = (
+      await screen.findAllByRole('gridcell', {
+        name: /Available/u,
+      })
+    ).find((cell) => {
+      const startsAtUtc = Number(cell.getAttribute('data-starts-at-utc'));
+      const parts = getOfficeDateTimeParts(startsAtUtc);
+      return parts.hour === 18 && parts.minute === 30;
+    });
+    if (!lateSlot) throw new Error('Expected an 18:30 office slot');
+
+    fireEvent.click(lateSlot);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: '30 min' }).hasAttribute('disabled'),
+      ).toBe(false);
+      expect(
+        screen.getByRole('button', { name: '1 hour' }).hasAttribute('disabled'),
+      ).toBe(true);
+      expect(
+        screen
+          .getByRole('button', { name: '1.5 hours' })
+          .hasAttribute('disabled'),
+      ).toBe(true);
+      expect(
+        screen
+          .getByRole('button', { name: '2 hours' })
+          .hasAttribute('disabled'),
+      ).toBe(true);
+      expect(
+        screen.getByRole('combobox', { name: 'Other end time' }).textContent,
+      ).toMatch(/5:00 PM/u);
+    });
+    expect(screen.queryByText('Duration')).toBeDefined();
   });
 
   it('opens the month picker and selects a date', async () => {

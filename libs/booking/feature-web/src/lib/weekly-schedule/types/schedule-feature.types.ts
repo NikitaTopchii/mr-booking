@@ -60,6 +60,7 @@ export interface ScheduleDataState {
   readonly bookings: readonly ScheduleBooking[];
   readonly isLoadingRooms: boolean;
   readonly isLoadingSchedule: boolean;
+  readonly hasScheduleData: boolean;
   readonly isRevalidating: boolean;
   readonly roomsError: RoomQueryFeatureError | undefined;
   readonly scheduleError: ScheduleQueryFeatureError | undefined;
@@ -69,6 +70,7 @@ export interface ScheduleDataState {
 }
 
 export interface BookingSelection {
+  readonly slotId: string;
   readonly slot: ScheduleSlot;
 }
 
@@ -78,6 +80,7 @@ export interface BookingCreationState {
   readonly endsAt: string;
   readonly endOptions: readonly string[];
   readonly pending: boolean;
+  readonly reconciling: boolean;
   readonly error: BookingCreationFeatureError | undefined;
   readonly notice: 'created' | undefined;
   readonly openForSlot: (slot: ScheduleSlot) => void;

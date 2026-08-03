@@ -11,10 +11,8 @@ import type { Locale } from '@mr-booking/shared-i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWRMutation from 'swr/mutation';
 import type { ScheduleSlot } from '@mr-booking/booking-ui';
-import {
-  createBookingEndOptions,
-  defaultBookingEnd,
-} from '../model/create-booking-end-options';
+import { createBookingEndOptions } from '../model/create-booking-end-options';
+import { MAX_BOOKING_SLOT_COUNT } from '../constants/schedule.constants';
 import { bookingClientErrorStatus } from '../errors/booking-client-error.context';
 import { classifyBookingCreationError } from '../errors/booking-creation-error.classifier';
 import { bookingCreationErrorCatalog } from '../errors/booking-creation-error.catalog';
@@ -32,11 +30,13 @@ import type {
 export function useBookingCreation({
   locale,
   data,
+  nowUtc,
   errorDependencies,
   onVerificationRequired,
 }: {
   readonly locale: Locale;
   readonly data: ScheduleDataState;
+  readonly nowUtc: number;
   readonly errorDependencies?: ScheduleErrorDependencies;
   readonly onVerificationRequired?: () => void;
 }): BookingCreationState {
@@ -61,9 +61,14 @@ export function useBookingCreation({
     [errorClock, errorReporter],
   );
   const operationAttempt = useRef(0);
+  const lastStableOptions = useRef<
+    { readonly slotId: string; readonly options: readonly string[] } | undefined
+  >(undefined);
   const [selection, setSelection] = useState<BookingSelection>();
   const [title, setTitle] = useState('');
   const [endsAt, setEndsAt] = useState('');
+  const [reconciling, setReconciling] = useState(false);
+  const [suppressReconciliation, setSuppressReconciliation] = useState(false);
   const [error, setError] = useState<BookingCreationFeatureError>();
   const [notice, setNotice] = useState<'created'>();
   const mutation = useSWRMutation(
@@ -82,49 +87,172 @@ export function useBookingCreation({
       },
     ) => createBooking(arg),
   );
-  const endOptions = useMemo(
+  const resolvedSlot = useMemo(
     () =>
       selection && data.presentationRange
-        ? createBookingEndOptions(
-            selection.slot,
-            data.presentationRange.slots,
-            data.bookings,
+        ? data.presentationRange.slots.find(
+            (slot) => slot.id === selection.slotId,
           )
-        : [],
-    [data.bookings, data.presentationRange, selection],
+        : undefined,
+    [data.presentationRange, selection],
   );
+  const calculatedEndOptions = useMemo(
+    () =>
+      selection && resolvedSlot && data.presentationRange && data.selectedRoom
+        ? createBookingEndOptions({
+            selectedSlot: resolvedSlot,
+            slots: data.presentationRange.slots,
+            bookings: data.bookings,
+            roomId: data.selectedRoom.id,
+            maximumDurationSlots: MAX_BOOKING_SLOT_COUNT,
+          })
+        : [],
+    [
+      data.bookings,
+      data.presentationRange,
+      data.selectedRoom,
+      resolvedSlot,
+      selection,
+    ],
+  );
+  const scheduleIsUnstable =
+    data.isLoadingSchedule || !data.hasScheduleData || data.isRevalidating;
+  const endOptions =
+    selection &&
+    scheduleIsUnstable &&
+    lastStableOptions.current?.slotId === selection.slotId
+      ? lastStableOptions.current.options
+      : calculatedEndOptions;
+  const displaySlot = resolvedSlot ?? selection?.slot;
 
   useEffect(() => {
-    if (selection && !endOptions.includes(endsAt)) {
-      setEndsAt(endOptions[0] ?? '');
-    }
-  }, [endOptions, endsAt, selection]);
+    if (!selection || scheduleIsUnstable) return;
+    lastStableOptions.current = {
+      slotId: selection.slotId,
+      options: calculatedEndOptions,
+    };
+  }, [calculatedEndOptions, scheduleIsUnstable, selection]);
 
-  const openForSlot = useCallback((slot: ScheduleSlot) => {
-    setSelection({ slot });
-    setTitle('');
-    setEndsAt(defaultBookingEnd(slot));
-    setError(undefined);
-    setNotice(undefined);
-  }, []);
+  useEffect(() => {
+    if (!selection || suppressReconciliation) return;
+    if (scheduleIsUnstable) {
+      setReconciling(true);
+      return;
+    }
+    setReconciling(false);
+    if (!resolvedSlot || calculatedEndOptions.length === 0) {
+      setEndsAt('');
+      if (
+        error?.code !== 'conflict' &&
+        data.selectedRoom &&
+        data.presentation
+      ) {
+        setError(
+          errorFactory.create({
+            code: 'conflict',
+            context: {
+              roomId: data.selectedRoom.id,
+              startsAtUtc: resolvedSlot
+                ? new Date(resolvedSlot.startsAtUtc).toISOString()
+                : new Date(selection.slot.startsAtUtc).toISOString(),
+              endsAtUtc: '',
+              presentation: data.presentation,
+              operationAttempt: operationAttempt.current,
+            },
+          }),
+        );
+      }
+      return;
+    }
+    if (calculatedEndOptions.includes(endsAt)) return;
+
+    const previousEnd = Date.parse(endsAt);
+    const shorterOptions = Number.isFinite(previousEnd)
+      ? calculatedEndOptions.filter(
+          (option) => Date.parse(option) <= previousEnd,
+        )
+      : [];
+    const reconciledEnd = shorterOptions.at(-1) ?? calculatedEndOptions[0];
+    if (reconciledEnd) setEndsAt(reconciledEnd);
+  }, [
+    calculatedEndOptions,
+    scheduleIsUnstable,
+    suppressReconciliation,
+    data.presentation,
+    data.selectedRoom,
+    endsAt,
+    error,
+    errorFactory,
+    resolvedSlot,
+    selection,
+  ]);
+
+  const openForSlot = useCallback(
+    (slot: ScheduleSlot) => {
+      const currentSlot = data.presentationRange?.slots.find(
+        (candidate) => candidate.id === slot.id,
+      );
+      const options =
+        currentSlot && data.presentationRange && data.selectedRoom
+          ? createBookingEndOptions({
+              selectedSlot: currentSlot,
+              slots: data.presentationRange.slots,
+              bookings: data.bookings,
+              roomId: data.selectedRoom.id,
+              maximumDurationSlots: MAX_BOOKING_SLOT_COUNT,
+            })
+          : [];
+      setSelection({ slotId: slot.id, slot: currentSlot ?? slot });
+      setTitle('');
+      setEndsAt(options[0] ?? '');
+      setReconciling(false);
+      setSuppressReconciliation(false);
+      setError(undefined);
+      setNotice(undefined);
+      lastStableOptions.current = {
+        slotId: slot.id,
+        options,
+      };
+    },
+    [data.bookings, data.presentationRange, data.selectedRoom],
+  );
   const close = useCallback(() => {
-    if (mutation.isMutating) return;
+    if (mutation.isMutating || reconciling) return;
     setSelection(undefined);
     setTitle('');
     setEndsAt('');
+    setReconciling(false);
+    setSuppressReconciliation(false);
     setError(undefined);
-  }, [mutation.isMutating]);
+  }, [mutation.isMutating, reconciling]);
   const submit = useCallback(async () => {
     if (!selection || !data.selectedRoom || !data.presentation) return;
+    if (reconciling || scheduleIsUnstable) return;
     const attempt = ++operationAttempt.current;
-    const normalizedTitle = title.trim();
+    const currentSlot = data.presentationRange?.slots.find(
+      (slot) => slot.id === selection.slotId,
+    );
+    const startsAtUtc = currentSlot
+      ? new Date(currentSlot.startsAtUtc).toISOString()
+      : new Date(selection.slot.startsAtUtc).toISOString();
     const contextBase = {
       roomId: data.selectedRoom.id,
-      startsAtUtc: new Date(selection.slot.startsAtUtc).toISOString(),
+      startsAtUtc,
       endsAtUtc: endsAt,
       presentation: data.presentation,
       operationAttempt: attempt,
     };
+    if (!currentSlot) {
+      setError(errorFactory.create({ code: 'conflict', context: contextBase }));
+      return;
+    }
+    if (currentSlot.startsAtUtc <= nowUtc) {
+      setError(
+        errorFactory.create({ code: 'startNotInFuture', context: contextBase }),
+      );
+      return;
+    }
+    const normalizedTitle = title.trim();
     if (!normalizedTitle) {
       setError(
         errorFactory.create({ code: 'invalidTitle', context: contextBase }),
@@ -142,16 +270,19 @@ export function useBookingCreation({
       await mutation.trigger({
         roomId: data.selectedRoom.id,
         title: normalizedTitle,
-        startsAtUtc: contextBase.startsAtUtc,
+        startsAtUtc,
         endsAtUtc: endsAt,
       });
+      setSuppressReconciliation(true);
       await data.revalidateSchedule();
       setSelection(undefined);
       setTitle('');
       setEndsAt('');
       setError(undefined);
+      setSuppressReconciliation(false);
       setNotice('created');
     } catch (cause) {
+      setSuppressReconciliation(false);
       if (redirectIfAuthExpired(cause)) return;
       const code = classifyBookingCreationError(cause);
       if (code === 'emailVerificationRequired') {
@@ -166,8 +297,23 @@ export function useBookingCreation({
       };
       setError(errorFactory.create({ code, context, cause }));
       if (code === 'conflict') {
-        await data.revalidateSchedule();
+        setReconciling(true);
+        try {
+          await data.revalidateSchedule();
+        } catch (refreshCause) {
+          setError(
+            errorFactory.create({
+              code: 'service',
+              context,
+              cause: refreshCause,
+            }),
+          );
+        } finally {
+          setReconciling(false);
+        }
       }
+    } finally {
+      setSuppressReconciliation(false);
     }
   }, [
     data,
@@ -175,19 +321,23 @@ export function useBookingCreation({
     endsAt,
     errorFactory,
     mutation,
-    operationAttempt,
+    nowUtc,
     onVerificationRequired,
+    reconciling,
     redirectIfAuthExpired,
     selection,
     title,
   ]);
 
   return {
-    selection,
+    selection: selection
+      ? { ...selection, slot: displaySlot ?? selection.slot }
+      : undefined,
     title,
     endsAt,
     endOptions,
     pending: mutation.isMutating,
+    reconciling,
     error,
     notice,
     openForSlot,
