@@ -43,6 +43,7 @@ export default defineConfig({
       API_INTERNAL_PORT: String(apiPort),
       API_INTERNAL_URL: `http://localhost:${apiPort}`,
       WEB_ORIGIN: `http://localhost:${webPort}`,
+      APP_PUBLIC_URL: `http://localhost:${webPort}`,
       DATABASE_PATH: databasePath,
       SEED_ON_START: 'true',
       SESSION_COOKIE_NAME: 'room_booking_session',

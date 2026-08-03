@@ -3,6 +3,7 @@ import {
   loginUser,
   registerUser,
 } from '@mr-booking/auth-data-access-web/client';
+import type { AuthenticationResponse } from '@mr-booking/auth-data-access-web/client';
 import {
   AuthValidationError,
   parseLoginInput,
@@ -26,6 +27,7 @@ export function AuthForm({
   loginHref,
   registerHref,
   successHref,
+  locale = 'uk',
 }: AuthFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -69,7 +71,9 @@ export function AuthForm({
       password: String(form.get('password') ?? ''),
     };
 
-    let authenticationRequest: () => Promise<unknown>;
+    let authenticationRequest: (
+      locale: 'uk' | 'en',
+    ) => Promise<AuthenticationResponse>;
 
     try {
       authenticationRequest = createAuthenticationRequest(
@@ -89,9 +93,12 @@ export function AuthForm({
     setSubmitting(true);
 
     try {
-      await authenticationRequest();
+      const authentication = await authenticationRequest(locale);
 
-      router.replace(successHref);
+      const developmentVerificationUrl = isRegistration
+        ? authentication.emailVerification?.developmentVerificationUrl
+        : undefined;
+      router.replace(developmentVerificationUrl ?? successHref);
       router.refresh();
     } catch (error) {
       if (error instanceof AuthClientError) {
@@ -153,10 +160,10 @@ export function AuthForm({
 function createAuthenticationRequest(
   isRegistration: boolean,
   input: AuthenticationInput,
-): () => Promise<unknown> {
+): (locale: 'uk' | 'en') => Promise<AuthenticationResponse> {
   if (isRegistration) {
     const validatedInput = parseRegistrationInput(input);
-    return () => registerUser(validatedInput);
+    return (locale) => registerUser(validatedInput, locale);
   }
 
   const validatedInput = parseLoginInput(input);

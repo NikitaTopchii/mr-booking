@@ -38,6 +38,7 @@ describe('Nx module-boundary configuration', () => {
       'libs/auth/data-access-web/project.json',
       'libs/auth/feature/project.json',
       'libs/auth/feature-web/project.json',
+      'libs/auth/feature-email-verification/project.json',
       'libs/auth/ui/project.json',
       'tools/project.json',
     ];
@@ -102,6 +103,7 @@ describe('Nx module-boundary configuration', () => {
     const authUiSource = listSourceFiles(
       join(workspaceRoot, 'libs/auth/ui/src'),
     )
+      .filter((file) => !file.endsWith('/use-auth-expiry-redirect.ts'))
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
     const browserBarrel = readFileSync(

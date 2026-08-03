@@ -45,12 +45,22 @@ prohibited. Web cannot import API-only code; API cannot import browser code.
 
 Authentication makes the platform split explicit:
 
-```text
+````text
 API: auth-feature -> auth-data-access -> auth-domain
 Web: auth-feature-web -> auth-ui / auth-data-access-web -> auth-domain
                      -> shared-ui
 App routes -> shared-i18n/server
-```
+
+Email verification is a separate web feature boundary:
+
+```text
+auth-feature-email-verification
+  -> auth-data-access-web/client
+  -> auth-domain (safe user contracts)
+  -> shared-feature-error / shared-i18n / shared-ui
+````
+
+````
 
 The booking write foundation adds:
 
@@ -62,7 +72,7 @@ booking-feature
                          -> shared-database
   -> rooms-domain / rooms-data-access
   -> auth-domain / auth-data-access for composition-time Clock/UUID aliases
-```
+````
 
 `auth-infrastructure` and `rooms-infrastructure` own only their feature's
 Drizzle table declarations. This lets booking foreign keys reuse authoritative

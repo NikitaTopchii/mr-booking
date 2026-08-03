@@ -84,6 +84,35 @@ export const dictionary = {
       logoutError: 'We could not sign you out. Please try again.',
     },
   },
+  emailVerification: {
+    title: 'Verify your email',
+    description:
+      'Confirm your email to create meeting-room bookings. You can still view rooms and schedules while verification is pending.',
+    requiredBanner:
+      'Verify your email to create a meeting-room booking. Room schedules remain available.',
+    bookingBlocked:
+      'Email verification is required before you can create a booking.',
+    verify: 'Verify email',
+    verifying: 'Verifying…',
+    success: 'Your email has been verified. You can now create bookings.',
+    alreadyVerified: 'This email is already verified.',
+    invalidOrExpired:
+      'This verification link is invalid, expired, or has already been used. Request a new link.',
+    deliveryFailure:
+      'We could not deliver the verification message. Request another link to try again.',
+    missingToken: 'Open the verification link from your email to continue.',
+    ready: 'Confirm below to verify your email.',
+    resend: 'Send verification link again',
+    resending: 'Sending…',
+    resendSent: 'A new verification link has been sent.',
+    resendRateLimited: 'Please wait before requesting another link.',
+    retryAfter: 'Try again in {seconds} seconds.',
+    openVerificationLink: 'Open verification link',
+    developmentLink: 'Development verification link',
+    returnToSchedule: 'Return to schedule',
+    signInToResend: 'Sign in to request a new verification link.',
+    retry: 'Try again',
+  },
   schedule: {
     title: 'Weekly schedule',
     description:
@@ -166,6 +195,8 @@ export const dictionary = {
         invalidTitle: 'Enter a meeting title.',
         validation: 'Check the booking details and try again.',
         roomNotFound: 'This room is no longer available. Choose another room.',
+        emailVerificationRequired:
+          'Verify your email before creating a booking.',
         generic: 'We could not create the booking. Please try again.',
       },
       cancellation: {

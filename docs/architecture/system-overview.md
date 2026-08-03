@@ -71,6 +71,8 @@ transactions, overlap decisions, or persistence.
 Owns:
 
 - registration, login, logout, and session resolution;
+- email-verification issuance, delivery policy, cooldown, expiry, and atomic
+  consumption;
 - authenticated identity and booking ownership;
 - runtime input validation;
 - commands, queries, handlers, and stable domain-error mapping;
@@ -111,6 +113,11 @@ WAL, foreign keys, and a 5000 ms busy timeout are enabled and verified.
 - The UI formats instants in the browser timezone.
 - A stable error envelope maps machine-readable application/domain and field
   codes to localized UI states without translating backend prose.
+- New accounts remain authenticated but unverified. The current-user contract
+  carries only `emailVerified`; the authenticated shell refreshes it through
+  SWR after verification. Rooms, schedules, and My Bookings remain readable,
+  while booking creation is rejected by a narrow auth verification-status
+  port. Existing owners may still cancel their future bookings.
 
 ## Bonus boundary
 

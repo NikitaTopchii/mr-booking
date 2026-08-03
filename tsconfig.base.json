@@ -63,7 +63,10 @@
       ],
       "@mr-booking/auth-feature": ["./libs/auth/feature/src/index.ts"],
       "@mr-booking/auth-ui": ["./libs/auth/ui/src/index.ts"],
-      "@mr-booking/auth-feature-web": ["./libs/auth/feature-web/src/index.ts"]
+      "@mr-booking/auth-feature-web": ["./libs/auth/feature-web/src/index.ts"],
+      "@mr-booking/auth-feature-email-verification": [
+        "./libs/auth/feature-email-verification/src/index.ts"
+      ]
     }
   }
 }

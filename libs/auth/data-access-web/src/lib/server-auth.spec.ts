@@ -40,6 +40,7 @@ describe('server-side authentication resolution', () => {
           id: 'alice',
           name: 'Alice',
           email: 'alice@example.com',
+          emailVerified: true,
         },
       }),
     );
@@ -50,6 +51,7 @@ describe('server-side authentication resolution', () => {
         id: 'alice',
         name: 'Alice',
         email: 'alice@example.com',
+        emailVerified: true,
       },
     });
     expect(fetchMock).toHaveBeenCalledWith(

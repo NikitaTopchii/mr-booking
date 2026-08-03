@@ -3,6 +3,7 @@ import {
   InvalidCredentialsError,
   UnauthenticatedError,
   type AuthRepository,
+  type AuthWriteTransaction,
   type Clock,
   type IdGenerator,
   type NewSessionRecord,
@@ -11,6 +12,7 @@ import {
   type SessionTokenGenerator,
   type SessionTokenHasher,
 } from '@mr-booking/auth-domain';
+import type { CommandBus } from '@nestjs/cqrs';
 import {
   LoginUserCommand,
   LogoutSessionCommand,
@@ -33,6 +35,7 @@ describe('authentication handlers', () => {
   let tokenHasher: SessionTokenHasher;
   let clock: MutableClock;
   let idGenerator: SequenceIdGenerator;
+  let commandBus: CommandBus;
 
   beforeEach(() => {
     repository = new InMemoryAuthRepository();
@@ -41,6 +44,14 @@ describe('authentication handlers', () => {
     tokenHasher = { hash: (token) => `hash:${token}` };
     clock = new MutableClock();
     idGenerator = new SequenceIdGenerator();
+    commandBus = {
+      execute: jest.fn().mockResolvedValue({
+        status: 'sent',
+        code: 'EMAIL_VERIFICATION_SENT',
+        expiresAtUtc: new Date(clock.value + 60_000).toISOString(),
+        retryAfterSeconds: 60,
+      }),
+    } as unknown as CommandBus;
   });
 
   it('registers atomically and automatically authenticates the user', async () => {
@@ -57,6 +68,7 @@ describe('authentication handlers', () => {
       id: 'id-1',
       name: 'Alice',
       email: 'Alice@Example.com',
+      emailVerified: false,
     });
     expect(result.rawSessionToken).toBe('token-1');
     expect(repository.users).toHaveLength(1);
@@ -172,6 +184,7 @@ describe('authentication handlers', () => {
       id: 'id-1',
       name: 'Alice',
       email: 'alice@example.com',
+      emailVerified: false,
     });
   });
 
@@ -202,6 +215,7 @@ describe('authentication handlers', () => {
       clock,
       idGenerator,
       sessionTtl,
+      commandBus,
     );
   }
 
@@ -254,13 +268,30 @@ class InMemoryAuthRepository implements AuthRepository {
       (candidate) => candidate.id === session?.userId,
     );
 
-    return user ? { id: user.id, name: user.name, email: user.email } : null;
+    return user
+      ? {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          emailVerified: user.emailVerifiedAtUtc !== null,
+        }
+      : null;
   }
 
   public deleteSession(tokenHash: string): void {
     this.sessions = this.sessions.filter(
       (session) => session.tokenHash !== tokenHash,
     );
+  }
+
+  public findUserById(userId: string) {
+    return this.users.find((user) => user.id === userId) ?? null;
+  }
+
+  public withImmediateTransaction<T>(
+    operation: (transaction: AuthWriteTransaction) => T,
+  ): T {
+    return operation(this as unknown as AuthWriteTransaction);
   }
 }
 

@@ -60,7 +60,18 @@ export function ApplicationShell({
         </div>
       </header>
 
-      {children}
+      <AuthSessionBoundary initialUser={user}>
+        <EmailVerificationBanner
+          locale={locale}
+          messages={dictionary.emailVerification}
+          scheduleHref={scheduleHref}
+        />
+        {children}
+      </AuthSessionBoundary>
     </div>
   );
 }
+import {
+  AuthSessionBoundary,
+  EmailVerificationBanner,
+} from '@mr-booking/auth-feature-email-verification';

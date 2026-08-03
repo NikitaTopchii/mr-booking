@@ -52,6 +52,7 @@ export async function AuthPage({ locale, mode }: AuthPageProps) {
         loginHref={localizedRoute(locale, '/login')}
         registerHref={localizedRoute(locale, '/register')}
         successHref={localizedRoute(locale, '/schedule')}
+        locale={locale}
       />
     </AuthCard>
   );

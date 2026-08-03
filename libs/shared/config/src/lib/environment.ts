@@ -7,6 +7,7 @@ import {
 const nodeEnvironmentSchema = z.enum(['development', 'test', 'production']);
 
 const portSchema = z.coerce.number().int().min(1).max(65_535);
+const emailDeliveryModeSchema = z.enum(['development', 'disabled']);
 
 const demoSeedWeekStartSchema = z.preprocess(
   (value) => (value === '' ? undefined : value),
@@ -33,12 +34,27 @@ const environmentSchema = z
     OFFICE_OPEN_TIME: z.literal('09:00'),
     OFFICE_CLOSE_TIME: z.literal('19:00'),
     WEB_ORIGIN: z.url(),
+    APP_PUBLIC_URL: z.url(),
     API_INTERNAL_URL: z.url(),
     SESSION_COOKIE_NAME: z
       .string()
       .min(1)
       .regex(/^[A-Za-z0-9_-]+$/u),
     SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365),
+    EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(10_080),
+    EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(86_400),
+    EMAIL_DELIVERY_MODE: emailDeliveryModeSchema,
+    EXPOSE_DEVELOPMENT_VERIFICATION_LINK: z
+      .enum(['true', 'false'])
+      .transform((value) => value === 'true'),
     DEMO_SEED_WEEK_START: demoSeedWeekStartSchema,
   })
   .superRefine((environment, context) => {
@@ -52,6 +68,25 @@ const environmentSchema = z
         message: 'must be an absolute path in production',
       });
     }
+
+    if (environment.NODE_ENV === 'production') {
+      if (environment.EMAIL_DELIVERY_MODE === 'development') {
+        context.addIssue({
+          code: 'custom',
+          path: ['EMAIL_DELIVERY_MODE'],
+          message: 'development delivery is not allowed in production',
+        });
+      }
+
+      if (environment.EXPOSE_DEVELOPMENT_VERIFICATION_LINK) {
+        context.addIssue({
+          code: 'custom',
+          path: ['EXPOSE_DEVELOPMENT_VERIFICATION_LINK'],
+          message:
+            'development verification links are not allowed in production',
+        });
+      }
+    }
   });
 
 const localDefaults = {
@@ -64,9 +99,14 @@ const localDefaults = {
   OFFICE_OPEN_TIME: '09:00',
   OFFICE_CLOSE_TIME: '19:00',
   WEB_ORIGIN: 'http://localhost:3000',
+  APP_PUBLIC_URL: 'http://localhost:3001',
   API_INTERNAL_URL: 'http://localhost:3002',
   SESSION_COOKIE_NAME: 'room_booking_session',
   SESSION_TTL_DAYS: '7',
+  EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: '1440',
+  EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: '60',
+  EMAIL_DELIVERY_MODE: 'development',
+  EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true',
 } as const;
 
 export type RuntimeEnvironment = z.infer<typeof environmentSchema>;

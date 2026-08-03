@@ -16,6 +16,7 @@ const localizedMessages = {
       invalidTitle: 'Назва.',
       validation: 'Перевірка.',
       roomNotFound: 'Переговорна.',
+      emailVerificationRequired: 'Пошта.',
       generic: 'Сервіс.',
     },
     cancellation: {
@@ -38,6 +39,7 @@ const localizedMessages = {
       invalidTitle: 'Title.',
       validation: 'Validation.',
       roomNotFound: 'Room.',
+      emailVerificationRequired: 'Email.',
       generic: 'Service.',
     },
     cancellation: {

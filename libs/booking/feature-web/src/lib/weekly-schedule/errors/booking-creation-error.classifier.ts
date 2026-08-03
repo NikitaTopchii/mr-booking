@@ -25,6 +25,8 @@ export function classifyBookingCreationError(
       return 'validation';
     case 'ROOM_NOT_FOUND':
       return 'roomNotFound';
+    case 'EMAIL_VERIFICATION_REQUIRED':
+      return 'emailVerificationRequired';
     default:
       return 'service';
   }

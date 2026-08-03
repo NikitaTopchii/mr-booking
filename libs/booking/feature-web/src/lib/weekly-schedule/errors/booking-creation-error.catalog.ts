@@ -50,6 +50,12 @@ export const bookingCreationErrorCatalog = {
     retryable: false,
     telemetryCode: 'schedule.booking.create.room_not_found',
   },
+  emailVerificationRequired: {
+    messageKey: 'emailVerificationRequired',
+    severity: 'warning',
+    retryable: false,
+    telemetryCode: 'schedule.booking.create.email_verification_required',
+  },
   service: {
     messageKey: 'generic',
     severity: 'error',

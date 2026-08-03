@@ -184,7 +184,12 @@ describe('web auth form orchestration', () => {
 
   it('uses replace and preserves the localized success route', async () => {
     loginMock.mockResolvedValue({
-      user: { id: 'alice', name: 'Alice', email: 'alice@example.com' },
+      user: {
+        id: 'alice',
+        name: 'Alice',
+        email: 'alice@example.com',
+        emailVerified: true,
+      },
     });
     renderLogin();
     fillLogin();
@@ -200,7 +205,12 @@ describe('web auth form orchestration', () => {
 
   it('renders registration labels and hint and preserves its localized route', async () => {
     registerMock.mockResolvedValue({
-      user: { id: 'new-user', name: 'New User', email: 'new@example.com' },
+      user: {
+        id: 'new-user',
+        name: 'New User',
+        email: 'new@example.com',
+        emailVerified: false,
+      },
     });
     render(
       <AuthForm
@@ -241,6 +251,7 @@ describe('web auth form orchestration', () => {
     await waitFor(() => {
       expect(registerMock).toHaveBeenCalledWith(
         expect.objectContaining({ password: ' pass123 ' }),
+        'uk',
       );
       expect(replace).toHaveBeenCalledWith('/en/schedule');
     });

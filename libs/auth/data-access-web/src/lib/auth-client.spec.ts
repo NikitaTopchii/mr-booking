@@ -25,6 +25,7 @@ describe('browser auth client', () => {
           id: 'alice',
           name: 'Alice',
           email: 'alice@example.com',
+          emailVerified: true,
         },
       }),
     );
@@ -39,6 +40,7 @@ describe('browser auth client', () => {
         id: 'alice',
         name: 'Alice',
         email: 'alice@example.com',
+        emailVerified: true,
       },
     });
   });

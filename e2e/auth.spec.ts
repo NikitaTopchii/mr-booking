@@ -11,6 +11,10 @@ test.describe('authentication journey', () => {
     await page.getByLabel('Пароль').fill('password123');
     await page.getByRole('button', { name: 'Створити акаунт' }).click();
 
+    await expect(page).toHaveURL(/\/uk\/verify-email\?token=/u);
+    await page.getByRole('button', { name: 'Підтвердити пошту' }).click();
+    await expect(page).toHaveURL(/\/uk\/verify-email\?result=success$/u);
+    await page.getByRole('link', { name: 'Повернутися до розкладу' }).click();
     await expect(page).toHaveURL(/\/uk\/schedule(?:\?.*)?$/u);
     const userMenu = page.getByRole('button', {
       name: 'Відкрити меню користувача: E2E User',

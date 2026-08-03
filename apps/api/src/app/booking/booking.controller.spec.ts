@@ -769,15 +769,32 @@ describe('rooms and bookings API', () => {
       .post('/api/auth/register')
       .send({ name, email, password: 'password123' })
       .expect(201);
-    return z
+    const registration = z
       .strictObject({
         user: z.strictObject({
           id: z.string(),
           name: z.string(),
           email: z.string(),
+          emailVerified: z.boolean(),
+        }),
+        emailVerification: z.strictObject({
+          status: z.literal('sent'),
+          code: z.literal('EMAIL_VERIFICATION_SENT'),
+          expiresAtUtc: z.string(),
+          retryAfterSeconds: z.number().int().positive(),
+          developmentVerificationUrl: z.string().url(),
         }),
       })
-      .parse(response.body).user.id;
+      .parse(response.body);
+    const verificationUrl =
+      registration.emailVerification.developmentVerificationUrl;
+    const token = new URL(verificationUrl).searchParams.get('token');
+    if (!token) throw new Error('Expected a development verification token');
+    await agent
+      .post('/api/auth/email-verification/verify')
+      .send({ token })
+      .expect(200, { code: 'EMAIL_VERIFIED' });
+    return registration.user.id;
   }
 
   function insertBooking(input: InsertBookingInput): void {

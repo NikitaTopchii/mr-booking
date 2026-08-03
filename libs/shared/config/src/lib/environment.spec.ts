@@ -16,9 +16,14 @@ describe('parseRuntimeEnvironment', () => {
       OFFICE_OPEN_TIME: '09:00',
       OFFICE_CLOSE_TIME: '19:00',
       WEB_ORIGIN: 'http://localhost:3000',
+      APP_PUBLIC_URL: 'http://localhost:3001',
       API_INTERNAL_URL: 'http://localhost:3002',
       SESSION_COOKIE_NAME: 'room_booking_session',
       SESSION_TTL_DAYS: 7,
+      EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: 1440,
+      EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: 60,
+      EMAIL_DELIVERY_MODE: 'development',
+      EXPOSE_DEVELOPMENT_VERIFICATION_LINK: true,
       DEMO_SEED_WEEK_START: undefined,
     });
   });
@@ -26,6 +31,33 @@ describe('parseRuntimeEnvironment', () => {
   it('requires complete production configuration', () => {
     expect(() => parseRuntimeEnvironment({ NODE_ENV: 'production' })).toThrow(
       EnvironmentValidationError,
+    );
+  });
+
+  it('rejects development email delivery and exposed links in production', () => {
+    const production = {
+      NODE_ENV: 'production',
+      APP_PORT: '3000',
+      WEB_INTERNAL_PORT: '3001',
+      API_INTERNAL_PORT: '3002',
+      DATABASE_PATH: '/data/mr-booking.sqlite',
+      SEED_ON_START: 'false',
+      OFFICE_TIME_ZONE: 'Europe/Kyiv',
+      OFFICE_OPEN_TIME: '09:00',
+      OFFICE_CLOSE_TIME: '19:00',
+      WEB_ORIGIN: 'https://booking.example.com',
+      APP_PUBLIC_URL: 'https://booking.example.com',
+      API_INTERNAL_URL: 'http://api:3002',
+      SESSION_COOKIE_NAME: 'room_booking_session',
+      SESSION_TTL_DAYS: '7',
+      EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: '1440',
+      EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: '60',
+      EMAIL_DELIVERY_MODE: 'development',
+      EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true',
+    };
+
+    expect(() => parseRuntimeEnvironment(production)).toThrow(
+      'development delivery is not allowed in production',
     );
   });
 

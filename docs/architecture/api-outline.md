@@ -39,8 +39,9 @@ Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 
 - **Method/path:** `POST /api/auth/register`
 - **Authentication:** anonymous only
-- **Input:** `{ name, email, password }`
-- **Success:** `201` with `{ user: { id, name, email } }` and session cookie
+- **Input:** `{ name, email, password, locale? }`
+- **Success:** `201` with a safe user containing `emailVerified: false`, an
+  optional safe verification delivery status, and session cookie
 - **Errors:** `VALIDATION_ERROR`, `EMAIL_ALREADY_EXISTS`,
   `SERVICE_UNAVAILABLE`
 - **Cache:** private, `no-store`
@@ -50,10 +51,33 @@ Authentication field codes are `NAME_REQUIRED`, `EMAIL_REQUIRED`,
 - **Method/path:** `POST /api/auth/login`
 - **Authentication:** anonymous
 - **Input:** `{ email, password }`
-- **Success:** `200` with `{ user: { id, name, email } }` and session cookie
+- **Success:** `200` with `{ user: { id, name, email, emailVerified } }` and
+  session cookie
 - **Errors:** `VALIDATION_ERROR`, `INVALID_CREDENTIALS`,
   `SERVICE_UNAVAILABLE`
 - **Cache:** private, `no-store`
+
+### Request email verification
+
+- **Method/path:** `POST /api/auth/email-verification/request`
+- **Authentication:** required session; identity is server-derived
+- **Input:** `{ locale?: "uk" | "en" }`
+- **Success:** `200` with `sent` or `already-verified`, canonical UTC expiry,
+  retry-after seconds, and a development URL only when both development
+  delivery and explicit link exposure are configured
+- **Errors:** `UNAUTHENTICATED`, `EMAIL_VERIFICATION_RATE_LIMITED`,
+  `EMAIL_VERIFICATION_DELIVERY_FAILED`, `SERVICE_UNAVAILABLE`
+
+### Verify email
+
+- **Method/path:** `POST /api/auth/email-verification/verify`
+- **Authentication:** public
+- **Input:** `{ token }`; the token is consumed only after explicit user
+  confirmation in the localized verification page
+- **Success:** `200` with `EMAIL_VERIFIED` or `EMAIL_ALREADY_VERIFIED`
+- **Errors:** invalid, expired, superseded, and replayed tokens all return
+  the same `EMAIL_VERIFICATION_INVALID_OR_EXPIRED` result
+- **Cache:** mutation, `no-store`
 
 ### Logout
 
@@ -127,6 +151,7 @@ canonical UTC ISO 8601 strings with milliseconds and `Z`.
   `BOOKING_INVALID_INTERVAL`, `BOOKING_INVALID_DURATION`,
   `BOOKING_SLOT_ALIGNMENT`, `BOOKING_OUTSIDE_OFFICE_HOURS`,
   `ROOM_NOT_FOUND`, `BOOKING_CONFLICT`, `DATABASE_BUSY`
+  `EMAIL_VERIFICATION_REQUIRED`
 - **Cache:** mutation, `no-store`; revalidate schedule and personal lists
 
 ### Cancel booking

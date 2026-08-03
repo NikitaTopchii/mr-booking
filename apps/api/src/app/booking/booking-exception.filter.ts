@@ -6,7 +6,10 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { UnauthenticatedError } from '@mr-booking/auth-domain';
+import {
+  EmailNotVerifiedError,
+  UnauthenticatedError,
+} from '@mr-booking/auth-domain';
 import {
   BookingCancellationForbiddenError,
   BookingConflictError,
@@ -36,6 +39,11 @@ export class BookingExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof UnauthenticatedError) {
       this.respond(response, HttpStatus.UNAUTHORIZED, exception.code);
+      return;
+    }
+
+    if (exception instanceof EmailNotVerifiedError) {
+      this.respond(response, HttpStatus.FORBIDDEN, exception.code);
       return;
     }
 

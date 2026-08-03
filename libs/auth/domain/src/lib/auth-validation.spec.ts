@@ -118,6 +118,7 @@ describe('authentication domain rules', () => {
       id: 'alice',
       name: 'Alice',
       email: 'alice@example.com',
+      emailVerified: true,
     });
   });
 });

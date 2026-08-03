@@ -3,7 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { EmailAlreadyExistsError } from '@mr-booking/auth-domain';
-import { sessions, users } from '@mr-booking/auth-infrastructure';
+import {
+  emailVerificationTokens,
+  sessions,
+  users,
+} from '@mr-booking/auth-infrastructure';
 import {
   applyMigrations,
   type DatabaseConnection,
@@ -130,6 +134,53 @@ describe('Drizzle authentication persistence', () => {
 
     expect(alice?.passwordHash.startsWith('$argon2id$')).toBe(true);
     expect(alice?.passwordHash).not.toContain('password123');
+  });
+
+  it('stores only hashed verification tokens and consumes them atomically', () => {
+    repository.createUserAndSession(
+      userRecord(
+        'verification-user',
+        'verify@example.com',
+        'verify@example.com',
+      ),
+      sessionRecord(
+        'verification-session',
+        'verification-user',
+        'hash-session',
+      ),
+    );
+    const rawToken = 'raw-development-token';
+    const tokenHash = 'hashed-development-token';
+    repository.withImmediateTransaction((transaction) => {
+      transaction.createEmailVerificationToken({
+        id: 'verification-token',
+        userId: 'verification-user',
+        tokenHash,
+        createdAtUtc: 1000,
+        expiresAtUtc: 2000,
+      });
+    });
+
+    expect(
+      connection.drizzle
+        .select({ tokenHash: emailVerificationTokens.tokenHash })
+        .from(emailVerificationTokens)
+        .get()?.tokenHash,
+    ).toBe(tokenHash);
+    expect(tokenHash).not.toBe(rawToken);
+    expect(
+      repository.withImmediateTransaction((transaction) =>
+        transaction.consumeEmailVerificationToken(tokenHash, 1500),
+      ),
+    ).toBe('verified');
+    expect(
+      repository.findUserCredentials('verify@example.com')?.emailVerifiedAtUtc,
+    ).toBe(1500);
+    expect(
+      repository.withImmediateTransaction((transaction) =>
+        transaction.consumeEmailVerificationToken(tokenHash, 1500),
+      ),
+    ).toBe('invalid');
   });
 
   it('seeds Alice and Bob idempotently without resetting existing users', async () => {

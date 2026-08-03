@@ -130,6 +130,7 @@ function renderMenu() {
         id: 'olena',
         name: 'Олена Коваль',
         email: 'olena@example.com',
+        emailVerified: true,
       }}
       loginHref="/uk/login"
       messages={{

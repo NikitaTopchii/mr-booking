@@ -24,7 +24,27 @@ mutation before the server succeeds.
 - **Server checks:** normalized email, password verification, session issue.
 - **Navigation:** schedule or original protected destination.
 
-## 3. Session restoration
+## 3. Email verification
+
+- **Starting state:** a newly registered or logged-in unverified user. The
+  session is valid immediately, and rooms, schedules, and My Bookings remain
+  readable.
+- **Actions:** follow the localized link, explicitly confirm on the page, or
+  request a resend from the shell banner.
+- **Loading:** verification and resend controls prevent duplicate requests;
+  the token is not rendered in visible UI.
+- **Success:** the public verify endpoint atomically consumes the active token,
+  marks the user verified, invalidates remaining tokens, removes the token from
+  the URL, and refreshes current-user SWR state without relogin.
+- **Errors:** invalid, expired, superseded, and replayed tokens share one safe
+  message. Cooldown and delivery failures expose stable retry states.
+- **Server checks:** session-derived identity for resend, injected server
+  clock for expiry, persisted cooldown, hashed token lookup, and atomic replay
+  protection.
+- **Development only:** a verification URL is returned only when explicitly
+  configured; production never returns raw tokens or links.
+
+## 4. Session restoration
 
 - **Starting state:** page reload with or without a valid session cookie.
 - **Actions:** browser requests current session.
@@ -38,7 +58,7 @@ mutation before the server succeeds.
   `no-store`; browser Back cannot restore authenticated server state after
   logout.
 
-## 4. Logout
+## 5. Logout
 
 - **Starting state:** authenticated user in the application shell.
 - **Actions:** activate the logout control once.
@@ -52,7 +72,7 @@ mutation before the server succeeds.
   redirects to the locale-preserving login route, including after reload or
   Back navigation.
 
-## 5. Room selection
+## 6. Room selection
 
 - **Starting state:** authenticated schedule with rooms loading.
 - **Actions:** choose one room.

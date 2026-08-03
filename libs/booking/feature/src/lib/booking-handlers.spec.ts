@@ -13,6 +13,7 @@ import {
   type BookingRepository,
   type BookingWriteTransaction,
 } from '@mr-booking/booking-domain';
+import type { EmailVerificationStatusReader } from '@mr-booking/auth-domain';
 import type { RoomReader } from '@mr-booking/rooms-domain';
 import { CancelBookingCommand, CreateBookingCommand } from './booking-commands';
 import { CancelBookingHandler, CreateBookingHandler } from './booking-handlers';
@@ -25,12 +26,24 @@ describe('booking command handlers', () => {
   let roomReader: TestRoomReader;
   let clock: MutableClock;
   let idGenerator: SequenceIdGenerator;
+  let verificationStatusReader: TestVerificationStatusReader;
 
   beforeEach(() => {
     repository = new InMemoryBookingRepository();
     roomReader = new TestRoomReader();
     clock = new MutableClock(Date.UTC(2026, 0, 1));
     idGenerator = new SequenceIdGenerator();
+    verificationStatusReader = new TestVerificationStatusReader();
+  });
+
+  it('rejects an unverified user before booking validation or persistence', async () => {
+    verificationStatusReader.verified = false;
+
+    await expect(
+      createHandler().execute(validCreateCommand()),
+    ).rejects.toMatchObject({ code: 'EMAIL_VERIFICATION_REQUIRED' });
+    expect(idGenerator.generatedCount).toBe(0);
+    expect(repository.transactionCount).toBe(0);
   });
 
   it('creates a normalized booking and all slots in one transaction', async () => {
@@ -184,7 +197,13 @@ describe('booking command handlers', () => {
   });
 
   function createHandler(): CreateBookingHandler {
-    return new CreateBookingHandler(repository, roomReader, clock, idGenerator);
+    return new CreateBookingHandler(
+      repository,
+      roomReader,
+      clock,
+      idGenerator,
+      verificationStatusReader,
+    );
   }
 
   function cancelHandler(): CancelBookingHandler {
@@ -255,6 +274,14 @@ class TestRoomReader implements RoomReader {
 
   public list(): readonly [] {
     return [];
+  }
+}
+
+class TestVerificationStatusReader implements EmailVerificationStatusReader {
+  public verified = true;
+
+  public isEmailVerified(): boolean {
+    return this.verified;
   }
 }
 

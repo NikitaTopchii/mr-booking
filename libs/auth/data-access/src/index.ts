@@ -5,6 +5,8 @@ export * from './lib/auth-seed.service';
 export { Argon2PasswordHasher } from './lib/argon2-password-hasher';
 export {
   CryptoSessionTokenGenerator,
+  CryptoEmailVerificationTokenGenerator,
+  Sha256EmailVerificationTokenHasher,
   Sha256SessionTokenHasher,
 } from './lib/session-token-adapters';
 export { SystemClock } from './lib/system-clock';

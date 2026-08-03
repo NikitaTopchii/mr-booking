@@ -42,6 +42,7 @@ export async function seedAuthUsers(
         ...user,
         passwordHash,
         createdAtUtc: seededAtUtc,
+        emailVerifiedAtUtc: seededAtUtc,
       })
       .onConflictDoNothing({ target: users.normalizedEmail })
       .run();

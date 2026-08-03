@@ -9,12 +9,21 @@ import { useScheduleNavigation } from './weekly-schedule/hooks/use-schedule-navi
 import { WeeklyScheduleView } from './weekly-schedule/weekly-schedule-view';
 import type { WeeklyScheduleProps } from './weekly-schedule/types/schedule-feature.types';
 
-export function WeeklySchedule({ locale, messages }: WeeklyScheduleProps) {
+export function WeeklySchedule({
+  locale,
+  messages,
+  emailVerified = true,
+  onVerificationRequired,
+}: WeeklyScheduleProps) {
   const browserTimeZone = useBrowserTimeZone();
   const clock = useScheduleClock();
   const navigation = useScheduleNavigation(locale, clock.nowUtc);
   const data = useScheduleData({ locale, navigation, browserTimeZone });
-  const creation = useBookingCreation({ locale, data });
+  const creation = useBookingCreation({
+    locale,
+    data,
+    ...(onVerificationRequired ? { onVerificationRequired } : {}),
+  });
   const cancellation = useBookingCancellation({
     locale,
     data,
@@ -31,6 +40,8 @@ export function WeeklySchedule({ locale, messages }: WeeklyScheduleProps) {
       data={data}
       creation={creation}
       cancellation={cancellation}
+      emailVerified={emailVerified}
+      {...(onVerificationRequired ? { onVerificationRequired } : {})}
     />
   );
 }

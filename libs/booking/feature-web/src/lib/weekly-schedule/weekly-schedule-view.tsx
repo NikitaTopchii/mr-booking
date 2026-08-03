@@ -23,6 +23,8 @@ export function WeeklyScheduleView({
   data,
   creation,
   cancellation,
+  emailVerified = true,
+  onVerificationRequired,
 }: WeeklyScheduleViewProps) {
   const roomsError = data.roomsError
     ? resolveFeatureErrorMessage(data.roomsError, messages.errors)
@@ -134,7 +136,13 @@ export function WeeklyScheduleView({
               browserTimeZone={browserTimeZone}
               revalidating={data.isRevalidating}
               selectedDate={navigation.selectedDate}
-              onSelectSlot={creation.openForSlot}
+              onSelectSlot={(slot) => {
+                if (!emailVerified) {
+                  onVerificationRequired?.();
+                  return;
+                }
+                creation.openForSlot(slot);
+              }}
               onSelectBooking={cancellation.openBooking}
             />
           </>

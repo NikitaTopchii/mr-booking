@@ -1,6 +1,11 @@
 import { Inject } from '@nestjs/common';
 import { CommandHandler, type ICommandHandler } from '@nestjs/cqrs';
 import {
+  AUTH_VERIFICATION_STATUS_READER,
+  EmailNotVerifiedError,
+  type EmailVerificationStatusReader,
+} from '@mr-booking/auth-domain';
+import {
   BOOKING_CLOCK,
   BOOKING_ID_GENERATOR,
   BOOKING_REPOSITORY,
@@ -33,9 +38,15 @@ export class CreateBookingHandler implements ICommandHandler<
     private readonly clock: BookingClock,
     @Inject(BOOKING_ID_GENERATOR)
     private readonly idGenerator: BookingIdGenerator,
+    @Inject(AUTH_VERIFICATION_STATUS_READER)
+    private readonly verificationStatusReader: EmailVerificationStatusReader,
   ) {}
 
   public async execute(command: CreateBookingCommand): Promise<Booking> {
+    if (!this.verificationStatusReader.isEmailVerified(command.authorUserId)) {
+      throw new EmailNotVerifiedError();
+    }
+
     const title = normalizeBookingTitle(command.title);
     const createdAtUtc = this.clock.now();
     const interval = validateBookingInterval(

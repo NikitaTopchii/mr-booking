@@ -33,10 +33,12 @@ export function useBookingCreation({
   locale,
   data,
   errorDependencies,
+  onVerificationRequired,
 }: {
   readonly locale: Locale;
   readonly data: ScheduleDataState;
   readonly errorDependencies?: ScheduleErrorDependencies;
+  readonly onVerificationRequired?: () => void;
 }): BookingCreationState {
   const redirectIfAuthExpired = useAuthExpiryRedirect(locale);
   const errorClock = errorDependencies?.clock ?? systemFeatureErrorClock;
@@ -152,6 +154,11 @@ export function useBookingCreation({
     } catch (cause) {
       if (redirectIfAuthExpired(cause)) return;
       const code = classifyBookingCreationError(cause);
+      if (code === 'emailVerificationRequired') {
+        setSelection(undefined);
+        onVerificationRequired?.();
+        return;
+      }
       const status = bookingClientErrorStatus(cause);
       const context: BookingCreationErrorContext = {
         ...contextBase,
@@ -169,6 +176,7 @@ export function useBookingCreation({
     errorFactory,
     mutation,
     operationAttempt,
+    onVerificationRequired,
     redirectIfAuthExpired,
     selection,
     title,

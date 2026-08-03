@@ -12,6 +12,7 @@ const currentUserResponseSchema = z
         id: z.string(),
         name: z.string(),
         email: z.string(),
+        emailVerified: z.boolean(),
       })
       .strict(),
   })

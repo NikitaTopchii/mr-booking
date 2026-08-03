@@ -57,7 +57,7 @@ describe('Drizzle booking persistence', () => {
       { name: 'booking_slots' },
       { name: 'bookings' },
     ]);
-    expect(migrationCount).toEqual({ count: 3 });
+    expect(migrationCount).toEqual({ count: 4 });
   });
 
   it('enforces room and author foreign keys', () => {

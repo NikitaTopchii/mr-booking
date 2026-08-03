@@ -22,6 +22,7 @@ export interface AuthFormProps {
   readonly loginHref: string;
   readonly registerHref: string;
   readonly successHref: string;
+  readonly locale?: 'uk' | 'en';
 }
 
 export type AuthenticationInput = LoginInput | RegistrationInput;

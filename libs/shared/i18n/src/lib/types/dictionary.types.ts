@@ -77,6 +77,30 @@ export interface AppDictionary {
       readonly logoutError: string;
     };
   };
+  readonly emailVerification: {
+    readonly title: string;
+    readonly description: string;
+    readonly requiredBanner: string;
+    readonly bookingBlocked: string;
+    readonly verify: string;
+    readonly verifying: string;
+    readonly success: string;
+    readonly alreadyVerified: string;
+    readonly invalidOrExpired: string;
+    readonly deliveryFailure: string;
+    readonly missingToken: string;
+    readonly ready: string;
+    readonly resend: string;
+    readonly resending: string;
+    readonly resendSent: string;
+    readonly resendRateLimited: string;
+    readonly retryAfter: string;
+    readonly openVerificationLink: string;
+    readonly developmentLink: string;
+    readonly returnToSchedule: string;
+    readonly signInToResend: string;
+    readonly retry: string;
+  };
   readonly schedule: {
     readonly title: string;
     readonly description: string;
@@ -156,6 +180,7 @@ export interface AppDictionary {
         readonly invalidTitle: string;
         readonly validation: string;
         readonly roomNotFound: string;
+        readonly emailVerificationRequired: string;
         readonly generic: string;
       };
       readonly cancellation: {

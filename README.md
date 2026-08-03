@@ -41,22 +41,27 @@ invalid configuration fails before either application starts.
 
 Runtime variables:
 
-| Variable               | Example/default           | Purpose                                              |
-| ---------------------- | ------------------------- | ---------------------------------------------------- |
-| `NODE_ENV`             | `development`             | Runtime mode                                         |
-| `APP_PORT`             | `3000`                    | Public Docker gateway port                           |
-| `WEB_INTERNAL_PORT`    | `3001`                    | Next.js internal/local port                          |
-| `API_INTERNAL_PORT`    | `3002`                    | NestJS internal/local port                           |
-| `DATABASE_PATH`        | `.data/mr-booking.sqlite` | API-owned SQLite file; absolute in production        |
-| `SEED_ON_START`        | `true`                    | Run deterministic rooms/users/bookings at API start  |
-| `DEMO_SEED_WEEK_START` | blank                     | Optional Kyiv Monday (`YYYY-MM-DD`) for demo records |
-| `OFFICE_TIME_ZONE`     | `Europe/Kyiv`             | Fixed office policy zone                             |
-| `OFFICE_OPEN_TIME`     | `09:00`                   | Fixed office opening boundary                        |
-| `OFFICE_CLOSE_TIME`    | `19:00`                   | Fixed office closing boundary                        |
-| `WEB_ORIGIN`           | `http://localhost:3000`   | Public application origin                            |
-| `API_INTERNAL_URL`     | `http://localhost:3002`   | Server-side NestJS URL                               |
-| `SESSION_COOKIE_NAME`  | `room_booking_session`    | HttpOnly opaque-session cookie name                  |
-| `SESSION_TTL_DAYS`     | `7`                       | Fixed session lifetime in days                       |
+| Variable                                     | Example/default           | Purpose                                                      |
+| -------------------------------------------- | ------------------------- | ------------------------------------------------------------ |
+| `NODE_ENV`                                   | `development`             | Runtime mode                                                 |
+| `APP_PORT`                                   | `3000`                    | Public Docker gateway port                                   |
+| `WEB_INTERNAL_PORT`                          | `3001`                    | Next.js internal/local port                                  |
+| `API_INTERNAL_PORT`                          | `3002`                    | NestJS internal/local port                                   |
+| `DATABASE_PATH`                              | `.data/mr-booking.sqlite` | API-owned SQLite file; absolute in production                |
+| `SEED_ON_START`                              | `true`                    | Run deterministic rooms/users/bookings at API start          |
+| `DEMO_SEED_WEEK_START`                       | blank                     | Optional Kyiv Monday (`YYYY-MM-DD`) for demo records         |
+| `OFFICE_TIME_ZONE`                           | `Europe/Kyiv`             | Fixed office policy zone                                     |
+| `OFFICE_OPEN_TIME`                           | `09:00`                   | Fixed office opening boundary                                |
+| `OFFICE_CLOSE_TIME`                          | `19:00`                   | Fixed office closing boundary                                |
+| `WEB_ORIGIN`                                 | `http://localhost:3000`   | Public application origin                                    |
+| `APP_PUBLIC_URL`                             | `http://localhost:3001`   | Trusted origin used to build verification links              |
+| `API_INTERNAL_URL`                           | `http://localhost:3002`   | Server-side NestJS URL                                       |
+| `SESSION_COOKIE_NAME`                        | `room_booking_session`    | HttpOnly opaque-session cookie name                          |
+| `SESSION_TTL_DAYS`                           | `7`                       | Fixed session lifetime in days                               |
+| `EMAIL_VERIFICATION_TOKEN_TTL_MINUTES`       | `1440`                    | Verification-token lifetime, bounded by validation           |
+| `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS` | `60`                      | Persisted resend cooldown                                    |
+| `EMAIL_DELIVERY_MODE`                        | `development`             | Explicit development adapter or disabled production adapter  |
+| `EXPOSE_DEVELOPMENT_VERIFICATION_LINK`       | `true` locally            | Gate for development-only links; must be false in production |
 
 The production cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, scoped to `/`,
 and has explicit max-age and expiry. The raw 256-bit token is never persisted:
@@ -178,6 +183,20 @@ Authentication dictionaries live in `libs/shared/i18n`. They are typed,
 dynamically imported by Server Components, and never loaded in Client
 Components. API validation returns stable field codes; the active dictionary
 provides user-facing text.
+
+New registrations are authenticated immediately but start with
+`emailVerified: false`. The localized `/uk/verify-email` and
+`/en/verify-email` pages require an explicit confirmation before posting the
+token. Authenticated users see a resend banner; a development link is shown
+only when the explicit development configuration enables it. Production uses
+the disabled delivery adapter until a real provider is approved and never
+returns a raw token or verification URL.
+
+Unverified users can read rooms, schedules, and My Bookings. Slot selection
+routes them to verification guidance and `POST /api/bookings` enforces
+`EMAIL_VERIFICATION_REQUIRED` server-side. Existing owners can still cancel
+their own future bookings. Successful verification refreshes current-user
+SWR state, so booking becomes available without relogin.
 
 One user may remain logged in on multiple browsers. Session reads never extend
 expiry. Missing, unknown, and expired sessions return `UNAUTHENTICATED`.

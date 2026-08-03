@@ -4,7 +4,6 @@ export * from './lib/auth-form-error';
 export * from './lib/auth-form-view';
 export * from './lib/auth-language-switcher';
 export * from './lib/logout-control';
-export * from './lib/use-auth-expiry-redirect';
 export type {
   AuthCardProps,
   AuthFieldProps,
@@ -15,3 +14,4 @@ export type {
   AuthMode,
   LogoutControlProps,
 } from './lib/types/auth-ui.types';
+export * from './lib/use-auth-expiry-redirect';

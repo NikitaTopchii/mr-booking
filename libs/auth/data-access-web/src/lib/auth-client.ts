@@ -18,11 +18,26 @@ const safeUserSchema = z
     id: z.string(),
     name: z.string(),
     email: z.string(),
+    emailVerified: z.boolean(),
+  })
+  .strict();
+const emailVerificationDeliverySchema = z
+  .object({
+    status: z.enum(['sent', 'delivery-failed', 'already-verified']),
+    code: z.enum([
+      'EMAIL_VERIFICATION_SENT',
+      'EMAIL_VERIFICATION_DELIVERY_FAILED',
+      'EMAIL_ALREADY_VERIFIED',
+    ]),
+    expiresAtUtc: z.iso.datetime({ offset: true }).optional(),
+    retryAfterSeconds: z.number().int().positive().optional(),
+    developmentVerificationUrl: z.string().url().optional(),
   })
   .strict();
 const authenticationResponseSchema = z
   .object({
     user: safeUserSchema,
+    emailVerification: emailVerificationDeliverySchema.optional(),
   })
   .strict();
 const fieldErrorsSchema = z
@@ -63,6 +78,8 @@ const formErrorSchema = z
     code: z.enum([
       'INVALID_CREDENTIALS',
       'UNAUTHENTICATED',
+      'EMAIL_VERIFICATION_RATE_LIMITED',
+      'EMAIL_VERIFICATION_DELIVERY_FAILED',
       'SERVICE_UNAVAILABLE',
     ]),
   })
@@ -88,8 +105,12 @@ export class AuthClientError extends Error {
 
 export async function registerUser(
   input: RegistrationInput,
+  locale: 'uk' | 'en' = 'uk',
 ): Promise<AuthenticationResponse> {
-  return requestAuthentication('/api/auth/register', input);
+  return requestAuthentication('/api/auth/register', {
+    ...input,
+    locale,
+  });
 }
 
 export async function loginUser(
@@ -112,7 +133,10 @@ export async function logoutSession(): Promise<void> {
 
 async function requestAuthentication(
   endpoint: string,
-  input: LoginInput | RegistrationInput,
+  input:
+    | LoginInput
+    | RegistrationInput
+    | (RegistrationInput & { readonly locale: 'uk' | 'en' }),
 ): Promise<AuthenticationResponse> {
   return requestJson(endpoint, {
     method: 'POST',

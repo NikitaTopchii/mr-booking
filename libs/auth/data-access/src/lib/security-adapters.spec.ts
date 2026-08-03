@@ -1,6 +1,8 @@
 import { Argon2PasswordHasher } from './argon2-password-hasher';
 import {
+  CryptoEmailVerificationTokenGenerator,
   CryptoSessionTokenGenerator,
+  Sha256EmailVerificationTokenHasher,
   Sha256SessionTokenHasher,
 } from './session-token-adapters';
 
@@ -23,6 +25,17 @@ describe('authentication security adapters', () => {
     );
     expect(hasher.hash('raw-token')).toHaveLength(64);
     expect(hasher.hash('raw-token')).not.toBe('raw-token');
+  });
+
+  it('uses the same 256-bit opaque-token policy for email verification', () => {
+    const generator = new CryptoEmailVerificationTokenGenerator();
+    const hasher = new Sha256EmailVerificationTokenHasher();
+    const token = generator.generate();
+
+    expect(token).toHaveLength(43);
+    expect(Buffer.from(token, 'base64url')).toHaveLength(32);
+    expect(hasher.hash(token)).toHaveLength(64);
+    expect(hasher.hash(token)).not.toContain(token);
   });
 
   it('hashes and verifies passwords with Argon2id', async () => {

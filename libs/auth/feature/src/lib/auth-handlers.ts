@@ -1,6 +1,7 @@
 import { Inject } from '@nestjs/common';
 import {
   CommandHandler,
+  CommandBus,
   type ICommandHandler,
   type IQueryHandler,
   QueryHandler,
@@ -8,8 +9,14 @@ import {
 import {
   AUTH_CLOCK,
   AUTH_ID_GENERATOR,
+  EMAIL_VERIFICATION_DELIVERY,
+  EMAIL_VERIFICATION_TOKEN_GENERATOR,
+  EMAIL_VERIFICATION_TOKEN_HASHER,
   AUTH_REPOSITORY,
   EmailAlreadyExistsError,
+  EmailVerificationDeliveryFailedError,
+  EmailVerificationInvalidOrExpiredError,
+  EmailVerificationRateLimitedError,
   InvalidCredentialsError,
   PASSWORD_HASHER,
   SESSION_TOKEN_GENERATOR,
@@ -22,6 +29,11 @@ import {
   type AuthenticationResult,
   type AuthRepository,
   type Clock,
+  type EmailVerificationDelivery,
+  type EmailVerificationDeliveryResult,
+  type EmailVerificationResult,
+  type EmailVerificationTokenGenerator,
+  type EmailVerificationTokenHasher,
   type IdGenerator,
   type PasswordHasher,
   type SafeUser,
@@ -32,12 +44,18 @@ import {
   LoginUserCommand,
   LogoutSessionCommand,
   RegisterUserCommand,
+  RequestEmailVerificationCommand,
+  VerifyEmailCommand,
 } from './auth-commands';
 import { GetCurrentUserQuery } from './auth-queries';
 import type { IssuedSession } from './types/auth-handler.types';
+import type { EmailVerificationConfiguration } from './types/email-verification.types';
 
 export const AUTH_SESSION_TTL_MILLISECONDS = Symbol(
   'AUTH_SESSION_TTL_MILLISECONDS',
+);
+export const AUTH_EMAIL_VERIFICATION_CONFIGURATION = Symbol(
+  'AUTH_EMAIL_VERIFICATION_CONFIGURATION',
 );
 
 abstract class SessionIssuingHandler {
@@ -81,6 +99,7 @@ export class RegisterUserHandler
     @Inject(AUTH_CLOCK) clock: Clock,
     @Inject(AUTH_ID_GENERATOR) idGenerator: IdGenerator,
     @Inject(AUTH_SESSION_TTL_MILLISECONDS) sessionTtlMilliseconds: number,
+    private readonly commandBus: CommandBus,
   ) {
     super(
       repository,
@@ -112,14 +131,33 @@ export class RegisterUserHandler
       normalizedEmail,
       passwordHash,
       createdAtUtc: issued.session.createdAtUtc,
+      emailVerifiedAtUtc: null,
     };
 
     this.repository.createUserAndSession(user, issued.session);
+
+    let emailVerification: EmailVerificationDeliveryResult;
+
+    try {
+      emailVerification = await this.commandBus.execute(
+        new RequestEmailVerificationCommand(userId, command.locale, 'initial'),
+      );
+    } catch (error) {
+      if (!(error instanceof EmailVerificationDeliveryFailedError)) {
+        throw error;
+      }
+
+      emailVerification = {
+        status: 'delivery-failed',
+        code: error.code,
+      };
+    }
 
     return {
       user: toSafeUser(user),
       rawSessionToken: issued.rawSessionToken,
       expiresAtUtc: issued.session.expiresAtUtc,
+      emailVerification,
     };
   }
 }
@@ -223,4 +261,155 @@ export class GetCurrentUserHandler implements IQueryHandler<
 
     return user;
   }
+}
+
+@CommandHandler(RequestEmailVerificationCommand)
+export class RequestEmailVerificationHandler implements ICommandHandler<
+  RequestEmailVerificationCommand,
+  EmailVerificationDeliveryResult
+> {
+  public constructor(
+    @Inject(AUTH_REPOSITORY)
+    private readonly repository: AuthRepository,
+    @Inject(AUTH_CLOCK)
+    private readonly clock: Clock,
+    @Inject(AUTH_ID_GENERATOR)
+    private readonly idGenerator: IdGenerator,
+    @Inject(EMAIL_VERIFICATION_TOKEN_GENERATOR)
+    private readonly tokenGenerator: EmailVerificationTokenGenerator,
+    @Inject(EMAIL_VERIFICATION_TOKEN_HASHER)
+    private readonly tokenHasher: EmailVerificationTokenHasher,
+    @Inject(EMAIL_VERIFICATION_DELIVERY)
+    private readonly delivery: EmailVerificationDelivery,
+    @Inject(AUTH_EMAIL_VERIFICATION_CONFIGURATION)
+    private readonly configuration: EmailVerificationConfiguration,
+  ) {}
+
+  public async execute(
+    command: RequestEmailVerificationCommand,
+  ): Promise<EmailVerificationDeliveryResult> {
+    const nowUtc = this.clock.now();
+    const rawToken = this.tokenGenerator.generate();
+    const issue = this.repository.withImmediateTransaction((transaction) => {
+      const user = transaction.findUserById(command.authenticatedUserId);
+
+      if (!user) {
+        throw new UnauthenticatedError();
+      }
+
+      if (user.emailVerifiedAtUtc !== null) {
+        return null;
+      }
+
+      const latest = transaction.findLatestEmailVerificationToken(user.id);
+      const cooldownMilliseconds =
+        this.configuration.resendCooldownSeconds * 1000;
+
+      if (latest && latest.createdAtUtc + cooldownMilliseconds > nowUtc) {
+        throw new EmailVerificationRateLimitedError(
+          Math.ceil(
+            (latest.createdAtUtc + cooldownMilliseconds - nowUtc) / 1000,
+          ),
+        );
+      }
+
+      const expiresAtUtc = nowUtc + this.configuration.tokenTtlMilliseconds;
+      transaction.invalidateActiveEmailVerificationTokens(user.id, nowUtc);
+      transaction.createEmailVerificationToken({
+        id: this.idGenerator.generate(),
+        userId: user.id,
+        tokenHash: this.tokenHasher.hash(rawToken),
+        createdAtUtc: nowUtc,
+        expiresAtUtc,
+      });
+
+      return {
+        user,
+        expiresAtUtc,
+      };
+    });
+
+    if (!issue) {
+      return {
+        status: 'already-verified',
+        code: 'EMAIL_ALREADY_VERIFIED',
+      };
+    }
+
+    const verificationUrl = buildVerificationUrl(
+      this.configuration.appPublicUrl,
+      command.locale,
+      rawToken,
+    );
+
+    try {
+      await this.delivery.sendVerificationEmail({
+        email: issue.user.email,
+        name: issue.user.name,
+        locale: command.locale,
+        verificationUrl,
+        expiresAtUtc: issue.expiresAtUtc,
+      });
+    } catch {
+      throw new EmailVerificationDeliveryFailedError();
+    }
+
+    return {
+      status: 'sent',
+      code: 'EMAIL_VERIFICATION_SENT',
+      expiresAtUtc: new Date(issue.expiresAtUtc).toISOString(),
+      retryAfterSeconds: this.configuration.resendCooldownSeconds,
+      ...(this.configuration.exposeDevelopmentVerificationLink
+        ? { developmentVerificationUrl: verificationUrl }
+        : {}),
+    };
+  }
+}
+
+@CommandHandler(VerifyEmailCommand)
+export class VerifyEmailHandler implements ICommandHandler<
+  VerifyEmailCommand,
+  EmailVerificationResult
+> {
+  public constructor(
+    @Inject(AUTH_REPOSITORY)
+    private readonly repository: AuthRepository,
+    @Inject(AUTH_CLOCK)
+    private readonly clock: Clock,
+    @Inject(EMAIL_VERIFICATION_TOKEN_HASHER)
+    private readonly tokenHasher: EmailVerificationTokenHasher,
+  ) {}
+
+  public async execute(
+    command: VerifyEmailCommand,
+  ): Promise<EmailVerificationResult> {
+    const result = this.repository.withImmediateTransaction((transaction) =>
+      transaction.consumeEmailVerificationToken(
+        this.tokenHasher.hash(command.rawToken),
+        this.clock.now(),
+      ),
+    );
+
+    if (result === 'invalid') {
+      throw new EmailVerificationInvalidOrExpiredError();
+    }
+
+    return {
+      code:
+        result === 'already-verified'
+          ? 'EMAIL_ALREADY_VERIFIED'
+          : 'EMAIL_VERIFIED',
+    };
+  }
+}
+
+function buildVerificationUrl(
+  appPublicUrl: string,
+  locale: 'uk' | 'en',
+  rawToken: string,
+): string {
+  const baseUrl = appPublicUrl.endsWith('/')
+    ? appPublicUrl.slice(0, -1)
+    : appPublicUrl;
+  return `${baseUrl}/${locale}/verify-email?token=${encodeURIComponent(rawToken)}`;
 }

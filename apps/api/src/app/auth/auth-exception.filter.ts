@@ -7,12 +7,16 @@ import {
 } from '@nestjs/common';
 import {
   AuthValidationError,
+  EmailVerificationDeliveryFailedError,
+  EmailVerificationInvalidOrExpiredError,
+  EmailVerificationRateLimitedError,
   EmailAlreadyExistsError,
   InvalidCredentialsError,
   ServiceUnavailableError,
   UnauthenticatedError,
 } from '@mr-booking/auth-domain';
 import type { Response } from 'express';
+import { ZodError } from 'zod';
 
 @Catch()
 export class AuthExceptionFilter implements ExceptionFilter {
@@ -21,6 +25,13 @@ export class AuthExceptionFilter implements ExceptionFilter {
   public catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
     response.setHeader('Cache-Control', 'private, no-store');
+
+    if (exception instanceof ZodError) {
+      response.status(HttpStatus.BAD_REQUEST).json({
+        code: 'VALIDATION_ERROR',
+      });
+      return;
+    }
 
     if (exception instanceof AuthValidationError) {
       response.status(HttpStatus.BAD_REQUEST).json({
@@ -45,6 +56,26 @@ export class AuthExceptionFilter implements ExceptionFilter {
       exception instanceof UnauthenticatedError
     ) {
       response.status(HttpStatus.UNAUTHORIZED).json({
+        code: exception.code,
+      });
+      return;
+    }
+
+    if (exception instanceof EmailVerificationRateLimitedError) {
+      response.status(HttpStatus.TOO_MANY_REQUESTS).json({
+        code: exception.code,
+        details: { retryAfterSeconds: exception.retryAfterSeconds },
+      });
+      return;
+    }
+
+    if (exception instanceof EmailVerificationInvalidOrExpiredError) {
+      response.status(HttpStatus.BAD_REQUEST).json({ code: exception.code });
+      return;
+    }
+
+    if (exception instanceof EmailVerificationDeliveryFailedError) {
+      response.status(HttpStatus.SERVICE_UNAVAILABLE).json({
         code: exception.code,
       });
       return;

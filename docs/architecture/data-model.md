@@ -18,6 +18,7 @@ Required fields:
 - `normalizedEmail`;
 - `passwordHash`;
 - `createdAtUtc`;
+- `emailVerifiedAtUtc` nullable;
 
 Constraints and indexes:
 
@@ -25,8 +26,28 @@ Constraints and indexes:
 - unique constraint/index on `normalizedEmail`;
 - database check for a name that remains non-empty after trimming.
 
-Lifecycle: created at registration; name/email changes are outside mandatory
-scope; deleting users is outside mandatory scope.
+Lifecycle: created at registration with a null verification timestamp. Existing
+rows migrated by `0003_massive_gravity.sql` use their original creation time
+as a deterministic verified timestamp; seeded Alice and Bob are verified.
+Name/email changes are outside mandatory scope; deleting users is outside
+mandatory scope.
+
+## EmailVerificationToken
+
+**Responsibility:** one-time, restart-safe proof that the registrant controls
+the email address.
+
+Required fields are `id`, `userId`, `tokenHash`, `createdAtUtc`,
+`expiresAtUtc`, `consumedAtUtc` nullable, and `invalidatedAtUtc` nullable.
+The token hash is a SHA-256 digest of a generated 32-byte base64url token;
+raw tokens never cross persistence or production responses. A unique hash,
+foreign-key cascade, expiry/timestamp checks, and active-token lookup index
+are committed in migration `0003_massive_gravity.sql`. Issuance and
+consumption use SQLite immediate transactions. Resends invalidate all prior
+unused tokens, and consumption updates the user plus token state atomically.
+
+Safe user responses expose only `emailVerified: boolean`; token rows, hashes,
+and internal timestamps are never API fields.
 
 ## Session
 

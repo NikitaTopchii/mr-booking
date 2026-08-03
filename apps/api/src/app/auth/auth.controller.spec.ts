@@ -70,9 +70,17 @@ describe('authentication API', () => {
         id: expect.any(String),
         name: 'Alice',
         email: 'Alice@Example.com',
+        emailVerified: false,
       },
+      emailVerification: expect.objectContaining({
+        status: 'sent',
+        code: 'EMAIL_VERIFICATION_SENT',
+        developmentVerificationUrl: expect.stringContaining(
+          '/uk/verify-email?token=',
+        ),
+      }),
     });
-    expect(JSON.stringify(response.body)).not.toMatch(/password|token|hash/iu);
+    expect(JSON.stringify(response.body)).not.toMatch(/password|hash/iu);
 
     const persistedUser = databaseService.connection.drizzle
       .select()
@@ -281,6 +289,46 @@ describe('authentication API', () => {
     await request(application.getHttpServer())
       .post('/api/auth/logout')
       .expect(204);
+  });
+
+  it('issues, rate-limits, consumes, and rejects replay of a verification token', async () => {
+    const agent = request.agent(application.getHttpServer());
+    const registration = await agent
+      .post('/api/auth/register')
+      .send({
+        name: 'Verification User',
+        email: 'verification@example.com',
+        password: 'password123',
+        locale: 'en',
+      })
+      .expect(201);
+    const verificationUrl = registration.body.emailVerification
+      .developmentVerificationUrl as string;
+    const token = new URL(verificationUrl).searchParams.get('token');
+
+    expect(token).toBeTruthy();
+    await agent
+      .post('/api/auth/email-verification/request')
+      .send({ locale: 'en' })
+      .expect(429)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          code: 'EMAIL_VERIFICATION_RATE_LIMITED',
+          details: { retryAfterSeconds: 60 },
+        });
+      });
+    await agent
+      .post('/api/auth/email-verification/verify')
+      .send({ token })
+      .expect(200, { code: 'EMAIL_VERIFIED' });
+    await agent
+      .get('/api/auth/me')
+      .expect(200)
+      .expect(({ body }) => expect(body.user.emailVerified).toBe(true));
+    await request(application.getHttpServer())
+      .post('/api/auth/email-verification/verify')
+      .send({ token })
+      .expect(400, { code: 'EMAIL_VERIFICATION_INVALID_OR_EXPIRED' });
   });
 
   it('never exposes raw exception messages', async () => {

@@ -21,6 +21,8 @@ export type ScheduleMessages = AppDictionary['schedule'];
 export interface WeeklyScheduleProps {
   readonly locale: Locale;
   readonly messages: ScheduleMessages;
+  readonly emailVerified?: boolean;
+  readonly onVerificationRequired?: () => void;
 }
 
 export interface ScheduleRoomSelectorProps {
@@ -108,4 +110,6 @@ export interface WeeklyScheduleViewProps {
   readonly data: ScheduleDataState;
   readonly creation: BookingCreationState;
   readonly cancellation: BookingCancellationState;
+  readonly emailVerified?: boolean;
+  readonly onVerificationRequired?: () => void;
 }

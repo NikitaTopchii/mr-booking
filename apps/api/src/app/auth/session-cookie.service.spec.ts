@@ -14,9 +14,14 @@ describe('SessionCookieService production policy', () => {
     process.env['OFFICE_OPEN_TIME'] = '09:00';
     process.env['OFFICE_CLOSE_TIME'] = '19:00';
     process.env['WEB_ORIGIN'] = 'https://example.com';
+    process.env['APP_PUBLIC_URL'] = 'https://example.com';
     process.env['API_INTERNAL_URL'] = 'http://api:3002';
     process.env['SESSION_COOKIE_NAME'] = 'room_booking_session';
     process.env['SESSION_TTL_DAYS'] = '7';
+    process.env['EMAIL_VERIFICATION_TOKEN_TTL_MINUTES'] = '1440';
+    process.env['EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS'] = '60';
+    process.env['EMAIL_DELIVERY_MODE'] = 'disabled';
+    process.env['EXPOSE_DEVELOPMENT_VERIFICATION_LINK'] = 'false';
     const response = {
       cookie: jest.fn(),
       clearCookie: jest.fn(),
