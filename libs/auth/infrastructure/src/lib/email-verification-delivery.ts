@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, type LoggerService } from '@nestjs/common';
 import type {
   EmailVerificationDelivery,
   EmailVerificationEmail,
@@ -7,10 +7,22 @@ import type { EmailVerificationTemplate } from './types/email-verification-templ
 
 @Injectable()
 export class DevelopmentEmailVerificationDelivery implements EmailVerificationDelivery {
+  public constructor(
+    private readonly logger: LoggerService = new Logger(
+      DevelopmentEmailVerificationDelivery.name,
+    ),
+    private readonly logDevelopmentVerificationLink = false,
+  ) {}
+
   public async sendVerificationEmail(
     input: EmailVerificationEmail,
   ): Promise<void> {
     renderEmailVerificationTemplate(input);
+    if (this.logDevelopmentVerificationLink) {
+      this.logger.log(
+        `[email-verification:development] Verification link for user ${input.userId}: ${input.verificationUrl}`,
+      );
+    }
   }
 }
 

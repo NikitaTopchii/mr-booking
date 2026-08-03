@@ -36,12 +36,13 @@ const millisecondsPerDay = 24 * 60 * 60 * 1000;
         const environment = parseRuntimeEnvironment(process.env);
         return {
           tokenTtlMilliseconds:
-            environment.EMAIL_VERIFICATION_TOKEN_TTL_MINUTES * 60 * 1000,
+            environment.E2E_EMAIL_VERIFICATION_TOKEN_TTL_SECONDS !== undefined
+              ? environment.E2E_EMAIL_VERIFICATION_TOKEN_TTL_SECONDS * 1000
+              : environment.EMAIL_VERIFICATION_TOKEN_TTL_MINUTES * 60 * 1000,
           resendCooldownSeconds:
             environment.EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS,
           appPublicUrl: environment.APP_PUBLIC_URL,
           exposeDevelopmentVerificationLink:
-            environment.NODE_ENV !== 'production' &&
             environment.EXPOSE_DEVELOPMENT_VERIFICATION_LINK,
         };
       },

@@ -62,6 +62,7 @@ Runtime variables:
 | `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS` | `60`                      | Persisted resend cooldown                                    |
 | `EMAIL_DELIVERY_MODE`                        | `development`             | Explicit development adapter or disabled production adapter  |
 | `EXPOSE_DEVELOPMENT_VERIFICATION_LINK`       | `true` locally            | Gate for development-only links; must be false in production |
+| `LOG_DEVELOPMENT_VERIFICATION_LINK`          | `true` in `.env.example`  | Explicit local server-log link; rejected in production       |
 
 The production cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, scoped to `/`,
 and has explicit max-age and expiry. The raw 256-bit token is never persisted:
@@ -191,6 +192,20 @@ token. Authenticated users see a resend banner; a development link is shown
 only when the explicit development configuration enables it. Production uses
 the disabled delivery adapter until a real provider is approved and never
 returns a raw token or verification URL.
+
+When `EMAIL_DELIVERY_MODE=development` and
+`LOG_DEVELOPMENT_VERIFICATION_LINK=true`, the development delivery adapter
+also writes the authoritative link once to the local server log in the form
+`[email-verification:development] Verification link for user <id>: <url>`.
+This is the intentional development-only raw-token exception; production
+validation rejects the flag, development delivery, and link exposure, and
+`APP_PUBLIC_URL` must use HTTPS in production. The development log is not
+persisted or sent through production telemetry.
+
+Tokens expire after the configured TTL, resend is persisted and cooldown
+protected, and every resend supersedes prior unused tokens. Invalid, expired,
+superseded, and replayed tokens have one safe public result. Consumption is
+serialized by SQLite immediate transactions, including concurrent requests.
 
 Unverified users can read rooms, schedules, and My Bookings. Slot selection
 routes them to verification guidance and `POST /api/bookings` enforces
@@ -340,6 +355,11 @@ different-room, and neighbouring-day interval cases.
 
 Implemented and verified in repository tests:
 
+- complete development email verification: explicit-link logging, localized
+  expiry/cooldown/supersession/replay handling, concurrent consumption, and
+  server-side booking gating without relogin; production delivery remains
+  intentionally disabled until a provider is approved;
+
 - unique 30-minute room-slot ownership and `BEGIN IMMEDIATE` allow exactly
   one winner under concurrent booking requests;
 - authenticated booking API integration tests cover creation, validation,
@@ -356,7 +376,6 @@ in this review despite earlier project-phase gateway evidence.
 
 Deferred to later bonus phases:
 
-- development email confirmation;
 - room-capacity filtering;
 - recurring weekly bookings;
 - end-of-booking in-app notifications;

@@ -24,6 +24,7 @@ describe('parseRuntimeEnvironment', () => {
       EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: 60,
       EMAIL_DELIVERY_MODE: 'development',
       EXPOSE_DEVELOPMENT_VERIFICATION_LINK: true,
+      LOG_DEVELOPMENT_VERIFICATION_LINK: false,
       DEMO_SEED_WEEK_START: undefined,
     });
   });
@@ -54,11 +55,34 @@ describe('parseRuntimeEnvironment', () => {
       EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: '60',
       EMAIL_DELIVERY_MODE: 'development',
       EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true',
+      LOG_DEVELOPMENT_VERIFICATION_LINK: 'false',
     };
 
     expect(() => parseRuntimeEnvironment(production)).toThrow(
       'development delivery is not allowed in production',
     );
+  });
+
+  it('rejects the test-only verification TTL outside test environments', () => {
+    expect(() =>
+      parseRuntimeEnvironment({
+        NODE_ENV: 'development',
+        E2E_EMAIL_VERIFICATION_TOKEN_TTL_SECONDS: '2',
+      }),
+    ).toThrow('test-only verification TTL is only allowed in test');
+  });
+
+  it('rejects an invalid verification TTL or cooldown', () => {
+    expect(() =>
+      parseRuntimeEnvironment({
+        EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: '0',
+      }),
+    ).toThrow(EnvironmentValidationError);
+    expect(() =>
+      parseRuntimeEnvironment({
+        EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: '0',
+      }),
+    ).toThrow(EnvironmentValidationError);
   });
 
   it('rejects invalid ports and office policy overrides', () => {

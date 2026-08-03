@@ -32,6 +32,16 @@ a link only when `EMAIL_DELIVERY_MODE=development` and
 adapter until a provider is approved; production responses never contain raw
 tokens or links.
 
+For the original development-only acceptance flow, the same adapter may log
+the already-constructed link when
+`LOG_DEVELOPMENT_VERIFICATION_LINK=true`. The deterministic local message is
+`[email-verification:development] Verification link for user <id>: <url>`.
+The flag is explicit, runtime validation rejects it outside development, and
+production rejects all development delivery, link exposure, and link logging.
+The raw token in this one local log line is an intentional security exception:
+it is not persisted, reported as a feature error, or sent through production
+telemetry.
+
 Booking creation depends on a narrow verification-status port and returns
 `EMAIL_VERIFICATION_REQUIRED` for unverified users. Reads and cancellation of
 an existing owned future booking remain available. Current-user SWR is
@@ -45,3 +55,6 @@ refreshed after success so no relogin is needed.
   from the visible verification route after confirmation.
 - A real provider and production delivery configuration remain intentionally
   deferred rather than being implied by the development adapter.
+- Completion evidence covers expiry, cooldown, supersession, replay,
+  concurrent HTTP/persistence consumption, both locales, banner/resend states,
+  and booking without relogin; Docker runtime remains environment-dependent.

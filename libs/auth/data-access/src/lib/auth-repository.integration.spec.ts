@@ -183,6 +183,93 @@ describe('Drizzle authentication persistence', () => {
     ).toBe('invalid');
   });
 
+  it('consumes one token safely through two independent SQLite connections', async () => {
+    repository.createUserAndSession(
+      userRecord(
+        'concurrent-verification-user',
+        'concurrent-verify@example.com',
+        'concurrent-verify@example.com',
+      ),
+      sessionRecord(
+        'concurrent-verification-session',
+        'concurrent-verification-user',
+        'concurrent-session-hash',
+      ),
+    );
+    repository.withImmediateTransaction((transaction) => {
+      transaction.createEmailVerificationToken({
+        id: 'concurrent-verification-token',
+        userId: 'concurrent-verification-user',
+        tokenHash: 'concurrent-token-hash',
+        createdAtUtc: 1000,
+        expiresAtUtc: 20_000,
+      });
+    });
+
+    const firstConnection = openDatabase(databasePath);
+    const secondConnection = openDatabase(databasePath);
+    const firstRepository = new DrizzleAuthRepository({
+      connection: firstConnection,
+    } as unknown as DatabaseService);
+    const secondRepository = new DrizzleAuthRepository({
+      connection: secondConnection,
+    } as unknown as DatabaseService);
+    const barrier = Promise.resolve();
+
+    try {
+      const results = await Promise.all([
+        barrier.then(() =>
+          firstRepository.withImmediateTransaction((transaction) =>
+            transaction.consumeEmailVerificationToken(
+              'concurrent-token-hash',
+              2000,
+            ),
+          ),
+        ),
+        barrier.then(() =>
+          secondRepository.withImmediateTransaction((transaction) =>
+            transaction.consumeEmailVerificationToken(
+              'concurrent-token-hash',
+              2000,
+            ),
+          ),
+        ),
+      ]);
+
+      expect(results.sort()).toEqual(['invalid', 'verified']);
+    } finally {
+      firstConnection.close();
+      secondConnection.close();
+    }
+
+    const reopened = openDatabase(databasePath);
+    try {
+      expect(
+        reopened.drizzle
+          .select()
+          .from(emailVerificationTokens)
+          .where(
+            eq(emailVerificationTokens.id, 'concurrent-verification-token'),
+          )
+          .get(),
+      ).toEqual(
+        expect.objectContaining({
+          consumedAtUtc: 2000,
+          invalidatedAtUtc: null,
+        }),
+      );
+      expect(
+        reopened.drizzle
+          .select()
+          .from(users)
+          .where(eq(users.id, 'concurrent-verification-user'))
+          .get(),
+      ).toEqual(expect.objectContaining({ emailVerifiedAtUtc: 2000 }));
+    } finally {
+      reopened.close();
+    }
+  });
+
   it('seeds Alice and Bob idempotently without resetting existing users', async () => {
     const hasher = new Argon2PasswordHasher();
     await seedAuthUsers(connection, hasher);

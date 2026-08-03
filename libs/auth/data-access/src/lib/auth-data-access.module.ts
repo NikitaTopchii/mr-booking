@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import {
   AUTH_CLOCK,
   AUTH_ID_GENERATOR,
@@ -70,7 +70,10 @@ const authPortProviders = [
     useFactory: () => {
       const environment = parseRuntimeEnvironment(process.env);
       return environment.EMAIL_DELIVERY_MODE === 'development'
-        ? new DevelopmentEmailVerificationDelivery()
+        ? new DevelopmentEmailVerificationDelivery(
+            new Logger(DevelopmentEmailVerificationDelivery.name),
+            environment.LOG_DEVELOPMENT_VERIFICATION_LINK,
+          )
         : new DisabledEmailVerificationDelivery();
     },
   },

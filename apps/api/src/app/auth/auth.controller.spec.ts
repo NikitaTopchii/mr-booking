@@ -1,9 +1,14 @@
 import { mkdtempSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { sessions, users } from '@mr-booking/auth-data-access';
+import {
+  emailVerificationTokens,
+  sessions,
+  users,
+} from '@mr-booking/auth-data-access';
 import { DatabaseService } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
@@ -331,6 +336,81 @@ describe('authentication API', () => {
       .expect(400, { code: 'EMAIL_VERIFICATION_INVALID_OR_EXPIRED' });
   });
 
+  it('rejects expired tokens and permits a cooldown-safe superseding resend', async () => {
+    const agent = request.agent(application.getHttpServer());
+    const registration = await agent.post('/api/auth/register').send({
+      name: 'Lifecycle User',
+      email: 'verification-lifecycle@example.com',
+      password: 'password123',
+    });
+    const firstUrl = registration.body.emailVerification
+      .developmentVerificationUrl as string;
+    const firstToken = new URL(firstUrl).searchParams.get('token');
+    const firstRecord = databaseService.connection.drizzle
+      .select()
+      .from(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.tokenHash, firstTokenHash(firstToken)))
+      .get();
+
+    expect(firstRecord).toBeDefined();
+    databaseService.connection.drizzle
+      .update(emailVerificationTokens)
+      .set({ createdAtUtc: -1, expiresAtUtc: 0 })
+      .where(eq(emailVerificationTokens.id, firstRecord?.id ?? ''))
+      .run();
+
+    await request(application.getHttpServer())
+      .post('/api/auth/email-verification/verify')
+      .send({ token: firstToken })
+      .expect(400, { code: 'EMAIL_VERIFICATION_INVALID_OR_EXPIRED' });
+
+    const resend = await agent
+      .post('/api/auth/email-verification/request')
+      .send({ locale: 'uk' })
+      .expect(200);
+    const secondUrl = resend.body.developmentVerificationUrl as string;
+    const secondToken = new URL(secondUrl).searchParams.get('token');
+
+    await request(application.getHttpServer())
+      .post('/api/auth/email-verification/verify')
+      .send({ token: firstToken })
+      .expect(400, { code: 'EMAIL_VERIFICATION_INVALID_OR_EXPIRED' });
+    await request(application.getHttpServer())
+      .post('/api/auth/email-verification/verify')
+      .send({ token: secondToken })
+      .expect(200, { code: 'EMAIL_VERIFIED' });
+  });
+
+  it('handles identical verification requests concurrently at the HTTP boundary', async () => {
+    const agent = request.agent(application.getHttpServer());
+    const registration = await agent.post('/api/auth/register').send({
+      name: 'Concurrent HTTP User',
+      email: 'verification-http-race@example.com',
+      password: 'password123',
+    });
+    const verificationUrl = registration.body.emailVerification
+      .developmentVerificationUrl as string;
+    const token = new URL(verificationUrl).searchParams.get('token');
+
+    const responses = await Promise.all([
+      request(application.getHttpServer())
+        .post('/api/auth/email-verification/verify')
+        .send({ token }),
+      request(application.getHttpServer())
+        .post('/api/auth/email-verification/verify')
+        .send({ token }),
+    ]);
+
+    expect(responses.map(({ status }) => status).sort()).toEqual([200, 400]);
+    expect(responses.find(({ status }) => status === 400)?.body).toEqual({
+      code: 'EMAIL_VERIFICATION_INVALID_OR_EXPIRED',
+    });
+    await agent
+      .get('/api/auth/me')
+      .expect(200)
+      .expect(({ body }) => expect(body.user.emailVerified).toBe(true));
+  });
+
   it('never exposes raw exception messages', async () => {
     await request(application.getHttpServer())
       .post('/api/auth/register')
@@ -351,3 +431,8 @@ describe('authentication API', () => {
       });
   });
 });
+
+function firstTokenHash(rawToken: string | null): string {
+  if (!rawToken) throw new Error('Expected a verification token');
+  return createHash('sha256').update(rawToken).digest('hex');
+}

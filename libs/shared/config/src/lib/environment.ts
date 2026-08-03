@@ -46,6 +46,12 @@ const environmentSchema = z
       .int()
       .min(1)
       .max(10_080),
+    E2E_EMAIL_VERIFICATION_TOKEN_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(3_600)
+      .optional(),
     EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: z.coerce
       .number()
       .int()
@@ -53,6 +59,9 @@ const environmentSchema = z
       .max(86_400),
     EMAIL_DELIVERY_MODE: emailDeliveryModeSchema,
     EXPOSE_DEVELOPMENT_VERIFICATION_LINK: z
+      .enum(['true', 'false'])
+      .transform((value) => value === 'true'),
+    LOG_DEVELOPMENT_VERIFICATION_LINK: z
       .enum(['true', 'false'])
       .transform((value) => value === 'true'),
     DEMO_SEED_WEEK_START: demoSeedWeekStartSchema,
@@ -66,6 +75,17 @@ const environmentSchema = z
         code: 'custom',
         path: ['DATABASE_PATH'],
         message: 'must be an absolute path in production',
+      });
+    }
+
+    if (
+      environment.E2E_EMAIL_VERIFICATION_TOKEN_TTL_SECONDS !== undefined &&
+      environment.NODE_ENV !== 'test'
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['E2E_EMAIL_VERIFICATION_TOKEN_TTL_SECONDS'],
+        message: 'test-only verification TTL is only allowed in test',
       });
     }
 
@@ -84,6 +104,23 @@ const environmentSchema = z
           path: ['EXPOSE_DEVELOPMENT_VERIFICATION_LINK'],
           message:
             'development verification links are not allowed in production',
+        });
+      }
+
+      if (environment.LOG_DEVELOPMENT_VERIFICATION_LINK) {
+        context.addIssue({
+          code: 'custom',
+          path: ['LOG_DEVELOPMENT_VERIFICATION_LINK'],
+          message:
+            'development verification link logging is not allowed in production',
+        });
+      }
+
+      if (!environment.APP_PUBLIC_URL.startsWith('https://')) {
+        context.addIssue({
+          code: 'custom',
+          path: ['APP_PUBLIC_URL'],
+          message: 'must use HTTPS in production',
         });
       }
     }
@@ -107,6 +144,7 @@ const localDefaults = {
   EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: '60',
   EMAIL_DELIVERY_MODE: 'development',
   EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true',
+  LOG_DEVELOPMENT_VERIFICATION_LINK: 'false',
 } as const;
 
 export type RuntimeEnvironment = z.infer<typeof environmentSchema>;

@@ -42,7 +42,13 @@ mutation before the server succeeds.
   clock for expiry, persisted cooldown, hashed token lookup, and atomic replay
   protection.
 - **Development only:** a verification URL is returned only when explicitly
-  configured; production never returns raw tokens or links.
+  configured; with `LOG_DEVELOPMENT_VERIFICATION_LINK=true` the same URL is
+  written once by the local development delivery adapter. Production never
+  returns or logs raw tokens and rejects development delivery, exposure, and
+  logging configuration.
+- **Lifecycle:** the default 24-hour TTL, persisted cooldown, supersession,
+  safe replay result, and concurrent-consumption transaction are authoritative
+  server behavior rather than client countdowns.
 
 ## 4. Session restoration
 

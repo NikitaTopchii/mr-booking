@@ -72,6 +72,7 @@ export interface NewEmailVerificationTokenRecord {
 }
 
 export interface EmailVerificationEmail {
+  readonly userId: string;
   readonly email: string;
   readonly name: string;
   readonly locale: EmailVerificationLocale;

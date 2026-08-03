@@ -48,6 +48,11 @@ export default defineConfig({
       SEED_ON_START: 'true',
       SESSION_COOKIE_NAME: 'room_booking_session',
       SESSION_TTL_DAYS: '7',
+      EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: '5',
+      E2E_EMAIL_VERIFICATION_TOKEN_TTL_SECONDS: '2',
+      EMAIL_DELIVERY_MODE: 'development',
+      EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true',
+      LOG_DEVELOPMENT_VERIFICATION_LINK: 'false',
     },
   },
 });

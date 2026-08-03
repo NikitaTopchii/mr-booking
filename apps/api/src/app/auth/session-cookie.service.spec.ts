@@ -22,6 +22,7 @@ describe('SessionCookieService production policy', () => {
     process.env['EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS'] = '60';
     process.env['EMAIL_DELIVERY_MODE'] = 'disabled';
     process.env['EXPOSE_DEVELOPMENT_VERIFICATION_LINK'] = 'false';
+    process.env['LOG_DEVELOPMENT_VERIFICATION_LINK'] = 'false';
     const response = {
       cookie: jest.fn(),
       clearCookie: jest.fn(),

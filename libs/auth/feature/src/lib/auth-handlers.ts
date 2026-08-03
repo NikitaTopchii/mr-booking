@@ -344,6 +344,7 @@ export class RequestEmailVerificationHandler implements ICommandHandler<
 
     try {
       await this.delivery.sendVerificationEmail({
+        userId: issue.user.id,
         email: issue.user.email,
         name: issue.user.name,
         locale: command.locale,

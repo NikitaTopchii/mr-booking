@@ -75,6 +75,7 @@ export function EmailVerificationPage({
       );
     }
     await refresh();
+    router.refresh();
   }
 
   const error = verificationErrorMessage(verify.error, messages);

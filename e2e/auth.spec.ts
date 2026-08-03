@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, request, test, type Page } from '@playwright/test';
 
 test.describe('authentication journey', () => {
   test('registration authenticates, survives reload, and logout revokes the session', async ({
@@ -197,4 +197,298 @@ test.describe('authentication journey', () => {
     });
     expect(desktopStyles.boxShadow).toMatch(/^(?:none|rgba\(0, 0, 0, 0\))/u);
   });
+
+  test('English verification succeeds and removes the token from the URL', async ({
+    page,
+  }) => {
+    const token = await registerThroughApi(page, 'en');
+    await verifyThroughPage(page, 'en', token);
+    await expect(page).toHaveURL(/\/en\/verify-email\?result=success$/u);
+    await expect(page.getByText('Your email has been verified.')).toBeVisible();
+  });
+
+  test('English invalid verification is safe and localized', async ({
+    page,
+  }) => {
+    await page.goto(`/en/verify-email?token=${'a'.repeat(43)}`);
+    await page.getByRole('button', { name: 'Verify email' }).click();
+    await expect(page).toHaveURL(/\/en\/verify-email\?result=invalid$/u);
+    await expect(
+      page.getByText(
+        'This verification link is invalid, expired, or has already been used. Request a new link.',
+      ),
+    ).toBeVisible();
+    await expect(page.getByText(/EMAIL_VERIFICATION/u)).toHaveCount(0);
+  });
+
+  test('Ukrainian invalid verification is safe and offers the public login path', async ({
+    page,
+  }) => {
+    await page.goto(`/uk/verify-email?token=${'b'.repeat(43)}`);
+    await page.getByRole('button', { name: 'Підтвердити пошту' }).click();
+    await expect(page).toHaveURL(/\/uk\/verify-email\?result=invalid$/u);
+    await expect(
+      page.getByText(
+        'Посилання недійсне, прострочене або вже використане. Запросіть нове посилання.',
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', {
+        name: 'Увійдіть, щоб запросити нове посилання.',
+      }),
+    ).toBeVisible();
+  });
+
+  test('expiry remains blocked until a fresh token is verified', async ({
+    page,
+  }) => {
+    const token = await registerThroughApi(page, 'uk');
+    await page.waitForTimeout(2_200);
+    await verifyThroughPage(page, 'uk', token);
+    await expect(
+      page.getByText(
+        'Посилання недійсне, прострочене або вже використане. Запросіть нове посилання.',
+      ),
+    ).toBeVisible();
+    await page.goto('/uk/schedule');
+    await expect(page.getByRole('banner')).toBeVisible();
+    await page.waitForTimeout(5_100);
+
+    const resend = await requestVerificationThroughApi(page, 'uk');
+    await verifyThroughPage(page, 'uk', resend);
+    await expect(page).toHaveURL(/\/uk\/verify-email\?result=success$/u);
+    await page.goto('/uk/schedule');
+    await page.reload();
+    await expect(
+      page.getByText(
+        'Підтвердіть електронну пошту, щоб створити бронювання. Розклад кімнат залишається доступним.',
+      ),
+    ).toHaveCount(0);
+  });
+
+  test('resend supersedes the prior token', async ({ page }) => {
+    const firstToken = await registerThroughApi(page, 'en');
+    await page.waitForTimeout(5_100);
+    const secondToken = await requestVerificationThroughApi(page, 'en');
+
+    await verifyThroughPage(page, 'en', firstToken);
+    await expect(
+      page.getByText(
+        'This verification link is invalid, expired, or has already been used. Request a new link.',
+      ),
+    ).toBeVisible();
+    await verifyThroughPage(page, 'en', secondToken);
+    await expect(page).toHaveURL(/\/en\/verify-email\?result=success$/u);
+
+    const staleTokenResponse = await page.request.post(
+      '/api/auth/email-verification/verify',
+      { data: { token: firstToken } },
+    );
+    expect(staleTokenResponse.status()).toBe(400);
+    await page.goto('/en/schedule');
+    await page.reload();
+    await expect(
+      page.getByText(
+        'Verify your email to create a meeting-room booking. Room schedules remain available.',
+      ),
+    ).toHaveCount(0);
+  });
+
+  test('resend cooldown is enforced by the API and rendered by the banner', async ({
+    page,
+  }) => {
+    await registerThroughApi(page, 'en');
+    const apiCooldown = await page.request.post(
+      '/api/auth/email-verification/request',
+      { data: { locale: 'en' } },
+    );
+    expect(apiCooldown.status()).toBe(429);
+    expect(await apiCooldown.json()).toMatchObject({
+      code: 'EMAIL_VERIFICATION_RATE_LIMITED',
+      details: { retryAfterSeconds: expect.any(Number) },
+    });
+    await page.route('**/api/auth/email-verification/request', (route) =>
+      route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          code: 'EMAIL_VERIFICATION_RATE_LIMITED',
+          details: { retryAfterSeconds: 5 },
+        }),
+      }),
+    );
+    await page.goto('/en/schedule');
+    const banner = page.getByRole('banner');
+    await expect(banner).toBeVisible();
+    const resendButton = page
+      .locator('aside[aria-label="Verify your email"] button')
+      .last();
+    await expect(resendButton).toBeEnabled();
+    await resendButton.click();
+    await expect(
+      page.getByText('Please wait before requesting another link.'),
+    ).toBeVisible();
+    await page.unroute('**/api/auth/email-verification/request');
+    await page.waitForTimeout(5_100);
+    await resendButton.click();
+    await expect(
+      page.getByText('A new verification link has been sent.'),
+    ).toBeVisible();
+  });
+
+  test('two independent HTTP clients safely consume one token', async ({
+    page,
+  }) => {
+    const token = await registerThroughApi(page, 'en');
+    const firstClient = await request.newContext({
+      baseURL: 'http://localhost:3101',
+    });
+    const secondClient = await request.newContext({
+      baseURL: 'http://localhost:3101',
+    });
+    try {
+      const responses = await Promise.all([
+        firstClient.post('/api/auth/email-verification/verify', {
+          data: { token },
+        }),
+        secondClient.post('/api/auth/email-verification/verify', {
+          data: { token },
+        }),
+      ]);
+      expect(responses.map((response) => response.status()).sort()).toEqual([
+        200, 400,
+      ]);
+      expect(
+        await responses.find((response) => response.status() === 400)?.json(),
+      ).toEqual({
+        code: 'EMAIL_VERIFICATION_INVALID_OR_EXPIRED',
+      });
+    } finally {
+      await firstClient.dispose();
+      await secondClient.dispose();
+    }
+    await expect(
+      (await page.request.get('/api/auth/me')).json(),
+    ).resolves.toMatchObject({
+      user: { emailVerified: true },
+    });
+  });
+
+  test('a verified token replay remains safe and does not require relogin', async ({
+    page,
+  }) => {
+    const token = await registerThroughApi(page, 'en');
+    await verifyThroughPage(page, 'en', token);
+
+    const replay = await page.request.post(
+      '/api/auth/email-verification/verify',
+      { data: { token } },
+    );
+    expect(replay.status()).toBe(400);
+    expect(await replay.json()).toEqual({
+      code: 'EMAIL_VERIFICATION_INVALID_OR_EXPIRED',
+    });
+    await expect(
+      (await page.request.get('/api/auth/me')).json(),
+    ).resolves.toMatchObject({
+      user: { emailVerified: true },
+    });
+    await page.goto('/en/schedule');
+    await page.reload();
+    await expect(
+      page.getByText(
+        'Verify your email to create a meeting-room booking. Room schedules remain available.',
+      ),
+    ).toHaveCount(0);
+  });
+
+  test('the booking gate keeps slots readable and enables booking without relogin', async ({
+    page,
+  }) => {
+    const token = await registerThroughApi(page, 'uk');
+    await page.goto('/uk/schedule');
+    await expect(page.getByRole('banner')).toBeVisible();
+    const availableSlot = page
+      .locator('button[role="gridcell"]:not([disabled])')
+      .first();
+    await expect(availableSlot).toBeVisible();
+    await availableSlot.click();
+    await expect(page).toHaveURL(/\/uk\/verify-email\?reason=booking$/u);
+
+    await verifyThroughPage(page, 'uk', token);
+    await page.goto('/uk/schedule');
+    await page.reload();
+    await expect(
+      page.getByText(
+        'Підтвердіть електронну пошту, щоб створити бронювання. Розклад кімнат залишається доступним.',
+      ),
+    ).toHaveCount(0);
+    await page
+      .locator('button[role="gridcell"]:not([disabled])')
+      .first()
+      .click();
+    await page.getByLabel('Назва зустрічі').fill('E2E verified booking');
+    await page.getByRole('button', { name: 'Забронювати' }).click();
+    await expect(page.getByText('Бронювання створено.')).toBeVisible();
+  });
 });
+
+async function registerThroughApi(
+  page: Page,
+  locale: 'uk' | 'en',
+): Promise<string> {
+  const email = `verification-${locale}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  const response = await page.request.post('/api/auth/register', {
+    data: {
+      name: 'E2E Verification User',
+      email,
+      password: 'password123',
+      locale,
+    },
+  });
+  expect(response.status()).toBe(201);
+  const body = (await response.json()) as {
+    emailVerification: { developmentVerificationUrl: string };
+  };
+  const url = new URL(body.emailVerification.developmentVerificationUrl);
+  const token = url.searchParams.get('token');
+  if (!token) throw new Error('Expected a development verification token');
+  return token;
+}
+
+async function requestVerificationThroughApi(
+  page: Page,
+  locale: 'uk' | 'en',
+): Promise<string> {
+  const response = await page.request.post(
+    '/api/auth/email-verification/request',
+    {
+      data: { locale },
+    },
+  );
+  expect(response.status()).toBe(200);
+  const body = (await response.json()) as {
+    developmentVerificationUrl: string;
+  };
+  const token = new URL(body.developmentVerificationUrl).searchParams.get(
+    'token',
+  );
+  if (!token) throw new Error('Expected a development verification token');
+  return token;
+}
+
+async function verifyThroughPage(
+  page: Page,
+  locale: 'uk' | 'en',
+  token: string,
+): Promise<void> {
+  await page.goto(`/${locale}/verify-email?token=${encodeURIComponent(token)}`);
+  await page
+    .getByRole('button', {
+      name: locale === 'uk' ? 'Підтвердити пошту' : 'Verify email',
+    })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(`/${locale}/verify-email\\?result=(?:success|invalid)$`, 'u'),
+  );
+}
