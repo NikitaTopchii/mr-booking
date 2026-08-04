@@ -71,6 +71,8 @@ export function useBookingCreation({
   const [suppressReconciliation, setSuppressReconciliation] = useState(false);
   const [error, setError] = useState<BookingCreationFeatureError>();
   const [notice, setNotice] = useState<'created'>();
+  const currentRoomIdRef = useRef<string | undefined>(data.selectedRoom?.id);
+  currentRoomIdRef.current = data.selectedRoom?.id;
   const mutation = useSWRMutation(
     ['booking', 'create'],
     (
@@ -124,6 +126,19 @@ export function useBookingCreation({
       ? lastStableOptions.current.options
       : calculatedEndOptions;
   const displaySlot = resolvedSlot ?? selection?.slot;
+
+  useEffect(() => {
+    if (!selection || selection.roomId === data.selectedRoom?.id) return;
+
+    setSelection(undefined);
+    setTitle('');
+    setEndsAt('');
+    setReconciling(false);
+    setSuppressReconciliation(false);
+    setError(undefined);
+    setNotice(undefined);
+    lastStableOptions.current = undefined;
+  }, [data.selectedRoom?.id, selection]);
 
   useEffect(() => {
     if (!selection || scheduleIsUnstable) return;
@@ -189,6 +204,8 @@ export function useBookingCreation({
 
   const openForSlot = useCallback(
     (slot: ScheduleSlot) => {
+      const selectedRoomId = data.selectedRoom?.id;
+      if (!selectedRoomId) return;
       const currentSlot = data.presentationRange?.slots.find(
         (candidate) => candidate.id === slot.id,
       );
@@ -202,7 +219,11 @@ export function useBookingCreation({
               maximumDurationSlots: MAX_BOOKING_SLOT_COUNT,
             })
           : [];
-      setSelection({ slotId: slot.id, slot: currentSlot ?? slot });
+      setSelection({
+        roomId: selectedRoomId,
+        slotId: slot.id,
+        slot: currentSlot ?? slot,
+      });
       setTitle('');
       setEndsAt(options[0] ?? '');
       setReconciling(false);
@@ -227,7 +248,15 @@ export function useBookingCreation({
   }, [mutation.isMutating, reconciling]);
   const submit = useCallback(async () => {
     if (!selection || !data.selectedRoom || !data.presentation) return;
+    if (selection.roomId !== data.selectedRoom.id) {
+      setSelection(undefined);
+      setTitle('');
+      setEndsAt('');
+      setError(undefined);
+      return;
+    }
     if (reconciling || scheduleIsUnstable) return;
+    const roomId = data.selectedRoom.id;
     const attempt = ++operationAttempt.current;
     const currentSlot = data.presentationRange?.slots.find(
       (slot) => slot.id === selection.slotId,
@@ -268,13 +297,20 @@ export function useBookingCreation({
     setError(undefined);
     try {
       await mutation.trigger({
-        roomId: data.selectedRoom.id,
+        roomId,
         title: normalizedTitle,
         startsAtUtc,
         endsAtUtc: endsAt,
       });
       setSuppressReconciliation(true);
       await data.revalidateSchedule();
+      if (currentRoomIdRef.current !== roomId) {
+        setSelection(undefined);
+        setTitle('');
+        setEndsAt('');
+        setError(undefined);
+        return;
+      }
       setSelection(undefined);
       setTitle('');
       setEndsAt('');
@@ -283,6 +319,7 @@ export function useBookingCreation({
       setNotice('created');
     } catch (cause) {
       setSuppressReconciliation(false);
+      if (currentRoomIdRef.current !== roomId) return;
       if (redirectIfAuthExpired(cause)) return;
       const code = classifyBookingCreationError(cause);
       if (code === 'emailVerificationRequired') {

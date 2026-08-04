@@ -114,6 +114,15 @@ export interface AppDictionary {
     readonly loadingSchedule: string;
     readonly emptyRooms: string;
     readonly emptySchedule: string;
+    readonly minimumCapacityLabel: string;
+    readonly minimumCapacityPlaceholder: string;
+    readonly applyCapacityFilter: string;
+    readonly clearCapacityFilter: string;
+    readonly activeCapacity: string;
+    readonly invalidCapacity: string;
+    readonly noMatchingRooms: string;
+    readonly filterButtonLabel: string;
+    readonly currentFilterSummary: string;
     readonly retry: string;
     readonly available: string;
     readonly unavailable: string;

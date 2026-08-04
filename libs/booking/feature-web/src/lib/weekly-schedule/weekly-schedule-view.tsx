@@ -11,6 +11,7 @@ import {
   ScheduleEmptyState,
   ScheduleErrorState,
   ScheduleLoading,
+  ScheduleNoMatchingRoomsState,
 } from './components/schedule-states';
 import { resolveFeatureErrorMessage } from './errors/resolve-schedule-error-message';
 
@@ -65,6 +66,9 @@ export function WeeklyScheduleView({
             onNext={navigation.goToNextWeek}
             onOpenCalendar={navigation.openCalendar}
             onSelectDate={navigation.selectDate}
+            minimumCapacity={navigation.minimumCapacity}
+            onApplyCapacity={navigation.setMinimumCapacity}
+            onClearCapacity={navigation.clearMinimumCapacity}
           />
         </div>
         {creation.notice === 'created' ? (
@@ -98,7 +102,16 @@ export function WeeklyScheduleView({
             retry={messages.retry}
             onRetry={data.retryRooms}
           />
-        ) : data.rooms.length === 0 ? (
+        ) : data.noMatchingRooms && navigation.minimumCapacity !== undefined ? (
+          <ScheduleNoMatchingRoomsState
+            message={messages.noMatchingRooms.replace(
+              '{capacity}',
+              String(navigation.minimumCapacity),
+            )}
+            clearLabel={messages.clearCapacityFilter}
+            onClear={navigation.clearMinimumCapacity}
+          />
+        ) : !data.hasRooms ? (
           <ScheduleEmptyState message={messages.emptyRooms} />
         ) : scheduleError ? (
           <ScheduleErrorState

@@ -38,8 +38,8 @@ jest.mock('@mr-booking/booking-data-access-web', () => {
     listRooms: jest.fn(),
     listRoomBookings,
     fetchRoomBookingsByKey: jest.fn((key: readonly unknown[]) => {
-      const [, , , fromUtc, toUtc] = key;
-      return listRoomBookings('room-1', { fromUtc, toUtc });
+      const [, , roomId, fromUtc, toUtc] = key;
+      return listRoomBookings(roomId, { fromUtc, toUtc });
     }),
     createBooking: jest.fn(),
     cancelBooking: jest.fn(),
@@ -68,6 +68,15 @@ const messages: AppDictionary['schedule'] = {
   loadingSchedule: 'Loading schedule',
   emptyRooms: 'No rooms',
   emptySchedule: 'No bookings',
+  minimumCapacityLabel: 'Minimum capacity',
+  minimumCapacityPlaceholder: 'People',
+  applyCapacityFilter: 'Apply filter',
+  clearCapacityFilter: 'Clear filter',
+  activeCapacity: 'Capacity filter active',
+  invalidCapacity: 'Enter a positive whole number of people.',
+  noMatchingRooms: 'No rooms can accommodate at least {capacity} people.',
+  filterButtonLabel: 'Filter rooms by capacity',
+  currentFilterSummary: 'Showing rooms for at least {capacity} people.',
   retry: 'Retry',
   available: 'Available',
   unavailable: 'Unavailable',
@@ -210,6 +219,128 @@ describe('weekly schedule', () => {
     ).toBeDefined();
     expect(screen.getByLabelText('Meeting title')).toBeDefined();
     expect(screen.getByText('Duration')).toBeDefined();
+  });
+
+  it('applies a valid minimum capacity without changing the selected date', async () => {
+    jest.mocked(listRooms).mockResolvedValue([
+      { id: 'room-1', name: 'Aquarium', floor: 2, capacity: 4 },
+      { id: 'room-2', name: 'Mars', floor: 3, capacity: 6 },
+      { id: 'room-3', name: 'Orbit', floor: 4, capacity: 10 },
+    ]);
+    renderSchedule();
+
+    const input = await screen.findByLabelText('Minimum capacity');
+    fireEvent.change(input, { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
+
+    expect(router.push).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /roomId=room-1.*week=2030-06-03.*date=2030-06-03.*minCapacity=6/u,
+      ),
+      { scroll: false },
+    );
+    expect((input as HTMLInputElement).value).toBe('6');
+  });
+
+  it('normalizes a filtered-out selected room to the first matching room', async () => {
+    jest
+      .mocked(useSearchParams)
+      .mockReturnValue(
+        new URLSearchParams(
+          'roomId=room-1&date=2030-06-03&week=2030-06-03&minCapacity=6',
+        ),
+      );
+    jest.mocked(listRooms).mockResolvedValue([
+      { id: 'room-1', name: 'Aquarium', floor: 2, capacity: 4 },
+      { id: 'room-2', name: 'Mars', floor: 3, capacity: 6 },
+      { id: 'room-3', name: 'Orbit', floor: 4, capacity: 10 },
+    ]);
+    renderSchedule();
+
+    expect(
+      await screen.findByRole('status', { name: 'Selected room: Mars' }),
+    ).toBeDefined();
+    expect(router.replace).toHaveBeenCalledWith(
+      expect.stringMatching(/roomId=room-2.*minCapacity=6/u),
+      { scroll: false },
+    );
+    expect(screen.queryByText('Aquarium')).toBeNull();
+  });
+
+  it('shows an accessible no-match state and does not fetch a room schedule', async () => {
+    jest
+      .mocked(useSearchParams)
+      .mockReturnValue(
+        new URLSearchParams(
+          'roomId=room-1&date=2030-06-03&week=2030-06-03&minCapacity=20',
+        ),
+      );
+    jest.mocked(listRooms).mockResolvedValue([
+      { id: 'room-1', name: 'Aquarium', floor: 2, capacity: 4 },
+      { id: 'room-2', name: 'Mars', floor: 3, capacity: 6 },
+    ]);
+    renderSchedule();
+
+    expect(
+      await screen.findByText('No rooms can accommodate at least 20 people.'),
+    ).toBeDefined();
+    expect(listRoomBookings).not.toHaveBeenCalled();
+    expect(
+      screen
+        .getByRole('combobox', { name: 'Select meeting room' })
+        .hasAttribute('disabled'),
+    ).toBe(true);
+
+    const clearButtons = screen.getAllByRole('button', {
+      name: 'Clear filter',
+    });
+    const emptyState = screen
+      .getByText('No rooms can accommodate at least 20 people.')
+      .closest('[role="status"]');
+    if (!emptyState) throw new Error('Expected no-match status');
+    fireEvent.click(emptyState.querySelector('button') ?? clearButtons[1]);
+    expect(router.push).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /date=2030-06-03.*week=2030-06-03(?!.*minCapacity)/u,
+      ),
+      { scroll: false },
+    );
+  });
+
+  it('rejects decimal capacity input with an associated validation message', async () => {
+    renderSchedule();
+    const input = await screen.findByLabelText('Minimum capacity');
+    fireEvent.change(input, { target: { value: '4.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
+
+    expect(
+      screen
+        .getByText('Enter a positive whole number of people.')
+        .getAttribute('role'),
+    ).toBe('alert');
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it('normalizes an invalid capacity URL value while preserving other query state', async () => {
+    jest
+      .mocked(useSearchParams)
+      .mockReturnValue(
+        new URLSearchParams(
+          'roomId=room-1&date=2030-06-03&week=2030-06-03&minCapacity=4.5&unrelated=keep',
+        ),
+      );
+    renderSchedule();
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /roomId=room-1.*date=2030-06-03.*week=2030-06-03.*unrelated=keep/u,
+        ),
+        { scroll: false },
+      ),
+    );
+    expect(router.replace.mock.calls[0]?.[0]).not.toContain('minCapacity');
+    expect(router.replace).toHaveBeenCalledTimes(1);
   });
 
   it('reports a room query failure once and renders its safe message', async () => {

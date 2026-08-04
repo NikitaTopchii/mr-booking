@@ -62,6 +62,8 @@ export function useBookingCancellation({
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<BookingCancellationFeatureError>();
   const [notice, setNotice] = useState<'cancelled'>();
+  const currentRoomIdRef = useRef<string | undefined>(data.selectedRoom?.id);
+  currentRoomIdRef.current = data.selectedRoom?.id;
   const mutation = useSWRMutation(
     ['booking', 'cancel'],
     (_key, { arg }: { readonly arg: string }) => cancelBooking(arg),
@@ -74,6 +76,15 @@ export function useBookingCancellation({
     setConfirming(false);
     setError(undefined);
   }, [booking]);
+
+  useEffect(() => {
+    if (!booking || booking.roomId === data.selectedRoom?.id) return;
+
+    setBooking(undefined);
+    setConfirming(false);
+    setError(undefined);
+    setNotice(undefined);
+  }, [booking, data.selectedRoom?.id]);
 
   const openBooking = useCallback((selected: ScheduleBooking) => {
     setBooking(selected);
@@ -90,15 +101,18 @@ export function useBookingCancellation({
   const confirmCancellation = useCallback(async () => {
     if (!booking || !canCancel) return;
     const attempt = ++operationAttempt.current;
+    const roomId = booking.roomId;
     setError(undefined);
     try {
       await mutation.trigger(booking.id);
       await data.revalidateSchedule();
+      if (currentRoomIdRef.current !== roomId) return;
       setBooking(undefined);
       setConfirming(false);
       setError(undefined);
       setNotice('cancelled');
     } catch (cause) {
+      if (currentRoomIdRef.current !== roomId) return;
       if (redirectIfAuthExpired(cause)) return;
       const status = bookingClientErrorStatus(cause);
       const context: BookingCancellationErrorContext = {

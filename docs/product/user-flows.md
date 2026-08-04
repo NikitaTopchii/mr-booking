@@ -81,14 +81,38 @@ mutation before the server succeeds.
 ## 6. Room selection
 
 - **Starting state:** authenticated schedule with rooms loading.
-- **Actions:** choose one room.
+- **Actions:** choose one room, or apply a minimum-capacity filter.
 - **Loading:** room list and selected-room schedule load independently.
 - **Success:** selected room and its current week are visible.
 - **Errors:** room-list failure, schedule failure, no seeded rooms.
 - **Server checks:** room existence and schedule query bounds.
-- **Navigation:** URL/state identifies selected room and week.
+- **Navigation:** URL/state identifies selected room, week, and optional
+  `minCapacity`.
 
-## 6. Weekly schedule navigation
+## 7. Room-capacity filtering
+
+- **Starting state:** authenticated schedule with the complete API room list
+  available.
+- **Actions:** enter a positive whole-number minimum, press Enter or Apply,
+  then optionally Clear.
+- **Loading:** keep the date/week context while the filtered room list and
+  selected-room schedule revalidate.
+- **Success:** show only rooms whose capacity is at least the requested value,
+  preserving API order. A selected room that no longer matches resolves to the
+  first matching room.
+- **No matches:** clear the room ID, show a localized no-match state, disable
+  room-dependent controls, and make no schedule request until the filter is
+  cleared.
+- **Errors/normalization:** invalid, empty, zero, negative, decimal, text,
+  unsafe, or repeated query values are normalized away or to one canonical
+  value with `router.replace`; unrelated query state and date/week remain.
+- **Navigation:** Apply/Clear create history entries; reload and Back/Forward
+  restore the filter, room resolution, and schedule. The same behavior is
+  available in English and Ukrainian at expanded, medium, and compact widths.
+- **Booking safety:** an open creation or cancellation flow is invalidated
+  when its room changes, so a stale room cannot receive a mutation.
+
+## 8. Weekly schedule navigation
 
 - **Starting state:** one room/week displayed.
 - **Actions:** move to previous or next week.
@@ -98,7 +122,7 @@ mutation before the server succeeds.
 - **Server checks:** room existence and normalized week range.
 - **Navigation:** URL represents room and week for deep linking.
 
-## 7. Booking creation
+## 9. Booking creation
 
 - **Starting state:** authenticated user, selected room/week, creation control.
 - **Actions:** enter title/date/start/end; submit.
@@ -110,7 +134,7 @@ mutation before the server succeeds.
   overlap, transactional slot ownership.
 - **Navigation:** remain on selected room/week and reveal confirmed booking.
 
-## 8. Booking conflict
+## 10. Booking conflict
 
 - **Starting state:** creation form proposes an occupied interval.
 - **Actions:** submit.
@@ -120,7 +144,7 @@ mutation before the server succeeds.
 - **Server checks:** unique room/slot ownership in the write transaction.
 - **Navigation:** remain in context; revalidate schedule to show the winner.
 
-## 9. Owned-booking cancellation
+## 11. Owned-booking cancellation
 
 - **Starting state:** user selects their active booking.
 - **Actions:** choose cancel and confirm, or use the specified undo pattern.
@@ -130,7 +154,7 @@ mutation before the server succeeds.
 - **Server checks:** authenticated ownership and transactional slot release.
 - **Navigation:** remain on schedule or personal list.
 
-## 10. Attempted foreign cancellation
+## 12. Attempted foreign cancellation
 
 - **Starting state:** user views another user's booking.
 - **Actions:** UI offers no cancellation action; direct API may still be
@@ -141,7 +165,7 @@ mutation before the server succeeds.
 - **Server checks:** booking owner equals authenticated user.
 - **Navigation:** remain in place; booking stays active.
 
-## 11. Upcoming personal bookings
+## 13. Upcoming personal bookings
 
 - **Starting state:** authenticated user opens personal bookings.
 - **Actions:** view or select an upcoming item; cancel a future item through
@@ -154,7 +178,7 @@ mutation before the server succeeds.
   cancellation ownership/cutoff.
 - **Navigation:** selected item opens matching room/week.
 
-## 12. Past-booking navigation
+## 14. Past-booking navigation
 
 - **Starting state:** personal bookings with past section.
 - **Actions:** load more and select an item.
@@ -164,7 +188,7 @@ mutation before the server succeeds.
 - **Server checks:** authenticated scope, stable cursor, past-time partition.
 - **Navigation:** selected item opens matching room/week.
 
-## 13. Mobile schedule usage
+## 15. Mobile schedule usage
 
 - **Starting state:** authenticated user on a phone-width viewport.
 - **Actions:** select a room; choose a day from the seven-day strip, Today,
@@ -178,9 +202,10 @@ mutation before the server succeeds.
 - **Server checks:** identical to desktop; viewport never changes authority.
 - **Navigation:** `date=YYYY-MM-DD` is authoritative, `week` is a normalized
   compatibility value, and room/date deep links remain keyboard/touch
-  accessible across reload and browser history.
+  accessible across reload and browser history. The optional `minCapacity`
+  filter preserves this date context and uses the same URL/history contract.
 
-## 14. Evaluator demo setup
+## 16. Evaluator demo setup
 
 - **Starting state:** migrated clean SQLite database.
 - **Actions:** run `yarn db:seed`, optionally with a Monday

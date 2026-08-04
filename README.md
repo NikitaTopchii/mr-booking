@@ -12,8 +12,8 @@ Browser -> Caddy -> Next.js web -> NestJS API -> SQLite
 The mandatory product is implemented in TypeScript with Next.js, NestJS,
 SQLite, Drizzle, SWR, Tailwind, Radix/shadcn primitives, and a repository-owned
 manual calendar. Implemented bonuses are one-command Docker Compose startup,
-database-enforced race protection, booking API integration coverage, and the
-complete compact/mobile schedule.
+database-enforced race protection, booking API integration coverage, the
+complete compact/mobile schedule, and the room-capacity filter.
 
 ## Prerequisites
 
@@ -272,6 +272,16 @@ selected date and keeps a normalized Monday `week` for legacy compatibility.
 It requests only the active compact one-day, medium three-day, or expanded
 seven-day half-open range as canonical ISO 8601 parameters. Booking creation
 validity is still evaluated authoritatively in `Europe/Kyiv`.
+The optional `minCapacity` parameter is the authoritative persisted room
+filter. It accepts only one canonical positive safe whole integer; invalid,
+empty, zero, negative, decimal, text, unsafe, or repeated values are normalized
+with a replace navigation while preserving `date`, `week`, `roomId`, and other
+query parameters. The client filters the complete API room list inclusively
+(`room.capacity >= minCapacity`) in API order. If the requested room no longer
+matches, the first matching room is selected; when none match, the room ID is
+cleared and no room schedule request is made. Applying and clearing the filter
+use browser-history entries, so Back/Forward restores the filter and its room
+selection.
 Schedule reads exclude cancelled bookings and return only author ID/name.
 `isMine` is server-derived, and booking-slot rows are never public.
 Personal-booking reads join only safe room ID/name/floor/capacity metadata.
@@ -367,6 +377,10 @@ Implemented and verified in repository tests:
 - the enhanced mobile schedule provides a one-day phone timeline, date strip,
   month picker, bottom sheets, safe-area clearance, and a three-day tablet
   view.
+- the room-capacity filter persists canonical `minCapacity` URL state,
+  filters the full API room list, resolves selected-room fallback and no-match
+  states, preserves browser history/date context, and invalidates stale
+  booking-form or cancellation state across room changes.
 
 Docker Compose source is present for the API, web, and public Caddy gateway
 with an API-owned persistent SQLite volume. `docker compose config --quiet`
@@ -376,7 +390,6 @@ in this review despite earlier project-phase gateway evidence.
 
 Deferred to later bonus phases:
 
-- room-capacity filtering;
 - recurring weekly bookings;
 - end-of-booking in-app notifications;
 - installable/offline PWA and Web Push.

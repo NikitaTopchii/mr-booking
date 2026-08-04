@@ -68,3 +68,37 @@ export function ScheduleEmptyState({ message }: { readonly message: string }) {
     </div>
   );
 }
+
+export function ScheduleNoMatchingRoomsState({
+  message,
+  clearLabel,
+  onClear,
+}: {
+  readonly message: string;
+  readonly clearLabel: string;
+  readonly onClear: () => void;
+}) {
+  return (
+    <div
+      className="mt-4 grid min-h-64 place-items-center rounded-xl border border-dashed border-border bg-card p-8 text-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="grid justify-items-center gap-4">
+        <p className="max-w-md text-muted-foreground">{message}</p>
+        <Button
+          type="button"
+          className="min-h-11 touch-manipulation"
+          onClick={() => {
+            onClear();
+            window.requestAnimationFrame(() => {
+              document.getElementById('schedule-minimum-capacity')?.focus();
+            });
+          }}
+        >
+          {clearLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}

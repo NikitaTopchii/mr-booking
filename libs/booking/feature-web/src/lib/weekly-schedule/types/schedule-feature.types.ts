@@ -33,13 +33,24 @@ export interface ScheduleRoomSelectorProps {
   readonly onChange: (roomId: string) => void;
 }
 
+export interface RoomCapacityFilterProps {
+  readonly messages: ScheduleMessages;
+  readonly minimumCapacity: number | undefined;
+  readonly onApply: (minimumCapacity: number) => void;
+  readonly onClear: () => void;
+}
+
 export interface ScheduleNavigationState {
   readonly selectedDate: CalendarDate;
   readonly selectedDateKey: string;
   readonly selectedWeek: CalendarDate;
   readonly requestedRoomId: string | undefined;
+  readonly minimumCapacity: number | undefined;
   readonly selectDate: (date: CalendarDate) => void;
   readonly selectRoom: (roomId: string) => void;
+  readonly normalizeRoom: (roomId: string | undefined) => void;
+  readonly setMinimumCapacity: (value: number) => void;
+  readonly clearMinimumCapacity: () => void;
   readonly goToPreviousWeek: () => void;
   readonly goToNextWeek: () => void;
   readonly goToToday: () => void;
@@ -55,6 +66,8 @@ export interface ScheduleClockState {
 export interface ScheduleDataState {
   readonly presentation: SchedulePresentation | undefined;
   readonly rooms: readonly Room[];
+  readonly hasRooms: boolean;
+  readonly noMatchingRooms: boolean;
   readonly selectedRoom: Room | undefined;
   readonly presentationRange: ScheduleRange | undefined;
   readonly bookings: readonly ScheduleBooking[];
@@ -70,6 +83,7 @@ export interface ScheduleDataState {
 }
 
 export interface BookingSelection {
+  readonly roomId: string;
   readonly slotId: string;
   readonly slot: ScheduleSlot;
 }

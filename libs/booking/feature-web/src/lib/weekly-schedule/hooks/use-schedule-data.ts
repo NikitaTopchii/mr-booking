@@ -21,6 +21,10 @@ import { classifyRoomQueryError } from '../errors/room-query-error.classifier';
 import { roomQueryErrorCatalog } from '../errors/room-query-error.catalog';
 import { classifyScheduleQueryError } from '../errors/schedule-query-error.classifier';
 import { scheduleQueryErrorCatalog } from '../errors/schedule-query-error.catalog';
+import {
+  filterRoomsByMinimumCapacity,
+  resolveSelectedRoom,
+} from '../model/room-capacity-filter';
 import type {
   RoomQueryErrorContext,
   ScheduleErrorDependencies,
@@ -93,9 +97,12 @@ export function useScheduleData({
   const reportedScheduleFailure = useRef<unknown>(undefined);
   const roomsAttempt = useRef(0);
   const scheduleAttempt = useRef(0);
-  const rooms = roomsQuery.data ?? [];
-  const selectedRoom =
-    rooms.find(({ id }) => id === navigation.requestedRoomId) ?? rooms[0];
+  const allRooms = roomsQuery.data ?? [];
+  const rooms = useMemo(
+    () => filterRoomsByMinimumCapacity(allRooms, navigation.minimumCapacity),
+    [allRooms, navigation.minimumCapacity],
+  );
+  const selectedRoom = resolveSelectedRoom(rooms, navigation.requestedRoomId);
   const presentationRange = useMemo(
     () =>
       presentation
@@ -189,24 +196,22 @@ export function useScheduleData({
   }, [scheduleQuery]);
 
   useEffect(() => {
-    if (
-      roomsQuery.data &&
-      selectedRoom &&
-      navigation.requestedRoomId !== selectedRoom.id
-    ) {
-      navigation.selectRoom(selectedRoom.id);
+    if (roomsQuery.data && navigation.requestedRoomId !== selectedRoom?.id) {
+      navigation.normalizeRoom(selectedRoom?.id);
     }
   }, [navigation, navigation.requestedRoomId, roomsQuery.data, selectedRoom]);
 
   return {
     presentation,
     rooms,
+    hasRooms: allRooms.length > 0,
+    noMatchingRooms: allRooms.length > 0 && rooms.length === 0,
     selectedRoom,
     presentationRange,
-    bookings: scheduleQuery.data ?? [],
+    bookings: selectedRoom ? (scheduleQuery.data ?? []) : [],
     isLoadingRooms: roomsQuery.isLoading,
     isLoadingSchedule: scheduleQuery.isLoading,
-    hasScheduleData: scheduleQuery.data !== undefined,
+    hasScheduleData: Boolean(selectedRoom && scheduleQuery.data !== undefined),
     isRevalidating: scheduleQuery.isValidating,
     roomsError,
     scheduleError,

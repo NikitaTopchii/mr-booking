@@ -25,6 +25,7 @@ import {
 } from '@mr-booking/booking-ui';
 import { formatScheduleWeekRange } from '../formatting/schedule-date-time.formatter';
 import { IconButton, ScheduleWeekDateStrip } from './schedule-date-navigation';
+import { RoomCapacityFilter } from './room-capacity-filter';
 import type {
   ScheduleMessages,
   ScheduleRoomSelectorProps,
@@ -47,6 +48,9 @@ export function ScheduleToolbar({
   onOpenCalendar,
   onSelectDate,
   nowUtc,
+  minimumCapacity,
+  onApplyCapacity,
+  onClearCapacity,
 }: {
   readonly locale: Locale;
   readonly messages: ScheduleMessages;
@@ -64,6 +68,9 @@ export function ScheduleToolbar({
   readonly onOpenCalendar: () => void;
   readonly onSelectDate: (date: CalendarDate) => void;
   readonly nowUtc: number;
+  readonly minimumCapacity: number | undefined;
+  readonly onApplyCapacity: (minimumCapacity: number) => void;
+  readonly onClearCapacity: () => void;
 }) {
   return (
     <>
@@ -85,13 +92,21 @@ export function ScheduleToolbar({
       ) : null}
       {presentation === 'expanded' && schedule ? (
         <div className="hidden rounded-xl border border-border bg-card p-4 shadow-sm lg:flex lg:items-end lg:justify-between">
-          <RoomSelector
-            messages={messages}
-            rooms={rooms}
-            room={room}
-            loading={loadingRooms}
-            onChange={onRoomChange}
-          />
+          <div className="flex min-w-0 flex-1 flex-wrap items-end gap-4">
+            <RoomSelector
+              messages={messages}
+              rooms={rooms}
+              room={room}
+              loading={loadingRooms}
+              onChange={onRoomChange}
+            />
+            <RoomCapacityFilter
+              messages={messages}
+              minimumCapacity={minimumCapacity}
+              onApply={onApplyCapacity}
+              onClear={onClearCapacity}
+            />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <IconButton label={messages.previousWeek} onClick={onPrevious}>
               <ChevronLeft aria-hidden="true" />
@@ -116,6 +131,12 @@ export function ScheduleToolbar({
             room={room}
             loading={loadingRooms}
             onChange={onRoomChange}
+          />
+          <RoomCapacityFilter
+            messages={messages}
+            minimumCapacity={minimumCapacity}
+            onApply={onApplyCapacity}
+            onClear={onClearCapacity}
           />
           <div className="flex items-center gap-2">
             <IconButton label={messages.previousWeek} onClick={onPrevious}>
