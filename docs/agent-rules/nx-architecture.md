@@ -92,13 +92,20 @@ The protected entrypoint policy is enforced from source imports:
 - only `apps/web` Server Components import
   `auth-data-access-web/server` and `shared-i18n/server`;
 - `shared-config` root is agnostic because it validates a supplied environment;
-  its `/node` entrypoint is server-only and is limited to API/database/tooling;
+  it MUST NOT export or transitively reach Node modules or environment-file
+  loading. Its `/node` entrypoint is the sole Node-specific boundary and is
+  limited to API/database/tooling;
 - `booking-data-access/seed` is limited to workspace tooling and its tests.
 
 `auth-data-access-web/server` is a Next.js server-runtime web boundary, not an
 API persistence boundary. `shared-i18n/server` is likewise web-only despite
-being server-rendered. These explicit subpaths preserve truthful project tags
-without permitting their use from Client Components or NestJS.
+being server-rendered, and is the sole public entrypoint for the
+`server-only` dictionary loader. These explicit subpaths preserve truthful
+project tags without permitting their use from Client Components or NestJS.
+
+Protected subpaths are exclusive. Runtime-specific implementations MUST NOT
+be re-exported through a root barrel, and the boundary audit follows root
+entrypoint re-exports transitively to enforce that rule.
 
 Cross-library imports MUST use public entrypoints. Deep imports, source
 dependency cycles, compatibility schema barrels, and moving domain code into

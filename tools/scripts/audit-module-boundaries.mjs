@@ -322,6 +322,37 @@ function importedSpecifiers(filePath, source) {
   return specifiers;
 }
 
+function allModuleSpecifiers(filePath, source) {
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const specifiers = [];
+  const add = (value) => specifiers.push(value);
+  const visit = (node) => {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      add(node.moduleSpecifier.text);
+    }
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      add(node.arguments[0].text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return specifiers;
+}
+
 function assertAllowedSchemaImport(sourceProject, targetProject, sourcePath) {
   const approvedTargets = {
     'auth-data-access': new Set(['auth-infrastructure']),
@@ -383,7 +414,7 @@ function assertSourceImportPolicy(
     sourcePlatform !== 'platform:web'
   ) {
     throw new Error(
-      `${relative(repositoryRoot, sourcePath)} may not import the web client entry point from ${sourcePlatform}.`,
+      `${relative(repositoryRoot, sourcePath)} (${sourceProject.tags.join(', ')}) may not import ${specifier}; allowed consumers: platform:web projects only; server and agnostic code must use a server-safe boundary.`,
     );
   }
   if (
@@ -392,18 +423,15 @@ function assertSourceImportPolicy(
   ) {
     if (sourceProject.name !== 'web' || isClientComponent(source)) {
       throw new Error(
-        `${relative(repositoryRoot, sourcePath)} may not import the Next server-only entry point ${specifier}.`,
+        `${relative(repositoryRoot, sourcePath)} (${sourceProject.tags.join(', ')}) may not import ${specifier}; allowed consumers: apps/web Server Components only; use the root locale/contract entrypoint for client or library code.`,
       );
     }
   }
   if (specifier === '@mr-booking/shared-config/node') {
-    if (
-      !new Set(['api', 'shared-database', 'workspace-tooling']).has(
-        sourceProject.name,
-      )
-    ) {
+    const allowedConsumers = ['api', 'shared-database', 'workspace-tooling'];
+    if (!new Set(allowedConsumers).has(sourceProject.name)) {
       throw new Error(
-        `${relative(repositoryRoot, sourcePath)} may not import the Node-only configuration entry point.`,
+        `${relative(repositoryRoot, sourcePath)} (${sourceProject.tags.join(', ')}) may not import ${specifier}; allowed consumers: ${allowedConsumers.join(', ')}; use @mr-booking/shared-config for runtime-neutral validation.`,
       );
     }
   }
@@ -424,6 +452,160 @@ function assertSourceImportPolicy(
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = findRepositoryRoot(scriptDirectory);
+const sourceExtensions = [
+  '.ts',
+  '.tsx',
+  '.mts',
+  '.cts',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+];
+const tsconfig = JSON.parse(
+  readFileSync(join(repositoryRoot, 'tsconfig.base.json'), 'utf8'),
+);
+const pathAliases = new Map(
+  Object.entries(tsconfig.compilerOptions?.paths ?? {}).flatMap(
+    ([alias, targets]) => {
+      const target = targets[0];
+      return target ? [[alias, resolve(repositoryRoot, target)]] : [];
+    },
+  ),
+);
+
+function resolveSourceModule(importerPath, specifier) {
+  const basePath = specifier.startsWith('.')
+    ? resolve(dirname(importerPath), specifier)
+    : pathAliases.get(specifier);
+  if (!basePath) return undefined;
+
+  const candidates = [basePath];
+  if (!parse(basePath).ext) {
+    candidates.push(
+      ...sourceExtensions.map((extension) => `${basePath}${extension}`),
+    );
+    candidates.push(
+      ...sourceExtensions.map((extension) =>
+        join(basePath, `index${extension}`),
+      ),
+    );
+  }
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
+function collectReachableSourceModules(entrypoint) {
+  const queue = [entrypoint];
+  const visited = new Set();
+  const edges = [];
+
+  while (queue.length > 0) {
+    const sourcePath = queue.shift();
+    if (!sourcePath || visited.has(sourcePath)) continue;
+    visited.add(sourcePath);
+    const source = readFileSync(sourcePath, 'utf8');
+    for (const specifier of allModuleSpecifiers(sourcePath, source)) {
+      const targetPath = resolveSourceModule(sourcePath, specifier);
+      edges.push({ sourcePath, specifier, targetPath });
+      if (targetPath && !visited.has(targetPath)) queue.push(targetPath);
+    }
+  }
+
+  return { edges, files: [...visited] };
+}
+
+function auditEntrypoint(entrypoint, policy) {
+  const { edges } = collectReachableSourceModules(entrypoint);
+  return edges.flatMap(({ sourcePath, specifier, targetPath }) => {
+    const reachesForbiddenSpecifier =
+      policy.forbiddenSpecifiers.has(specifier) ||
+      (policy.forbidNodeBuiltins && specifier.startsWith('node:'));
+    const reachesForbiddenFile =
+      targetPath && policy.forbiddenFileNames.has(parse(targetPath).base);
+    if (!reachesForbiddenSpecifier && !reachesForbiddenFile) return [];
+    const target = targetPath
+      ? relative(repositoryRoot, targetPath)
+      : specifier;
+    return [
+      `${policy.projectName} root entrypoint ${relative(
+        repositoryRoot,
+        entrypoint,
+      )} transitively reaches ${policy.description} via ${target} from ${relative(
+        repositoryRoot,
+        sourcePath,
+      )}; import the protected ${policy.protectedEntrypoint} only from its approved runtime boundary.`,
+    ];
+  });
+}
+
+function auditProtectedRootEntrypoints() {
+  const policies = [
+    {
+      projectName: 'shared-config',
+      entrypoint: join(repositoryRoot, 'libs/shared/config/src/index.ts'),
+      protectedEntrypoint: '@mr-booking/shared-config/node',
+      forbiddenSpecifiers: new Set(['node:fs', 'node:path', 'node:process']),
+      forbidNodeBuiltins: true,
+      forbiddenFileNames: new Set(['load-environment-file.ts']),
+      description: 'Node-only configuration loading',
+    },
+    {
+      projectName: 'shared-i18n',
+      entrypoint: join(repositoryRoot, 'libs/shared/web/i18n/src/index.ts'),
+      protectedEntrypoint: '@mr-booking/shared-i18n/server',
+      forbiddenSpecifiers: new Set(['server-only']),
+      forbiddenFileNames: new Set(['get-dictionary.ts']),
+      description: 'Next.js server-only dictionary loading',
+    },
+  ];
+
+  return policies.flatMap(({ entrypoint, ...policy }) =>
+    auditEntrypoint(entrypoint, policy),
+  );
+}
+
+const fixturePolicyName =
+  process.argv[2] === '--entrypoint-fixture' ? process.argv[3] : undefined;
+if (fixturePolicyName) {
+  const fixtureEntrypoint = process.argv[4];
+  const fixturePolicies = {
+    'shared-config': {
+      projectName: 'shared-config',
+      protectedEntrypoint: '@mr-booking/shared-config/node',
+      forbiddenSpecifiers: new Set(['node:fs', 'node:path', 'node:process']),
+      forbidNodeBuiltins: true,
+      forbiddenFileNames: new Set(['load-environment-file.ts']),
+      description: 'Node-only configuration loading',
+    },
+    'shared-i18n': {
+      projectName: 'shared-i18n',
+      protectedEntrypoint: '@mr-booking/shared-i18n/server',
+      forbiddenSpecifiers: new Set(['server-only']),
+      forbiddenFileNames: new Set(['get-dictionary.ts']),
+      description: 'Next.js server-only dictionary loading',
+    },
+  };
+  const fixturePolicy = fixturePolicies[fixturePolicyName];
+  if (!fixturePolicy || !fixtureEntrypoint) {
+    process.stderr.write(
+      'Usage: --entrypoint-fixture <shared-config|shared-i18n> <entrypoint>\n',
+    );
+    process.exit(2);
+  }
+  const fixtureErrors = auditEntrypoint(
+    resolve(fixtureEntrypoint),
+    fixturePolicy,
+  );
+  if (fixtureErrors.length > 0) {
+    process.stderr.write(
+      `Entrypoint fixture audit failed:\n${fixtureErrors.map((error) => `- ${error}`).join('\n')}\n`,
+    );
+    process.exit(1);
+  }
+  process.stdout.write('Entrypoint fixture audit passed.\n');
+  process.exit(0);
+}
+
 const projectFiles = ['apps', 'libs', 'tools'].flatMap((directory) =>
   listProjectFiles(join(repositoryRoot, directory)),
 );
@@ -440,6 +622,7 @@ const projectsByName = new Map(
   projects.map((project) => [project.name, project]),
 );
 const errors = [];
+errors.push(...auditProtectedRootEntrypoints());
 
 for (const project of projects) {
   for (const [group, vocabulary] of Object.entries(tagGroups)) {

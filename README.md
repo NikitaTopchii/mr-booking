@@ -416,8 +416,12 @@ remain at the scope root, server projects live under `server/`, and web
 projects live under `web/` (with user workflows in `web/features/`). Shared
 libraries are grouped by runtime under `agnostic/`, `server/`, and `web/`.
 The one intentional exception is `libs/shared/config`: its root is agnostic
-and its protected `/node` entrypoint is server-only. These grouping folders
-are not Nx projects; tags and `yarn audit:boundaries` enforce the same layout.
+and exposes runtime-neutral validation only; its protected `/node` entrypoint
+is the sole public boundary for Node environment-file loading. `shared-i18n`
+likewise exposes web-safe locale contracts at its root, while
+`/server` exclusively owns the Next.js `server-only` dictionary loader. These
+grouping folders are not Nx projects; tags and `yarn audit:boundaries` enforce
+the same layout and transitive entrypoint isolation.
 See [libs/README.md](libs/README.md) for the compact map.
 
 | Project                           | Location                                    | Nx tags                                             |

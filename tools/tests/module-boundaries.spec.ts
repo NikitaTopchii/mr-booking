@@ -1,4 +1,13 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { ProjectConfiguration } from './types/module-boundaries.types';
 
@@ -433,10 +442,118 @@ describe('Nx module-boundary configuration', () => {
     expect(verificationScript).toContain("'audit:boundaries'");
     expect(auditScript).toContain('crossScopeAllowlist');
     expect(auditScript).toContain('may not import persistence schemas');
+    expect(auditScript).toContain('may not import');
     expect(auditScript).toContain(
-      'may not import the Next server-only entry point',
+      'allowed consumers: apps/web Server Components',
+    );
+    expect(auditScript).toContain('auditProtectedRootEntrypoints');
+    expect(auditScript).toContain('transitively reaches');
+  });
+
+  it('keeps runtime-specific implementations behind protected entrypoints', () => {
+    const sharedConfigRoot = readFileSync(
+      join(workspaceRoot, 'libs/shared/config/src/index.ts'),
+      'utf8',
+    );
+    const sharedConfigNode = readFileSync(
+      join(workspaceRoot, 'libs/shared/config/src/node.ts'),
+      'utf8',
+    );
+    const sharedI18nRoot = readFileSync(
+      join(workspaceRoot, 'libs/shared/web/i18n/src/index.ts'),
+      'utf8',
+    );
+    const sharedI18nServer = readFileSync(
+      join(workspaceRoot, 'libs/shared/web/i18n/src/server.ts'),
+      'utf8',
+    );
+    const tsconfig = readFileSync(
+      join(workspaceRoot, 'tsconfig.base.json'),
+      'utf8',
+    );
+
+    expect(sharedConfigRoot).not.toContain('load-environment-file');
+    expect(sharedConfigRoot).not.toMatch(/node:(?:fs|path|process)/u);
+    expect(sharedConfigNode).toContain('load-environment-file');
+    expect(sharedI18nRoot).not.toContain('get-dictionary');
+    expect(sharedI18nRoot).not.toContain('server-only');
+    expect(sharedI18nServer).toContain('get-dictionary');
+    expect(tsconfig).toContain(
+      '"@mr-booking/shared-config/node": ["./libs/shared/config/src/node.ts"]',
+    );
+    expect(tsconfig).toContain(
+      '"@mr-booking/shared-i18n/server": [\n        "./libs/shared/web/i18n/src/server.ts"',
     );
   });
+
+  it.each([
+    {
+      policy: 'shared-config',
+      rootSource: "export * from './load-environment-file';\n",
+      implementationName: 'load-environment-file.ts',
+      implementationSource:
+        "import 'node:fs';\nexport function loadRootEnvironmentFile(): void {}\n",
+      protectedEntrypoint: '@mr-booking/shared-config/node',
+    },
+    {
+      policy: 'shared-i18n',
+      rootSource: "export * from './get-dictionary';\n",
+      implementationName: 'get-dictionary.ts',
+      implementationSource:
+        "import 'server-only';\nexport function getDictionary(): void {}\n",
+      protectedEntrypoint: '@mr-booking/shared-i18n/server',
+    },
+  ])(
+    'rejects a $policy root entrypoint fixture reaching protected runtime code',
+    ({
+      policy,
+      rootSource,
+      implementationName,
+      implementationSource,
+      protectedEntrypoint,
+    }) => {
+      const fixtureDirectory = mkdtempSync(
+        join(tmpdir(), 'mr-booking-entrypoint-fixture-'),
+      );
+      const rootEntrypoint = join(fixtureDirectory, 'index.ts');
+      writeFileSync(rootEntrypoint, rootSource);
+      writeFileSync(
+        join(fixtureDirectory, implementationName),
+        implementationSource,
+      );
+
+      try {
+        let auditOutput = '';
+        try {
+          execFileSync(
+            process.execPath,
+            [
+              join(workspaceRoot, 'tools/scripts/audit-module-boundaries.mjs'),
+              '--entrypoint-fixture',
+              policy,
+              rootEntrypoint,
+            ],
+            { cwd: workspaceRoot, encoding: 'utf8', stdio: 'pipe' },
+          );
+        } catch (error: unknown) {
+          if (
+            typeof error === 'object' &&
+            error !== null &&
+            'stderr' in error
+          ) {
+            auditOutput = String(error.stderr);
+          } else {
+            auditOutput = String(error);
+          }
+        }
+
+        expect(auditOutput).toContain('transitively reaches');
+        expect(auditOutput).toContain(protectedEntrypoint);
+      } finally {
+        rmSync(fixtureDirectory, { recursive: true, force: true });
+      }
+    },
+  );
 
   it('keeps database packages out of web source', () => {
     const webDirectories = [

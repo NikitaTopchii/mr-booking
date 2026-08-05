@@ -146,10 +146,13 @@ business-scope dependencies enumerated by the audit. This keeps a new
 cross-scope import from becoming an accidental convention. Schema entrypoints
 remain server-only: booking persistence owns the documented auth/rooms schema
 edges, while API and tooling access schemas directly only from focused tests.
-`shared-config` root is agnostic; its `/node` entrypoint is restricted to
-API/database/tooling. `auth-data-access-web/server` and
-`shared-i18n/server` are Next server-runtime entrypoints restricted to
-`apps/web` Server Components.
+`shared-config` root is agnostic and exposes only runtime-neutral validation;
+it does not export or transitively reach the Node environment-file loader.
+The `/node` entrypoint is the sole Node-specific entrypoint and is restricted
+to API/database/tooling. `shared-i18n` root exposes only web-safe locale and
+dictionary contracts; `shared-i18n/server` is the sole entrypoint for
+`getDictionary` and is restricted to `apps/web` Server Components. Protected
+subpaths are exclusive boundaries, not compatibility or convenience exports.
 
 This map does not predeclare a library per box. Create a library only when it
 owns real code, has a meaningful boundary, and benefits from independent

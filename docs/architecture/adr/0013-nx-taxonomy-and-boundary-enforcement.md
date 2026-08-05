@@ -42,14 +42,27 @@ enumerated by their current project pairs rather than covered by a wildcard.
 
 `shared-config` root remains agnostic because parsing a caller-provided
 environment has no runtime-side effect. Its explicit `/node` entrypoint is
-server-only. `auth-data-access-web/server` and `shared-i18n/server` remain
-web-tagged Next server-runtime boundaries; they are not NestJS/persistence
-code.
+the sole public entrypoint for environment-file loading and Node-specific
+helpers. The root barrel MUST NOT transitively reach `node:fs`, `node:path`,
+`node:process`, or the Node loader.
+
+`shared-i18n` root exposes only locale contracts, dictionary types, and
+web-safe helpers. Its explicit `/server` entrypoint is the sole public
+entrypoint for the `server-only` dictionary loader. The root barrel MUST NOT
+transitively reach `server-only` or `getDictionary`.
+
+Protected subpaths are exclusive runtime boundaries, not convenience aliases
+for symbols also exported from the root. `auth-data-access-web/server` and
+`shared-i18n/server` remain web-tagged Next server-runtime boundaries; they are
+not NestJS/persistence code.
 
 ## Consequences
 
 Platform violations become visible before build and the historical persistence
-exceptions remain reviewable. Recurring bookings, when actually implemented,
+exceptions remain reviewable. The boundary audit follows root entrypoint
+re-exports and path aliases transitively, and rejects protected-entrypoint
+imports from unauthorized projects with the allowed consumers and replacement
+entrypoint in the failure message. Recurring bookings, when actually implemented,
 remain `scope:booking`: its use cases belong in `booking-application`, schema
 in `booking-infrastructure`, persistence adapters in `booking-data-access`,
 and browser interaction in a real booking feature only if one is warranted.

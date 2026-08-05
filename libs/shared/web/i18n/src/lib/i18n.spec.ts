@@ -2,7 +2,7 @@ jest.mock('server-only', () => ({}));
 
 import { dictionary as englishDictionary } from './dictionaries/en';
 import { dictionary as ukrainianDictionary } from './dictionaries/uk';
-import { getDictionary } from './get-dictionary';
+import { getDictionary } from '../server';
 import { hasLocale, localizedRoute } from './locales';
 
 describe('shared i18n', () => {
