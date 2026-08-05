@@ -28,10 +28,22 @@ My Bookings owns its outbound schedule deep-link adapter. This keeps the
 features independent while preserving links from a personal booking to the
 same browser-local schedule date and normalized week.
 
+The schedule feature has one route-state owner: `useScheduleNavigation`. All
+schedule URL writers use its canonical patch operation, which starts from the
+latest observed or pending route query and preserves unrelated parameters.
+Capacity application is one atomic history update containing the canonical
+`minCapacity` and the selected fallback `roomId`; room normalization cannot
+replace that update with an older query snapshot. Date/week and room changes
+preserve an active capacity filter, while invalid query normalization uses
+`router.replace` and Apply/Clear use history entries.
+
 ## Consequences
 
 Schedule algorithms and models can evolve without expanding the reusable
 booking presentation API. My Bookings and schedule share only lower-level
-booking UI, data-access, shared date-time, and domain boundaries. Recurring
-booking UI can add schedule-independent presentation without placing
+booking UI, data-access, shared date-time, and domain boundaries. The route
+contract is `date`, normalized `week`, optional `roomId`, and optional positive
+integer `minCapacity`; a filter uses inclusive `capacity >= minCapacity`
+semantics and no-match state clears the room without requesting a schedule.
+Recurring booking UI can add schedule-independent presentation without placing
 recurrence policy in `booking-ui`.

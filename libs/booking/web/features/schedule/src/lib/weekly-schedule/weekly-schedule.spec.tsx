@@ -233,7 +233,7 @@ describe('weekly schedule', () => {
     expect(screen.getByText('Duration')).toBeDefined();
   });
 
-  it('applies a valid minimum capacity without changing the selected date', async () => {
+  it('applies capacity and fallback room in one route transition', async () => {
     jest.mocked(listRooms).mockResolvedValue([
       { id: 'room-1', name: 'Aquarium', floor: 2, capacity: 4 },
       { id: 'room-2', name: 'Mars', floor: 3, capacity: 6 },
@@ -241,17 +241,41 @@ describe('weekly schedule', () => {
     ]);
     renderSchedule();
 
+    await screen.findByRole('status', { name: 'Selected room: Aquarium' });
     const input = await screen.findByLabelText('Minimum capacity');
     fireEvent.change(input, { target: { value: '6' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
 
     expect(router.push).toHaveBeenCalledWith(
       expect.stringMatching(
-        /roomId=room-1.*week=2030-06-03.*date=2030-06-03.*minCapacity=6/u,
+        /roomId=room-2.*week=2030-06-03.*date=2030-06-03.*minCapacity=6/u,
       ),
       { scroll: false },
     );
     expect((input as HTMLInputElement).value).toBe('6');
+  });
+
+  it('submits capacity with Enter exactly once through the canonical route', async () => {
+    jest.mocked(listRooms).mockResolvedValue([
+      { id: 'room-1', name: 'Aquarium', floor: 2, capacity: 4 },
+      { id: 'room-2', name: 'Mars', floor: 3, capacity: 10 },
+    ]);
+    renderSchedule();
+
+    await screen.findByRole('status', { name: 'Selected room: Aquarium' });
+    const input = await screen.findByLabelText('Minimum capacity');
+    fireEvent.change(input, { target: { value: '10' } });
+    const form = input.closest('form');
+    if (!form) throw new Error('Expected capacity filter form');
+    fireEvent.submit(form);
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    const href = router.push.mock.calls[0]?.[0] as string;
+    const query = new URLSearchParams(href.slice(1));
+    expect(query.get('minCapacity')).toBe('10');
+    expect(query.get('roomId')).toBe('room-2');
+    expect(query.get('date')).toBe('2030-06-03');
+    expect(query.get('week')).toBe('2030-06-03');
   });
 
   it('normalizes a filtered-out selected room to the first matching room', async () => {
@@ -328,9 +352,9 @@ describe('weekly schedule', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
 
     expect(
-      screen
-        .getByText('Enter a positive whole number of people.')
-        .getAttribute('role'),
+      (
+        await screen.findByText('Enter a positive whole number of people.')
+      ).getAttribute('role'),
     ).toBe('alert');
     expect(router.push).not.toHaveBeenCalled();
   });

@@ -49,7 +49,7 @@ export interface ScheduleNavigationState {
   readonly selectDate: (date: CalendarDate) => void;
   readonly selectRoom: (roomId: string) => void;
   readonly normalizeRoom: (roomId: string | undefined) => void;
-  readonly setMinimumCapacity: (value: number) => void;
+  readonly setMinimumCapacity: (value: number, roomId?: string | null) => void;
   readonly clearMinimumCapacity: () => void;
   readonly goToPreviousWeek: () => void;
   readonly goToNextWeek: () => void;
@@ -69,6 +69,7 @@ export interface ScheduleDataState {
   readonly hasRooms: boolean;
   readonly noMatchingRooms: boolean;
   readonly selectedRoom: Room | undefined;
+  readonly applyMinimumCapacity: (value: number) => void;
   readonly presentationRange: ScheduleRange | undefined;
   readonly bookings: readonly ScheduleBooking[];
   readonly isLoadingRooms: boolean;

@@ -22,6 +22,15 @@ today. Schedule-owned navigation normalizes room and date updates, while the
 My Bookings feature owns its outbound schedule deep-link adapter. Reload, Back,
 Forward, locale changes, and My Bookings deep links preserve context.
 
+The complete schedule route contract is `date`, normalized `week`, optional
+`roomId`, and optional positive-integer `minCapacity`. `useScheduleNavigation`
+is the only schedule route-state owner. Every writer applies a patch to the
+latest observed or pending query, preserving unrelated parameters. Applying a
+capacity filter computes the inclusive `capacity >= minCapacity` room result
+and its fallback room before issuing one `router.push`; date, week, and room
+navigation preserve the active filter. Invalid or duplicate query values use
+one canonical `router.replace`, while Apply and Clear remain history entries.
+
 One hydration-safe media-query subscription selects the presentation. One SWR
 resource then requests only its active half-open absolute ISO range:
 

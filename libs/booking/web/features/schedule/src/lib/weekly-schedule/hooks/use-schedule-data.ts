@@ -103,6 +103,24 @@ export function useScheduleData({
     [allRooms, navigation.minimumCapacity],
   );
   const selectedRoom = resolveSelectedRoom(rooms, navigation.requestedRoomId);
+  const applyMinimumCapacity = useCallback(
+    (minimumCapacity: number) => {
+      if (roomsQuery.data === undefined) {
+        navigation.setMinimumCapacity(minimumCapacity);
+        return;
+      }
+      const filteredRooms = filterRoomsByMinimumCapacity(
+        allRooms,
+        minimumCapacity,
+      );
+      const nextRoom = resolveSelectedRoom(
+        filteredRooms,
+        navigation.requestedRoomId,
+      );
+      navigation.setMinimumCapacity(minimumCapacity, nextRoom?.id ?? null);
+    },
+    [allRooms, navigation, roomsQuery.data],
+  );
   const presentationRange = useMemo(
     () =>
       presentation
@@ -207,6 +225,7 @@ export function useScheduleData({
     hasRooms: allRooms.length > 0,
     noMatchingRooms: allRooms.length > 0 && rooms.length === 0,
     selectedRoom,
+    applyMinimumCapacity,
     presentationRange,
     bookings: selectedRoom ? (scheduleQuery.data ?? []) : [],
     isLoadingRooms: roomsQuery.isLoading,

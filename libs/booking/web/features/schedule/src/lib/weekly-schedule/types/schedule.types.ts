@@ -24,3 +24,16 @@ export interface ScheduleNavigation {
   readonly roomId?: string;
   readonly date: string;
 }
+
+export interface ScheduleRouteState {
+  readonly roomId?: string;
+  readonly date?: string;
+  readonly week?: string;
+  readonly minimumCapacity?: number;
+}
+
+export interface ScheduleRoutePatch {
+  readonly date?: string;
+  readonly roomId?: string | null;
+  readonly minimumCapacity?: number | null;
+}

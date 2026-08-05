@@ -67,7 +67,7 @@ export function WeeklyScheduleView({
             onOpenCalendar={navigation.openCalendar}
             onSelectDate={navigation.selectDate}
             minimumCapacity={navigation.minimumCapacity}
-            onApplyCapacity={navigation.setMinimumCapacity}
+            onApplyCapacity={data.applyMinimumCapacity}
             onClearCapacity={navigation.clearMinimumCapacity}
           />
         </div>

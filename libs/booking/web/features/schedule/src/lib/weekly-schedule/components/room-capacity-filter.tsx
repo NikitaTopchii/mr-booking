@@ -42,76 +42,78 @@ export function RoomCapacityFilter({
   }
 
   return (
-    <fieldset
-      aria-label={messages.filterButtonLabel}
-      className="grid min-w-0 gap-2 rounded-lg border border-border bg-card p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:min-w-80 lg:max-w-md"
+    <form
+      className="contents"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        submit();
+      }}
     >
-      <legend className="sr-only">{messages.filterButtonLabel}</legend>
-      <div className="grid min-w-0 gap-2">
-        <Label htmlFor="schedule-minimum-capacity">
-          {messages.minimumCapacityLabel}
-        </Label>
-        <Input
-          ref={inputRef}
-          id="schedule-minimum-capacity"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          step={1}
-          placeholder={messages.minimumCapacityPlaceholder}
-          value={draft}
-          aria-invalid={showValidationError}
-          aria-describedby={showValidationError ? errorId : undefined}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            setShowValidationError(false);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              submit();
-            }
-          }}
-        />
-        {showValidationError ? (
-          <p id={errorId} role="alert" className="text-sm text-destructive">
-            {messages.invalidCapacity}
-          </p>
-        ) : null}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          className="min-h-11 touch-manipulation"
-          disabled={isUnchanged}
-          onClick={submit}
-        >
-          {messages.applyCapacityFilter}
-        </Button>
-        {minimumCapacity !== undefined ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11 touch-manipulation"
-            onClick={onClear}
-          >
-            {messages.clearCapacityFilter}
-          </Button>
-        ) : null}
-      </div>
-      {minimumCapacity !== undefined ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-sm text-muted-foreground sm:col-span-2"
-        >
-          <span className="font-medium text-foreground">
-            {messages.activeCapacity}
-          </span>
-          <span>{currentFilterSummary}</span>
+      <fieldset
+        aria-label={messages.filterButtonLabel}
+        className="grid min-w-0 gap-2 rounded-lg border border-border bg-card p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:min-w-80 lg:max-w-md"
+      >
+        <legend className="sr-only">{messages.filterButtonLabel}</legend>
+        <div className="grid min-w-0 gap-2">
+          <Label htmlFor="schedule-minimum-capacity">
+            {messages.minimumCapacityLabel}
+          </Label>
+          <Input
+            ref={inputRef}
+            id="schedule-minimum-capacity"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={1}
+            placeholder={messages.minimumCapacityPlaceholder}
+            value={draft}
+            aria-invalid={showValidationError}
+            aria-describedby={showValidationError ? errorId : undefined}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              setShowValidationError(false);
+            }}
+          />
+          {showValidationError ? (
+            <p id={errorId} role="alert" className="text-sm text-destructive">
+              {messages.invalidCapacity}
+            </p>
+          ) : null}
         </div>
-      ) : null}
-    </fieldset>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="submit"
+            className="min-h-11 touch-manipulation"
+            disabled={isUnchanged}
+          >
+            {messages.applyCapacityFilter}
+          </Button>
+          {minimumCapacity !== undefined ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 touch-manipulation"
+              onClick={onClear}
+            >
+              {messages.clearCapacityFilter}
+            </Button>
+          ) : null}
+        </div>
+        {minimumCapacity !== undefined ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-sm text-muted-foreground sm:col-span-2"
+          >
+            <span className="font-medium text-foreground">
+              {messages.activeCapacity}
+            </span>
+            <span>{currentFilterSummary}</span>
+          </div>
+        ) : null}
+      </fieldset>
+    </form>
   );
 }
 

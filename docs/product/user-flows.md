@@ -99,7 +99,9 @@ mutation before the server succeeds.
   selected-room schedule revalidate.
 - **Success:** show only rooms whose capacity is at least the requested value,
   preserving API order. A selected room that no longer matches resolves to the
-  first matching room.
+  first matching room. Apply writes `minCapacity` and that fallback `roomId`
+  together in one history transition, preserving the current date/week and
+  unrelated query state.
 - **No matches:** clear the room ID, show a localized no-match state, disable
   room-dependent controls, and make no schedule request until the filter is
   cleared.
@@ -107,8 +109,10 @@ mutation before the server succeeds.
   unsafe, or repeated query values are normalized away or to one canonical
   value with `router.replace`; unrelated query state and date/week remain.
 - **Navigation:** Apply/Clear create history entries; reload and Back/Forward
-  restore the filter, room resolution, and schedule. The same behavior is
-  available in English and Ukrainian at expanded, medium, and compact widths.
+  restore the filter, room resolution, and schedule. Date/week/room changes
+  preserve an active filter; invalid query values use replace normalization.
+  The same behavior is available in English and Ukrainian at expanded, medium,
+  and compact widths.
 - **Booking safety:** an open creation or cancellation flow is invalidated
   when its room changes, so a stale room cannot receive a mutation.
 
