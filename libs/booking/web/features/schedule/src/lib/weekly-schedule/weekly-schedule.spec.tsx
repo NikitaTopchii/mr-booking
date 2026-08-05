@@ -152,7 +152,8 @@ const messages: AppDictionary['schedule'] = {
       outsideHours: 'Outside hours',
       invalidDuration: 'Duration',
       invalidSlotAlignment: 'Slot alignment',
-      invalidTitle: 'Title invalid',
+      titleRequired: 'Title required',
+      titleTooLong: 'Title too long',
       validation: 'Validation',
       roomNotFound: 'Room not found',
       emailVerificationRequired: 'Email verification required',
@@ -639,11 +640,44 @@ describe('weekly schedule', () => {
     expect(
       screen.getByRole('dialog', { name: 'Book a meeting room' }),
     ).toBeDefined();
-    expect(
-      (screen.getByLabelText('Meeting title') as HTMLInputElement).value,
-    ).toBe('Keep this title');
+    const titleInput = screen.getByLabelText('Meeting title');
+    expect((titleInput as HTMLInputElement).value).toBe('Keep this title');
+    expect(titleInput.getAttribute('aria-invalid')).toBeNull();
+    expect(titleInput.getAttribute('aria-describedby')).toBeNull();
     expect(await screen.findByText('Conflict')).toBeDefined();
     await waitFor(() => expect(listRoomBookings).toHaveBeenCalledTimes(2));
+  });
+
+  it('associates and focuses a localized title error, then clears it on correction', async () => {
+    renderSchedule();
+    const available = await screen.findAllByRole('gridcell', {
+      name: /Available/u,
+    });
+    const firstAvailable = available[0];
+    if (!firstAvailable) throw new Error('Expected an available slot');
+    fireEvent.click(firstAvailable);
+
+    const title = await screen.findByLabelText('Meeting title');
+    fireEvent.click(screen.getByRole('button', { name: 'Book room' }));
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(title);
+      expect(title.getAttribute('aria-invalid')).toBe('true');
+    });
+    const describedBy = title.getAttribute('aria-describedby');
+    expect(describedBy).toBe('booking-title-error');
+    expect(document.getElementById(describedBy ?? '')?.textContent).toBe(
+      'Title required',
+    );
+    expect(screen.getByText('Title required')).toBeDefined();
+
+    fireEvent.change(title, { target: { value: 'Planning' } });
+
+    await waitFor(() => {
+      expect(title.getAttribute('aria-invalid')).toBeNull();
+      expect(title.getAttribute('aria-describedby')).toBeNull();
+    });
+    expect(screen.queryByText('Title required')).toBeNull();
   });
 
   it('moves medium-grid focus by row and column independently', async () => {

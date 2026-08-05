@@ -72,8 +72,15 @@ test.describe('My bookings', () => {
   test('keeps the page usable at required viewport sizes', async ({ page }) => {
     await page.goto('/en/my-bookings');
 
-    for (const width of [375, 768, 1024, 1440]) {
-      await page.setViewportSize({ width, height: 900 });
+    for (const viewport of [
+      { width: 375, height: 812 },
+      { width: 390, height: 844 },
+      { width: 430, height: 932 },
+      { width: 768, height: 900 },
+      { width: 1024, height: 900 },
+      { width: 1440, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
       await expect(
         page.getByRole('heading', { name: 'My bookings', exact: true }),
       ).toBeVisible();
@@ -84,6 +91,28 @@ test.describe('My bookings', () => {
       expect(dimensions.scrollWidth).toBeLessThanOrEqual(
         dimensions.clientWidth,
       );
+
+      if (viewport.width < 640) {
+        const navigation = page.locator('[data-mobile-navigation]');
+        const finalBookingLink = page
+          .getByRole('link', { name: /Open in schedule:/u })
+          .last();
+        await finalBookingLink.focus();
+        await expect
+          .poll(async () => {
+            const [linkBox, navigationBox] = await Promise.all([
+              finalBookingLink.boundingBox(),
+              navigation.boundingBox(),
+            ]);
+            return Boolean(
+              linkBox &&
+              navigationBox &&
+              linkBox.y >= 0 &&
+              linkBox.y + linkBox.height <= navigationBox.y,
+            );
+          })
+          .toBe(true);
+      }
     }
   });
 });

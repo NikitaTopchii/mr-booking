@@ -67,10 +67,21 @@ only assist input; the API remains authoritative.
 ## Scrolling and safe areas
 
 Compact mode has one page-level vertical flow and no calendar horizontal
-scroll. The application shell owns `--mobile-nav-height` and
-`--mobile-nav-reserved-space`, which combines navigation height, device safe
-area, and a spacing margin. This lets the final timeline slot scroll fully
-above the fixed bottom navigation.
+scroll. The application shell owns `--mobile-navigation-occupied-space`,
+composed from the navigation height, its safe-area-aware bottom offset, and a
+small content clearance. The fixed navigation, page bottom inset, viewport
+`scroll-padding-bottom`, and focusable-content `scroll-margin-bottom` all
+consume that contract. This lets the final timeline slot, booking controls,
+and My Bookings actions scroll fully above the fixed navigation without
+duplicating feature-specific offsets.
+
+Creation field errors remain feature-owned. A title validation error is placed
+directly after the title input, referenced by `aria-describedby`, announced as
+a visible polite error, and focuses the first invalid field after submission.
+Domain conflicts and general service failures remain form-level contextual
+alerts rather than being incorrectly attached to the title field. Dialogs use
+the existing Radix layer above the navigation and retain bottom safe-area
+padding.
 
 The implementation preserves the repository-owned manual grid, semantic
 tokens, Lucide icon set, reduced-motion handling, keyboard focus, localized

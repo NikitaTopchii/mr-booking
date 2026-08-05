@@ -18,8 +18,9 @@ export function classifyBookingCreationError(
     case 'BOOKING_SLOT_ALIGNMENT':
       return 'invalidSlotAlignment';
     case 'BOOKING_TITLE_REQUIRED':
+      return 'titleRequired';
     case 'BOOKING_TITLE_TOO_LONG':
-      return 'invalidTitle';
+      return 'titleTooLong';
     case 'BOOKING_INVALID_INTERVAL':
     case 'VALIDATION_ERROR':
       return 'validation';

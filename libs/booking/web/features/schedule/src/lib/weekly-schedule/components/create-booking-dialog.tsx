@@ -15,14 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@mr-booking/shared-ui';
-import { AlertCircle } from 'lucide-react';
 import { BOOKING_SLOT_MILLISECONDS } from '@mr-booking/booking-domain';
-import { AdaptiveDialogContent } from './adaptive-dialog-content';
+import { AlertCircle } from 'lucide-react';
+import { useLayoutEffect, useRef } from 'react';
+import type { BookingCreationErrorCode } from '../errors/booking-creation-error.catalog';
 import {
   formatScheduleInstant,
   formatScheduleTimeRange,
 } from '../formatting/schedule-date-time.formatter';
 import type { CreateBookingDialogProps } from '../types/schedule-dialog.types';
+import { AdaptiveDialogContent } from './adaptive-dialog-content';
 
 export function CreateBookingDialog({
   locale,
@@ -33,6 +35,20 @@ export function CreateBookingDialog({
   errorMessage,
 }: CreateBookingDialogProps) {
   const slot = creation.selection?.slot;
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const previousTitleError = useRef<string | undefined>(undefined);
+  const titleError = isTitleFieldError(creation.error?.code)
+    ? errorMessage
+    : undefined;
+  const formError = titleError ? undefined : errorMessage;
+
+  useLayoutEffect(() => {
+    if (titleError && titleError !== previousTitleError.current) {
+      titleInputRef.current?.focus();
+    }
+    previousTitleError.current = titleError;
+  }, [titleError]);
+
   const quickDurations = [
     [1, messages.duration.thirtyMinutes],
     [2, messages.duration.oneHour],
@@ -93,13 +109,25 @@ export function CreateBookingDialog({
           <div className="grid gap-2">
             <Label htmlFor="booking-title">{messages.titleLabel}</Label>
             <Input
+              ref={titleInputRef}
               id="booking-title"
               autoFocus
               maxLength={100}
               value={creation.title}
-              aria-invalid={Boolean(errorMessage)}
+              aria-invalid={titleError ? true : undefined}
+              aria-describedby={titleError ? 'booking-title-error' : undefined}
               onChange={(event) => creation.setTitle(event.target.value)}
             />
+            {titleError ? (
+              <p
+                id="booking-title-error"
+                role="alert"
+                aria-live="polite"
+                className="text-sm font-medium leading-5 text-destructive"
+              >
+                {titleError}
+              </p>
+            ) : null}
           </div>
           <fieldset className="grid gap-2">
             <legend className="text-sm font-medium">
@@ -147,10 +175,10 @@ export function CreateBookingDialog({
               </SelectContent>
             </Select>
           </div>
-          {errorMessage ? (
+          {formError ? (
             <Alert variant="destructive" role="alert">
               <AlertCircle aria-hidden="true" />
-              <AlertDescription>{errorMessage}</AlertDescription>
+              <AlertDescription>{formError}</AlertDescription>
             </Alert>
           ) : null}
           <DialogFooter>
@@ -172,4 +200,10 @@ export function CreateBookingDialog({
       </AdaptiveDialogContent>
     </Dialog>
   );
+}
+
+function isTitleFieldError(
+  code: BookingCreationErrorCode | undefined,
+): boolean {
+  return code === 'titleRequired' || code === 'titleTooLong';
 }

@@ -360,23 +360,120 @@ test.describe('interactive weekly schedule', () => {
   test('keeps the final compact slot above bottom navigation', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    const grid = page.locator('[data-schedule-presentation="compact"]');
-    await expect(grid).toBeVisible();
-    await grid.scrollIntoViewIfNeeded();
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    const finalCell = grid.getByRole('gridcell').last();
-    const navigation = page.locator('[data-mobile-navigation]');
-    const [cellBox, navigationBox] = await Promise.all([
-      finalCell.boundingBox(),
-      navigation.boundingBox(),
-    ]);
-    expect(cellBox).not.toBeNull();
-    expect(navigationBox).not.toBeNull();
-    if (!cellBox || !navigationBox) {
-      throw new Error('Expected compact timeline and navigation bounds');
+    await page.getByRole('button', { name: 'Next week' }).click();
+    await expect(page.locator('[data-schedule-presentation]')).toHaveAttribute(
+      'aria-busy',
+      'false',
+    );
+    for (const viewport of [
+      { width: 375, height: 812 },
+      { width: 390, height: 844 },
+      { width: 430, height: 932 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const grid = page.locator('[data-schedule-presentation="compact"]');
+      await expect(grid).toBeVisible();
+      const finalCell = grid
+        .locator('button[role="gridcell"]:not([disabled])')
+        .last();
+      await finalCell.focus();
+      const navigation = page.locator('[data-mobile-navigation]');
+      await expect
+        .poll(async () => {
+          const [cellBox, navigationBox] = await Promise.all([
+            finalCell.boundingBox(),
+            navigation.boundingBox(),
+          ]);
+          return Boolean(
+            cellBox &&
+            navigationBox &&
+            cellBox.y >= 0 &&
+            cellBox.y + cellBox.height <= navigationBox.y,
+          );
+        })
+        .toBe(true);
     }
-    expect(cellBox.y + cellBox.height).toBeLessThanOrEqual(navigationBox.y);
+  });
+
+  test('associates and focuses the English title error', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.getByRole('button', { name: 'Next week' }).click();
+    await expect(page.locator('[data-schedule-presentation]')).toHaveAttribute(
+      'aria-busy',
+      'false',
+    );
+    const availableSlot = page
+      .getByRole('gridcell', { name: /Available/u })
+      .first();
+    await availableSlot.click();
+
+    const dialog = page.getByRole('dialog', { name: 'Book a meeting room' });
+    await expect(dialog).toBeVisible();
+    const [dialogZIndex, navigationZIndex, submitBox] = await Promise.all([
+      dialog.evaluate((element) =>
+        Number.parseInt(getComputedStyle(element).zIndex, 10),
+      ),
+      page
+        .locator('[data-mobile-navigation]')
+        .evaluate((element) =>
+          Number.parseInt(getComputedStyle(element).zIndex, 10),
+        ),
+      page.getByRole('button', { name: 'Book room' }).boundingBox(),
+    ]);
+    expect(dialogZIndex).toBeGreaterThan(navigationZIndex);
+    expect(submitBox).not.toBeNull();
+    expect((submitBox?.y ?? 0) + (submitBox?.height ?? 0)).toBeLessThanOrEqual(
+      812,
+    );
+
+    const title = page.getByLabel('Meeting title');
+    await page.getByRole('button', { name: 'Book room' }).click();
+
+    await expect(title).toHaveAttribute('aria-invalid', 'true');
+    await expect(title).toHaveAttribute(
+      'aria-describedby',
+      'booking-title-error',
+    );
+    await expect(page.locator('#booking-title-error')).toHaveText(
+      'Enter a meeting title.',
+    );
+    await expect(title).toBeFocused();
+
+    await title.fill('Planning');
+    await expect(title).not.toHaveAttribute('aria-invalid');
+    await expect(title).not.toHaveAttribute('aria-describedby');
+    await expect(page.locator('#booking-title-error')).toHaveCount(0);
+  });
+
+  test('associates and focuses the Ukrainian title error', async ({ page }) => {
+    await page.getByRole('button', { name: /Open user menu: Alice/u }).click();
+    await page.getByRole('menuitem', { name: 'Українська' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Тижневий розклад' }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.getByRole('button', { name: 'Наступний тиждень' }).click();
+    await expect(page.locator('[data-schedule-presentation]')).toHaveAttribute(
+      'aria-busy',
+      'false',
+    );
+
+    await page
+      .getByRole('gridcell', { name: /Вільно/u })
+      .first()
+      .click();
+    const title = page.getByLabel('Назва зустрічі');
+    await page.getByRole('button', { name: 'Забронювати' }).click();
+
+    await expect(title).toHaveAttribute('aria-invalid', 'true');
+    await expect(title).toHaveAttribute(
+      'aria-describedby',
+      'booking-title-error',
+    );
+    await expect(page.locator('#booking-title-error')).toHaveText(
+      'Введіть назву зустрічі.',
+    );
+    await expect(title).toBeFocused();
   });
 });
 

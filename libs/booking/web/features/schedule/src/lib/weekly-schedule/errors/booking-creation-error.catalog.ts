@@ -32,11 +32,17 @@ export const bookingCreationErrorCatalog = {
     retryable: false,
     telemetryCode: 'schedule.booking.create.invalid_slot_alignment',
   },
-  invalidTitle: {
-    messageKey: 'invalidTitle',
+  titleRequired: {
+    messageKey: 'titleRequired',
     severity: 'warning',
     retryable: false,
-    telemetryCode: 'schedule.booking.create.invalid_title',
+    telemetryCode: 'schedule.booking.create.title_required',
+  },
+  titleTooLong: {
+    messageKey: 'titleTooLong',
+    severity: 'warning',
+    retryable: false,
+    telemetryCode: 'schedule.booking.create.title_too_long',
   },
   validation: {
     messageKey: 'validation',

@@ -25,11 +25,12 @@
   --border: oklch(0.89 0.015 255);
   --input: oklch(0.84 0.02 255);
   --ring: oklch(0.58 0.19 264);
-  --mobile-nav-height: 5.5rem;
-  --mobile-nav-gap: 1.5rem;
-  --mobile-nav-reserved-space: calc(
-    var(--mobile-nav-height) + env(safe-area-inset-bottom) +
-      var(--mobile-nav-gap)
+  --mobile-navigation-height: 5.5rem;
+  --mobile-navigation-bottom-offset: max(1rem, env(safe-area-inset-bottom));
+  --mobile-navigation-clearance: 1.5rem;
+  --mobile-navigation-occupied-space: calc(
+    var(--mobile-navigation-height) + var(--mobile-navigation-bottom-offset) +
+      var(--mobile-navigation-clearance)
   );
 }
 
@@ -78,6 +79,17 @@
   button,
   a {
     -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (max-width: 767px) {
+  html {
+    scroll-padding-bottom: var(--mobile-navigation-occupied-space);
+  }
+
+  [data-mobile-navigation-content]
+    :where(a, button, input, select, textarea, [tabindex]) {
+    scroll-margin-bottom: var(--mobile-navigation-occupied-space);
   }
 }
 

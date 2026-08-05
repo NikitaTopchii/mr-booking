@@ -204,7 +204,8 @@ export const dictionary = {
         outsideHours: 'Choose a time within office hours.',
         invalidDuration: 'Choose a duration from 30 minutes through 4 hours.',
         invalidSlotAlignment: 'Choose a time aligned to a 30-minute slot.',
-        invalidTitle: 'Enter a meeting title.',
+        titleRequired: 'Enter a meeting title.',
+        titleTooLong: 'Keep the meeting title to 100 characters or fewer.',
         validation: 'Check the booking details and try again.',
         roomNotFound: 'This room is no longer available. Choose another room.',
         emailVerificationRequired:

@@ -51,13 +51,13 @@ export function ApplicationNavigation({
       <div
         aria-hidden="true"
         data-mobile-navigation-scrim
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-32 bg-gradient-to-t from-background via-background/95 to-transparent md:hidden"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-[var(--mobile-navigation-occupied-space)] bg-gradient-to-t from-background via-background/95 to-transparent md:hidden"
       />
 
       <nav
         aria-label={label}
         data-mobile-navigation
-        className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 mx-auto min-h-[var(--mobile-nav-height)] max-w-sm rounded-[2rem] border border-border/80 bg-card p-1.5 shadow-xl md:hidden"
+        className="fixed inset-x-4 bottom-[var(--mobile-navigation-bottom-offset)] z-30 mx-auto min-h-[var(--mobile-navigation-height)] max-w-sm rounded-[2rem] border border-border/80 bg-card p-1.5 shadow-xl md:hidden"
       >
         <ul className="relative grid grid-cols-2 gap-2">
           <li

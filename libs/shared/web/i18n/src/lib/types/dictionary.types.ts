@@ -189,7 +189,8 @@ export interface AppDictionary {
         readonly outsideHours: string;
         readonly invalidDuration: string;
         readonly invalidSlotAlignment: string;
-        readonly invalidTitle: string;
+        readonly titleRequired: string;
+        readonly titleTooLong: string;
         readonly validation: string;
         readonly roomNotFound: string;
         readonly emailVerificationRequired: string;

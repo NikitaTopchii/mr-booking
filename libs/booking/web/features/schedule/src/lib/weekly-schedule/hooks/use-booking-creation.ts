@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuthExpiryRedirect } from '@mr-booking/auth-ui';
+import { BOOKING_TITLE_MAX_LENGTH } from '@mr-booking/booking-domain';
 import { createBooking } from '@mr-booking/booking-data-access-web';
 import {
   createFeatureErrorFactory,
@@ -284,7 +285,13 @@ export function useBookingCreation({
     const normalizedTitle = title.trim();
     if (!normalizedTitle) {
       setError(
-        errorFactory.create({ code: 'invalidTitle', context: contextBase }),
+        errorFactory.create({ code: 'titleRequired', context: contextBase }),
+      );
+      return;
+    }
+    if (Array.from(normalizedTitle).length > BOOKING_TITLE_MAX_LENGTH) {
+      setError(
+        errorFactory.create({ code: 'titleTooLong', context: contextBase }),
       );
       return;
     }
