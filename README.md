@@ -410,32 +410,43 @@ Deferred to later bonus phases:
 
 ## Workspace projects
 
-| Project                       | Location                            | Nx tags                                         |
-| ----------------------------- | ----------------------------------- | ----------------------------------------------- |
-| `web`                         | `apps/web`                          | `scope:shared,type:app,platform:web`            |
-| `api`                         | `apps/api`                          | `scope:shared,type:app,platform:api`            |
-| `shared-config`               | `libs/shared/config`                | `scope:shared,type:util,platform:shared`        |
-| `shared-database`             | `libs/shared/database`              | `scope:shared,type:infrastructure,platform:api` |
-| `shared-i18n`                 | `libs/shared/i18n`                  | `scope:shared,type:util,platform:web`           |
-| `shared-ui`                   | `libs/shared/ui`                    | `scope:shared,type:ui,platform:web`             |
-| `booking-domain`              | `libs/booking/domain`               | `scope:booking,type:domain,platform:shared`     |
-| `booking-data-access`         | `libs/booking/data-access`          | `scope:booking,type:data-access,platform:api`   |
-| `booking-application`         | `libs/booking/application`          | `scope:booking,type:application,platform:api`   |
-| `booking-data-access-web`     | `libs/booking/data-access-web`      | `scope:booking,type:data-access,platform:web`   |
-| `booking-feature-schedule`    | `libs/booking/features/schedule`    | `scope:booking,type:feature,platform:web`       |
-| `booking-feature-my-bookings` | `libs/booking/features/my-bookings` | `scope:booking,type:feature,platform:web`       |
-| `booking-ui`                  | `libs/booking/ui`                   | `scope:booking,type:ui,platform:web`            |
-| `rooms-domain`                | `libs/rooms/domain`                 | `scope:rooms,type:domain,platform:shared`       |
-| `rooms-infrastructure`        | `libs/rooms/infrastructure`         | `scope:rooms,type:infrastructure,platform:api`  |
-| `rooms-data-access`           | `libs/rooms/data-access`            | `scope:rooms,type:data-access,platform:api`     |
-| `auth-domain`                 | `libs/auth/domain`                  | `scope:auth,type:domain,platform:shared`        |
-| `auth-infrastructure`         | `libs/auth/infrastructure`          | `scope:auth,type:infrastructure,platform:api`   |
-| `auth-data-access`            | `libs/auth/data-access`             | `scope:auth,type:data-access,platform:api`      |
-| `auth-data-access-web`        | `libs/auth/data-access-web`         | `scope:auth,type:data-access,platform:web`      |
-| `auth-application`            | `libs/auth/application`             | `scope:auth,type:application,platform:api`      |
-| `auth-feature-web`            | `libs/auth/feature-web`             | `scope:auth,type:feature,platform:web`          |
-| `auth-ui`                     | `libs/auth/ui`                      | `scope:auth,type:ui,platform:web`               |
-| `workspace-tooling`           | `tools`                             | `scope:shared,type:app,platform:api`            |
+| Project                       | Location                            | Nx tags                                          |
+| ----------------------------- | ----------------------------------- | ------------------------------------------------ |
+| `web`                         | `apps/web`                          | `scope:shared,type:app,platform:web`             |
+| `api`                         | `apps/api`                          | `scope:shared,type:app,platform:api`             |
+| `shared-config`               | `libs/shared/config`                | `scope:shared,type:util,platform:shared`         |
+| `shared-database`             | `libs/shared/database`              | `scope:shared,type:infrastructure,platform:api`  |
+| `shared-i18n`                 | `libs/shared/i18n`                  | `scope:shared,type:util,platform:web`            |
+| `shared-ui`                   | `libs/shared/ui`                    | `scope:shared,type:ui,platform:web`              |
+| `booking-domain`              | `libs/booking/domain`               | `scope:booking,type:domain,platform:shared`      |
+| `booking-infrastructure`      | `libs/booking/infrastructure`       | `scope:booking,type:infrastructure,platform:api` |
+| `booking-data-access`         | `libs/booking/data-access`          | `scope:booking,type:data-access,platform:api`    |
+| `booking-application`         | `libs/booking/application`          | `scope:booking,type:application,platform:api`    |
+| `booking-data-access-web`     | `libs/booking/data-access-web`      | `scope:booking,type:data-access,platform:web`    |
+| `booking-feature-schedule`    | `libs/booking/features/schedule`    | `scope:booking,type:feature,platform:web`        |
+| `booking-feature-my-bookings` | `libs/booking/features/my-bookings` | `scope:booking,type:feature,platform:web`        |
+| `booking-ui`                  | `libs/booking/ui`                   | `scope:booking,type:ui,platform:web`             |
+| `rooms-domain`                | `libs/rooms/domain`                 | `scope:rooms,type:domain,platform:shared`        |
+| `rooms-infrastructure`        | `libs/rooms/infrastructure`         | `scope:rooms,type:infrastructure,platform:api`   |
+| `rooms-data-access`           | `libs/rooms/data-access`            | `scope:rooms,type:data-access,platform:api`      |
+| `auth-domain`                 | `libs/auth/domain`                  | `scope:auth,type:domain,platform:shared`         |
+| `auth-infrastructure`         | `libs/auth/infrastructure`          | `scope:auth,type:infrastructure,platform:api`    |
+| `auth-data-access`            | `libs/auth/data-access`             | `scope:auth,type:data-access,platform:api`       |
+| `auth-data-access-web`        | `libs/auth/data-access-web`         | `scope:auth,type:data-access,platform:web`       |
+| `auth-application`            | `libs/auth/application`             | `scope:auth,type:application,platform:api`       |
+| `auth-feature-web`            | `libs/auth/feature-web`             | `scope:auth,type:feature,platform:web`           |
+| `auth-ui`                     | `libs/auth/ui`                      | `scope:auth,type:ui,platform:web`                |
+| `workspace-tooling`           | `tools`                             | `scope:shared,type:app,platform:api`             |
+
+Persistence schemas are scope-owned and available only through explicit
+infrastructure entry points:
+
+- `@mr-booking/auth-infrastructure/schema`;
+- `@mr-booking/booking-infrastructure/schema`;
+- `@mr-booking/rooms-infrastructure/schema`.
+
+Booking seed tooling uses `@mr-booking/booking-data-access/seed`; runtime
+data-access roots do not expose schema or seed internals.
 
 ## Responsive schedule and timezone responsibilities
 

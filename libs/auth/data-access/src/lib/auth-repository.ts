@@ -14,7 +14,7 @@ import {
   emailVerificationTokens,
   sessions,
   users,
-} from '@mr-booking/auth-infrastructure';
+} from '@mr-booking/auth-infrastructure/schema';
 import { DatabaseService } from '@mr-booking/shared-database';
 import { and, desc, eq, gt, isNull } from 'drizzle-orm';
 

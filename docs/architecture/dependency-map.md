@@ -82,19 +82,32 @@ The booking write foundation adds:
 apps/api
   -> booking-application -> booking-domain
   -> booking-data-access -> booking-domain
+                         -> booking-infrastructure
                          -> auth-infrastructure / rooms-infrastructure
                          -> shared-database
+  -> booking-infrastructure -> auth-infrastructure / rooms-infrastructure
   -> rooms-data-access -> rooms-domain
   -> auth-data-access -> auth-domain
 ```
 
-`auth-infrastructure` and `rooms-infrastructure` own only their feature's
-Drizzle table declarations. This lets booking foreign keys reuse authoritative
-schemas while preserving the prohibition on data-access-to-data-access
-imports. `rooms-domain` owns the focused room-existence port; it has no booking
+`auth-infrastructure`, `booking-infrastructure`, and
+`rooms-infrastructure` own their feature's Drizzle table declarations behind
+explicit `/schema` entry points. Booking infrastructure reuses the
+authoritative auth and rooms schemas through
+`@mr-booking/*-infrastructure/schema` for foreign keys. This preserves the
+prohibition on data-access-to-data-access imports; the cross-scope schema
+dependency is documented and intentional.
+`rooms-domain` owns the focused room-existence port; it has no booking
 dependency.
 
-`auth-data-access` owns Drizzle, SQLite, Argon2, and session persistence.
+`auth-data-access` owns Drizzle, SQLite, Argon2, and session persistence but
+imports auth tables from `auth-infrastructure/schema` rather than re-exporting
+them.
+`booking-data-access` owns booking repositories/readers and provider wiring;
+its root barrel does not expose booking tables or seed internals. The seed
+tooling contract is available through its explicit `/seed` entry point. The
+booking, auth, and rooms infrastructure roots do not act as schema
+compatibility barrels.
 `auth-data-access-web` owns browser HTTP parsing and server-side current-user
 resolution through the NestJS API. Their public entry points are separate, so
 the web graph cannot transitively include API persistence.

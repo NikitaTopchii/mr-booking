@@ -2,9 +2,13 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Worker } from 'node:worker_threads';
-import { users } from '@mr-booking/auth-infrastructure';
+import { users } from '@mr-booking/auth-infrastructure/schema';
 import { BookingConflictError, type Booking } from '@mr-booking/booking-domain';
-import { rooms } from '@mr-booking/rooms-infrastructure';
+import {
+  bookingSlots,
+  bookings,
+} from '@mr-booking/booking-infrastructure/schema';
+import { rooms } from '@mr-booking/rooms-infrastructure/schema';
 import {
   applyMigrations,
   type DatabaseConnection,
@@ -13,7 +17,6 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import { DrizzleBookingRepository } from './booking-repository';
 import { DrizzleMyBookingsReader } from './my-bookings-reader';
-import { bookingSlots, bookings } from './booking-schema';
 import type { ConcurrentBookingResult } from './types/booking-repository-test.types';
 
 jest.setTimeout(15_000);

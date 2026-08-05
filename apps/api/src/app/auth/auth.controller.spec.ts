@@ -8,7 +8,7 @@ import {
   emailVerificationTokens,
   sessions,
   users,
-} from '@mr-booking/auth-data-access';
+} from '@mr-booking/auth-infrastructure/schema';
 import { DatabaseService } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';

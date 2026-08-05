@@ -27,6 +27,7 @@ describe('Nx module-boundary configuration', () => {
       'libs/shared/i18n/project.json',
       'libs/shared/ui/project.json',
       'libs/booking/domain/project.json',
+      'libs/booking/infrastructure/project.json',
       'libs/booking/data-access/project.json',
       'libs/booking/application/project.json',
       'libs/rooms/domain/project.json',
@@ -74,9 +75,132 @@ describe('Nx module-boundary configuration', () => {
         .join('\n');
 
       expect(source).not.toMatch(
-        /@mr-booking\/(?:auth-data-access|booking-data-access|rooms-data-access|auth-infrastructure|rooms-infrastructure|shared-database|shared-config)/,
+        /@mr-booking\/(?:auth-data-access|booking-data-access|rooms-data-access|auth-infrastructure|booking-infrastructure|rooms-infrastructure|shared-database|shared-config)/,
       );
     }
+  });
+
+  it('keeps persistence schemas behind their owning infrastructure APIs', () => {
+    const bookingInfrastructureProject = readProject(
+      'libs/booking/infrastructure/project.json',
+    );
+    expect(bookingInfrastructureProject.tags).toEqual(
+      expect.arrayContaining([
+        'scope:booking',
+        'type:infrastructure',
+        'platform:api',
+      ]),
+    );
+    const bookingInfrastructureProjectSource = readFileSync(
+      join(workspaceRoot, 'libs/booking/infrastructure/project.json'),
+      'utf8',
+    );
+    expect(bookingInfrastructureProjectSource).toContain('"test"');
+
+    const schemaEntrypoints = [
+      'libs/auth/infrastructure/src/schema.ts',
+      'libs/booking/infrastructure/src/schema.ts',
+      'libs/rooms/infrastructure/src/schema.ts',
+    ];
+
+    for (const schemaEntrypoint of schemaEntrypoints) {
+      const schemaSource = readFileSync(
+        join(workspaceRoot, schemaEntrypoint),
+        'utf8',
+      );
+      expect(schemaSource).toMatch(/schema/);
+      expect(schemaSource).not.toMatch(
+        /DataAccessModule|SeedService|Delivery|ApplicationHandler/,
+      );
+    }
+
+    expect(
+      existsSync(
+        join(workspaceRoot, 'libs/auth/infrastructure/src/lib/auth-schema.ts'),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(
+          workspaceRoot,
+          'libs/booking/infrastructure/src/lib/booking-schema.ts',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(workspaceRoot, 'libs/rooms/infrastructure/src/lib/room-schema.ts'),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(
+          workspaceRoot,
+          'libs/booking/data-access/src/lib/booking-schema.ts',
+        ),
+      ),
+    ).toBe(false);
+
+    const infrastructureRoots = [
+      'libs/auth/infrastructure/src/index.ts',
+      'libs/booking/infrastructure/src/index.ts',
+      'libs/rooms/infrastructure/src/index.ts',
+    ]
+      .map((path) => readFileSync(join(workspaceRoot, path), 'utf8'))
+      .join('\n');
+    expect(infrastructureRoots).not.toMatch(
+      /auth-schema|booking-schema|room-schema/,
+    );
+
+    const drizzleConfiguration = readFileSync(
+      join(workspaceRoot, 'drizzle.config.ts'),
+      'utf8',
+    );
+    for (const schemaEntrypoint of schemaEntrypoints) {
+      expect(drizzleConfiguration).toContain(schemaEntrypoint);
+    }
+
+    const authDataAccessBarrel = readFileSync(
+      join(workspaceRoot, 'libs/auth/data-access/src/index.ts'),
+      'utf8',
+    );
+    const roomsDataAccessBarrel = readFileSync(
+      join(workspaceRoot, 'libs/rooms/data-access/src/index.ts'),
+      'utf8',
+    );
+    const bookingDataAccessBarrel = readFileSync(
+      join(workspaceRoot, 'libs/booking/data-access/src/index.ts'),
+      'utf8',
+    );
+
+    expect(authDataAccessBarrel).not.toContain(
+      "export * from '@mr-booking/auth-infrastructure'",
+    );
+    expect(roomsDataAccessBarrel).not.toContain(
+      "export * from '@mr-booking/rooms-infrastructure'",
+    );
+    expect(bookingDataAccessBarrel).not.toMatch(
+      /booking-schema|demo-booking-seed\/(?:demo-booking-definitions|demo-booking-seed)/,
+    );
+
+    const bookingDataAccessSource = listSourceFiles(
+      join(workspaceRoot, 'libs/booking/data-access/src'),
+    )
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    const authDataAccessSource = listSourceFiles(
+      join(workspaceRoot, 'libs/auth/data-access/src'),
+    )
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    const roomsDataAccessSource = listSourceFiles(
+      join(workspaceRoot, 'libs/rooms/data-access/src'),
+    )
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    expect(bookingDataAccessSource).not.toMatch(/sqliteTable|booking-schema/);
+    expect(authDataAccessSource).not.toContain('sqliteTable');
+    expect(roomsDataAccessSource).not.toContain('sqliteTable');
   });
 
   it('keeps schedule ownership out of booking-ui and feature boundaries', () => {
@@ -148,7 +272,7 @@ describe('Nx module-boundary configuration', () => {
       .join('\n');
 
     expect(webSource).not.toMatch(
-      /@mr-booking\/shared-database|better-sqlite3|drizzle-orm|argon2|@nestjs/,
+      /@mr-booking\/(?:auth|booking|rooms)-infrastructure|@mr-booking\/shared-database|better-sqlite3|drizzle-orm|argon2|@nestjs/,
     );
   });
 

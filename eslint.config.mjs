@@ -87,7 +87,11 @@ export default [
             },
             {
               sourceTag: 'type:infrastructure',
-              onlyDependOnLibsWithTags: ['type:domain', 'type:util'],
+              onlyDependOnLibsWithTags: [
+                'type:infrastructure',
+                'type:domain',
+                'type:util',
+              ],
             },
             {
               sourceTag: 'type:domain',

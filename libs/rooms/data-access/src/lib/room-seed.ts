@@ -1,6 +1,6 @@
 import type { DatabaseConnection } from '@mr-booking/shared-database';
 import { DEMO_ROOM_IDS } from '@mr-booking/rooms-domain';
-import { rooms } from '@mr-booking/rooms-infrastructure';
+import { rooms } from '@mr-booking/rooms-infrastructure/schema';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 
 const seedCreatedAtUtc = Date.UTC(2026, 0, 1);

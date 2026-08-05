@@ -156,7 +156,8 @@ Lifecycle: every interval owns one row per start slot. For 10:00–11:00, rows
 start at 10:00 and 10:30, not 11:00. All rows are inserted atomically with the
 booking and removed atomically on cancellation.
 
-Migration `0002_booking_foundation.sql` implements these tables and constraints.
+`booking-infrastructure` owns the Drizzle declarations for these tables;
+migration `0002_booking_foundation.sql` implements them and their constraints.
 Absolute timestamps are integer UTC epoch milliseconds. Europe/Kyiv
 interpretation, strict-future validation, local office-day boundaries, and
 ownership remain authoritative application policies because SQLite cannot

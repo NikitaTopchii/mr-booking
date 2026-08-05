@@ -2,9 +2,9 @@ import {
   type BookingScheduleReader,
   type BookingScheduleRecord,
 } from '@mr-booking/booking-domain';
-import { users } from '@mr-booking/auth-infrastructure';
+import { bookings } from '@mr-booking/booking-infrastructure/schema';
+import { users } from '@mr-booking/auth-infrastructure/schema';
 import { and, asc, eq, gt, isNull, lt } from 'drizzle-orm';
-import { bookings } from './booking-schema';
 import type { DatabaseConnectionProvider } from './types/booking-repository.types';
 
 export class DrizzleBookingScheduleReader implements BookingScheduleReader {

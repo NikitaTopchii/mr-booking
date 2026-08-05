@@ -4,16 +4,18 @@ import { join } from 'node:path';
 import {
   Argon2PasswordHasher,
   seedAuthUsers,
-  users,
 } from '@mr-booking/auth-data-access';
+import { users } from '@mr-booking/auth-infrastructure/schema';
 import { DEMO_USER_IDS } from '@mr-booking/auth-domain';
 import {
   DEMO_BOOKING_IDS,
-  bookingSlots,
-  bookings,
   demoBookingIds,
   seedDemoBookings,
-} from '@mr-booking/booking-data-access';
+} from '@mr-booking/booking-data-access/seed';
+import {
+  bookingSlots,
+  bookings,
+} from '@mr-booking/booking-infrastructure/schema';
 import { DEMO_ROOM_IDS } from '@mr-booking/rooms-domain';
 import {
   type DatabaseConnection,

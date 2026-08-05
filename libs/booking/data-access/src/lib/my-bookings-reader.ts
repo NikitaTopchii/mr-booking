@@ -3,9 +3,9 @@ import {
   type MyBookingsReader,
   type MyPastBookingsCursor,
 } from '@mr-booking/booking-domain';
-import { rooms } from '@mr-booking/rooms-infrastructure';
+import { bookings } from '@mr-booking/booking-infrastructure/schema';
+import { rooms } from '@mr-booking/rooms-infrastructure/schema';
 import { and, asc, desc, eq, isNull, lt, lte, or, gt } from 'drizzle-orm';
-import { bookings } from './booking-schema';
 import type { DatabaseConnectionProvider } from './types/booking-repository.types';
 
 export class DrizzleMyBookingsReader implements MyBookingsReader {

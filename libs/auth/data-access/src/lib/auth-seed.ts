@@ -1,5 +1,5 @@
 import { DEMO_USER_IDS, type PasswordHasher } from '@mr-booking/auth-domain';
-import { users } from '@mr-booking/auth-infrastructure';
+import { users } from '@mr-booking/auth-infrastructure/schema';
 import type { DatabaseConnection } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
 

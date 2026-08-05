@@ -1,5 +1,5 @@
-import { users } from '@mr-booking/auth-infrastructure';
-import { rooms } from '@mr-booking/rooms-infrastructure';
+import { users } from '@mr-booking/auth-infrastructure/schema';
+import { rooms } from '@mr-booking/rooms-infrastructure/schema';
 import { sql } from 'drizzle-orm';
 import {
   check,

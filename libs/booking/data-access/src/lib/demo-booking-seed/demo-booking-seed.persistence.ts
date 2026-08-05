@@ -1,6 +1,9 @@
 import type { DatabaseConnection } from '@mr-booking/shared-database';
+import {
+  bookingSlots,
+  bookings,
+} from '@mr-booking/booking-infrastructure/schema';
 import { inArray } from 'drizzle-orm';
-import { bookingSlots, bookings } from '../booking-schema';
 import { demoBookingIds } from './demo-booking-definitions';
 import type { DemoBookingSeedPlan } from './types/demo-booking-seed.types';
 

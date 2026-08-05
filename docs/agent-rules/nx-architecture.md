@@ -42,9 +42,16 @@ use-case orchestration. They depend on inward-defined domain ports and MUST
 NOT import data-access or infrastructure projects. Concrete Nest provider
 composition belongs in `apps/api`.
 
-Infrastructure implements inward-defined ports. Domain libraries MUST NOT
-depend on UI, features, data access, infrastructure, Next.js, NestJS, Drizzle,
-or browser APIs.
+Infrastructure implements inward-defined ports. Authoritative persistence
+schema infrastructure MAY depend on another feature's infrastructure schema
+for documented foreign-key declarations; this is the narrow cross-scope
+exception recorded in ADR 0012. Domain libraries MUST NOT depend on UI,
+features, data access, infrastructure, Next.js, NestJS, Drizzle, or browser
+APIs.
+
+Persistence schemas MUST be consumed through the owning infrastructure
+`/schema` entry point. Infrastructure roots MUST NOT act as compatibility
+barrels for another project's schema.
 
 Web projects may depend only on web/shared platform code; API projects may
 depend only on API/shared platform code. Shared platform code MUST remain

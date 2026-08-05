@@ -7,7 +7,7 @@ import {
   emailVerificationTokens,
   sessions,
   users,
-} from '@mr-booking/auth-infrastructure';
+} from '@mr-booking/auth-infrastructure/schema';
 import {
   applyMigrations,
   type DatabaseConnection,

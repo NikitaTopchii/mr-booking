@@ -21,9 +21,10 @@ or runtime configuration projects. Concrete adapter bindings and Nest CQRS
 provider composition belong to the `apps/api` composition modules.
 
 Data-access modules continue to implement and bind domain/application ports.
-The documented booking persistence exception remains valid: booking
-data-access may reference the authoritative auth and rooms infrastructure
-schemas for foreign keys and joins.
+Persistence schema ownership is defined separately by ADR 0012: booking
+infrastructure owns the booking tables and references the authoritative auth
+and rooms infrastructure `/schema` entry points. Booking data-access may
+still reference those explicit schema entry points for its read-model joins.
 
 Frontend user-facing libraries remain `type:feature` and are unaffected by
 this decision.

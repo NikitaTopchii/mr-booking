@@ -1,7 +1,7 @@
-export * from './lib/auth-data-access.module';
-export * from './lib/auth-repository';
-export * from './lib/auth-seed';
-export * from './lib/auth-seed.service';
+export { AuthDataAccessModule } from './lib/auth-data-access.module';
+export { DrizzleAuthRepository } from './lib/auth-repository';
+export { seedAuthUsers } from './lib/auth-seed';
+export { AuthSeedService } from './lib/auth-seed.service';
 export { Argon2PasswordHasher } from './lib/argon2-password-hasher';
 export {
   CryptoSessionTokenGenerator,
@@ -11,4 +11,3 @@ export {
 } from './lib/session-token-adapters';
 export { SystemClock } from './lib/system-clock';
 export { UuidGenerator } from './lib/uuid-generator';
-export * from '@mr-booking/auth-infrastructure';

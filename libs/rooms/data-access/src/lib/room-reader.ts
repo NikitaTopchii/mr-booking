@@ -1,5 +1,5 @@
 import type { Room, RoomReader } from '@mr-booking/rooms-domain';
-import { rooms } from '@mr-booking/rooms-infrastructure';
+import { rooms } from '@mr-booking/rooms-infrastructure/schema';
 import { asc, eq } from 'drizzle-orm';
 import type { DatabaseConnectionProvider } from './types/room-reader.types';
 

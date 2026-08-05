@@ -36,11 +36,12 @@ The hackathon deployment uses one API process as the only SQLite writer. Web
 and API should preferably share one public origin. The frontend never mounts
 or opens the database volume.
 
-Phase 3A realizes the booking write side as application, domain, and
-data-access Nx boundaries:
+Phase 3A realizes the booking write side as application, domain, data-access,
+and infrastructure Nx boundaries:
 
 ```text
 apps/api -> booking-application -> booking-domain <- booking-data-access
+                                  -> booking-infrastructure
                                   -> SQLite bookings + booking_slots
 ```
 
@@ -50,10 +51,13 @@ data-access adapters to application/domain ports. Application libraries do
 not import data-access or infrastructure projects.
 
 `rooms-domain` exposes only the room-existence port. Feature-owned
-`auth-infrastructure` and `rooms-infrastructure` expose Drizzle table
-declarations so booking foreign keys do not require data-access-to-data-access
-dependencies. Existing auth and room data-access barrels preserve their public
-schema exports.
+`auth-infrastructure`, `booking-infrastructure`, and `rooms-infrastructure`
+expose the authoritative Drizzle table declarations through explicit `/schema`
+entry points. Booking infrastructure reuses the auth and rooms declarations
+through those entry points for its foreign keys, so booking foreign keys do
+not require data-access-to-data-access dependencies. Data access owns
+repositories, readers, provider modules, and the explicit seed entry point;
+its root barrels do not re-export schemas.
 
 ## Responsibility boundaries
 

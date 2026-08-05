@@ -3,8 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { bookingSlots, bookings } from '@mr-booking/booking-data-access';
 import { BOOKING_CLOCK, type BookingClock } from '@mr-booking/booking-domain';
+import {
+  bookingSlots,
+  bookings,
+} from '@mr-booking/booking-infrastructure/schema';
 import { deterministicRooms, seedRooms } from '@mr-booking/rooms-data-access';
 import { DatabaseService } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
@@ -679,9 +682,11 @@ describe('rooms and bookings API', () => {
         .expect(400)
         .expect({ code: 'VALIDATION_ERROR' });
       const cursor = first.nextCursor ?? '';
-      const tamperedCursor = `${cursor.slice(0, -1)}${
-        cursor.endsWith('A') ? 'B' : 'A'
-      }`;
+      const signatureStart = cursor.indexOf('.') + 1;
+      const signature = cursor.slice(signatureStart);
+      const tamperedCursor = `${cursor.slice(0, signatureStart)}${
+        signature.startsWith('A') ? 'B' : 'A'
+      }${signature.slice(1)}`;
       await charlie
         .get(
           `/api/bookings/mine/past?cursor=${encodeURIComponent(tamperedCursor)}`,

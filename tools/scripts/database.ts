@@ -2,7 +2,7 @@ import {
   Argon2PasswordHasher,
   seedAuthUsers,
 } from '@mr-booking/auth-data-access';
-import { seedDemoBookings } from '@mr-booking/booking-data-access';
+import { seedDemoBookings } from '@mr-booking/booking-data-access/seed';
 import { applyMigrations, openDatabase } from '@mr-booking/shared-database';
 import { seedRooms } from '@mr-booking/rooms-data-access';
 import { parseRuntimeEnvironment } from '@mr-booking/shared-config';

@@ -5,9 +5,13 @@ import {
   type BookingRepository,
   type BookingWriteTransaction,
 } from '@mr-booking/booking-domain';
+import {
+  bookingSlots,
+  bookings,
+  type BookingRecord,
+} from '@mr-booking/booking-infrastructure/schema';
 import { type DatabaseConnection } from '@mr-booking/shared-database';
 import { eq } from 'drizzle-orm';
-import { bookingSlots, bookings, type BookingRecord } from './booking-schema';
 import type { DatabaseConnectionProvider } from './types/booking-repository.types';
 
 export class DrizzleBookingRepository implements BookingRepository {
