@@ -1,6 +1,6 @@
 import type { ScheduleBooking } from '@mr-booking/booking-data-access-web';
-import type { ScheduleSlot } from '@mr-booking/booking-ui';
 import { createBookingEndOptions } from './create-booking-end-options';
+import type { ScheduleSlot } from '../types/schedule.types';
 
 const SLOT_MS = 30 * 60_000;
 

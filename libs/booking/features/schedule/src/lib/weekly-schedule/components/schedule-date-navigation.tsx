@@ -1,11 +1,13 @@
 import {
   addCalendarDays,
-  calendarDateAt,
   formatCalendarDate,
-  startOfCalendarWeek,
+  calendarDateAt,
   type CalendarDate,
-} from '@mr-booking/booking-ui';
-import { OFFICE_TIME_ZONE } from '@mr-booking/booking-domain';
+} from '@mr-booking/shared-date-time';
+import {
+  OFFICE_TIME_ZONE,
+  startOfOfficeWeek as startOfCalendarWeek,
+} from '@mr-booking/booking-domain';
 import {
   Button,
   Dialog,

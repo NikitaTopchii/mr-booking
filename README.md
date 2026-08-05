@@ -446,7 +446,10 @@ the full Monday–Sunday week. All modes share one selected room/date model and
 one range-specific SWR resource; they do not fetch all presentations at once.
 
 The browser timezone controls all visible schedule and My Bookings labels.
-The API receives and returns absolute ISO timestamps, stores UTC instants, and
-always validates slot alignment and 09:00–19:00 office policy in
-`Europe/Kyiv`. When browser and office zones differ, booking surfaces show
-both responsibilities explicitly.
+`booking-feature-schedule` owns schedule range/navigation models and
+schedule-specific formatting; `booking-ui` owns reusable booking presentation
+and the browser-only timezone hook shared by both booking features. The API
+receives and returns absolute ISO timestamps, stores UTC instants, and always
+validates slot alignment and 09:00–19:00 office policy in `Europe/Kyiv`. When
+browser and office zones differ, booking surfaces show both responsibilities
+explicitly.

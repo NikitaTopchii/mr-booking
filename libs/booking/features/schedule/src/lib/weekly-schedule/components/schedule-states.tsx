@@ -5,7 +5,7 @@ import {
   Spinner,
 } from '@mr-booking/shared-ui';
 import { AlertCircle } from 'lucide-react';
-import type { SchedulePresentation } from '@mr-booking/booking-ui';
+import type { SchedulePresentation } from '../types/schedule.types';
 
 export function ScheduleLoading({
   presentation,

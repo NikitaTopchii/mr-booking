@@ -3,16 +3,16 @@
 import {
   addCalendarDays,
   calendarDateAt,
-  createScheduleSearchParams,
   formatCalendarDate,
-  selectedDateFromUrl,
-  startOfCalendarWeek,
   type CalendarDate,
-} from '@mr-booking/booking-ui';
+} from '@mr-booking/shared-date-time';
 import type { Locale } from '@mr-booking/shared-i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useBrowserTimeZone } from '@mr-booking/booking-ui';
+import { startOfOfficeWeek as startOfCalendarWeek } from '@mr-booking/booking-domain';
+import { selectedDateFromUrl } from '../model/schedule-calendar-policy';
+import { createScheduleSearchParams } from '../model/schedule-navigation';
 import {
   parseMinimumCapacity,
   serializeMinimumCapacity,

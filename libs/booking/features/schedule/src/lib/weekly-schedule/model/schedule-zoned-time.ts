@@ -5,14 +5,6 @@ import {
 
 const adapters = new Map<string, IntlZonedDateTimeAdapter>();
 
-export function calendarDateAt(
-  instant: number,
-  timeZone: string,
-): CalendarDate {
-  const parts = adapterFor(timeZone).partsAt(instant);
-  return { year: parts.year, month: parts.month, day: parts.day };
-}
-
 export function zonedDateTimeToEpoch(
   date: CalendarDate,
   hour: number,

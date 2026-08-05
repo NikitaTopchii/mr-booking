@@ -1,8 +1,6 @@
-import {
-  createScheduleBookingHref,
-  MyBookingCard,
-} from '@mr-booking/booking-ui';
+import { MyBookingCard } from '@mr-booking/booking-ui';
 import type { BookingListProps } from '../types/my-bookings.types';
+import { createBookingScheduleHref } from '../navigation/create-booking-schedule-href';
 
 export function BookingList({
   bookings,
@@ -17,7 +15,7 @@ export function BookingList({
         <MyBookingCard
           key={booking.id}
           booking={booking}
-          href={createScheduleBookingHref(
+          href={createBookingScheduleHref(
             locale,
             booking.room.id,
             booking.startsAtUtc,

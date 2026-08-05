@@ -6,7 +6,7 @@ import {
   fetchRoomBookingsByKey,
   listRooms,
 } from '@mr-booking/booking-data-access-web';
-import { createPresentationRange } from '@mr-booking/booking-ui';
+import { createPresentationRange } from '../model/schedule-range';
 import {
   createFeatureErrorFactory,
   defaultFeatureErrorReporter,

@@ -117,6 +117,10 @@ WAL, foreign keys, and a 5000 ms busy timeout are enabled and verified.
 - Mutations remain pending until the API confirms success.
 - The API uses the server clock and returns canonical UTC ISO 8601 timestamps.
 - The UI formats instants in the browser timezone.
+- `booking-feature-schedule` owns schedule range/navigation models and
+  schedule-specific formatting. `booking-ui` owns reusable booking
+  presentation and the browser timezone capability shared by the booking web
+  features; `shared-date-time` remains React-free.
 - A stable error envelope maps machine-readable application/domain and field
   codes to localized UI states without translating backend prose.
 - New accounts remain authenticated but unverified. The current-user contract

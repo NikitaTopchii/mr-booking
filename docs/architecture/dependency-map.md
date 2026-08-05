@@ -50,6 +50,14 @@ feature owns schedule navigation, room selection, filtering, and booking
 surfaces; My Bookings owns upcoming and past booking lists. They share lower
 layers but do not depend on each other.
 
+The schedule feature also owns its range algorithms, slot and current-time
+models, schedule presentation types, and schedule-only date/navigation
+helpers. `booking-ui` contains reusable booking presentation and the
+browser-only timezone hook used by both booking features. `shared-date-time`
+remains platform-neutral and React-free. My Bookings owns its outbound link
+adapter for opening a booking in the schedule route, so neither feature
+imports the other.
+
 Authentication makes the platform split explicit:
 
 ````text

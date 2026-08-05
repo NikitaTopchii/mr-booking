@@ -1,15 +1,15 @@
 import type { ScheduleBooking } from '@mr-booking/booking-data-access-web';
 import { BOOKING_SLOT_MILLISECONDS } from '@mr-booking/booking-domain';
-import {
-  calendarDateAt,
-  currentTimePosition,
-  type CalendarDate,
-  type ScheduleRange,
-  type ScheduleSlot,
-  type SchedulePresentation,
-} from '@mr-booking/booking-ui';
+import { calendarDateAt } from '@mr-booking/shared-date-time';
 import type { Locale } from '@mr-booking/shared-i18n';
 import { formatScheduleTimeRange } from '../formatting/schedule-date-time.formatter';
+import { currentTimePosition } from './schedule-indicators';
+import type {
+  SchedulePresentation,
+  ScheduleRange,
+  ScheduleSlot,
+} from '../types/schedule.types';
+import type { CalendarDate } from '@mr-booking/shared-date-time';
 
 export interface PreparedScheduleBooking {
   readonly booking: ScheduleBooking;

@@ -18,8 +18,9 @@ the predictable anchor.
 remains a normalized Monday for backward compatibility and shareable desktop
 context. A valid legacy `week` without `date` selects today when today is
 inside that week, otherwise its Monday. Missing or invalid values fall back to
-today. Room and date updates use the shared booking UI URL builder, so reload,
-Back, Forward, locale changes, and My Bookings deep links preserve context.
+today. Schedule-owned navigation normalizes room and date updates, while the
+My Bookings feature owns its outbound schedule deep-link adapter. Reload, Back,
+Forward, locale changes, and My Bookings deep links preserve context.
 
 One hydration-safe media-query subscription selects the presentation. One SWR
 resource then requests only its active half-open absolute ISO range:

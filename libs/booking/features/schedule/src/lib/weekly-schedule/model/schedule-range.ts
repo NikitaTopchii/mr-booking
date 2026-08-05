@@ -8,16 +8,17 @@ import {
 } from '@mr-booking/booking-domain';
 import {
   addCalendarDays,
+  calendarDateAt,
   formatCalendarDate,
   parseCalendarDate,
   type CalendarDate,
 } from '@mr-booking/shared-date-time';
-import { calendarDateAt, zonedDateTimeToEpoch } from './schedule-zoned-time';
+import { zonedDateTimeToEpoch } from './schedule-zoned-time';
 import type {
   SchedulePresentation,
   ScheduleRange,
   ScheduleSlot,
-} from './types/schedule.types';
+} from '../types/schedule.types';
 
 export function createScheduleWeek(
   weekKey: string,

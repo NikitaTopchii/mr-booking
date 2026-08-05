@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { ProjectConfiguration } from './types/module-boundaries.types';
 
@@ -77,6 +77,48 @@ describe('Nx module-boundary configuration', () => {
         /@mr-booking\/(?:auth-data-access|booking-data-access|rooms-data-access|auth-infrastructure|rooms-infrastructure|shared-database|shared-config)/,
       );
     }
+  });
+
+  it('keeps schedule ownership out of booking-ui and feature boundaries', () => {
+    const bookingUiSource = listSourceFiles(
+      join(workspaceRoot, 'libs/booking/ui/src'),
+    )
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    const scheduleSource = listSourceFiles(
+      join(workspaceRoot, 'libs/booking/features/schedule/src'),
+    )
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    const myBookingsSource = listSourceFiles(
+      join(workspaceRoot, 'libs/booking/features/my-bookings/src'),
+    )
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+
+    expect(bookingUiSource).not.toMatch(
+      /schedule-(?:calendar-policy|indicators|navigation|range|zoned-time)|types\/schedule\.types|createSchedule(?:Range|Week|SearchParams|BookingHref)/,
+    );
+    expect(bookingUiSource).toContain('useBrowserTimeZone');
+    expect(scheduleSource).not.toContain(
+      '@mr-booking/booking-feature-my-bookings',
+    );
+    expect(myBookingsSource).not.toContain(
+      '@mr-booking/booking-feature-schedule',
+    );
+    expect(
+      existsSync(
+        join(
+          workspaceRoot,
+          'libs/booking/features/schedule/src/lib/weekly-schedule/model/schedule-range.ts',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(workspaceRoot, 'libs/booking/ui/src/lib/schedule-range.ts'),
+      ),
+    ).toBe(false);
   });
 
   it('keeps module-boundary enforcement configured as an error', () => {

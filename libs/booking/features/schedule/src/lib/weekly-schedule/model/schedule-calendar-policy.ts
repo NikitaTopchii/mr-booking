@@ -4,11 +4,11 @@ import {
 } from '@mr-booking/booking-domain';
 import {
   addCalendarDays,
+  calendarDateAt,
   formatCalendarDate,
   parseCalendarDate,
   type CalendarDate,
 } from '@mr-booking/shared-date-time';
-import { calendarDateAt } from './schedule-zoned-time';
 
 export function startOfLocalWeek(now: number, timeZone: string): CalendarDate {
   return startOfOfficeWeek(calendarDateAt(now, timeZone));

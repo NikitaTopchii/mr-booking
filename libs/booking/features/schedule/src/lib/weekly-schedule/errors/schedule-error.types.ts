@@ -3,7 +3,7 @@ import type {
   FeatureErrorClock,
   FeatureErrorReporter,
 } from '@mr-booking/shared-feature-error';
-import type { SchedulePresentation } from '@mr-booking/booking-ui';
+import type { SchedulePresentation } from '../types/schedule.types';
 import type { BookingCreationErrorCode } from './booking-creation-error.catalog';
 import type { bookingCreationErrorCatalog } from './booking-creation-error.catalog';
 import type { BookingCancellationErrorCode } from './booking-cancellation-error.catalog';

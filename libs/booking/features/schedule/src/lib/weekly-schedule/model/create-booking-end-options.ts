@@ -4,8 +4,8 @@ import {
   OFFICE_CLOSING_MINUTE,
   OFFICE_OPENING_MINUTE,
 } from '@mr-booking/booking-domain';
-import type { ScheduleSlot } from '@mr-booking/booking-ui';
 import type { CreateBookingEndOptionsInput } from '../types/booking-end-options.types';
+import type { ScheduleSlot } from '../types/schedule.types';
 
 export function createBookingEndOptions(
   input: CreateBookingEndOptionsInput,

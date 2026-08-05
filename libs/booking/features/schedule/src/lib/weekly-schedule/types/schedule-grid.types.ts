@@ -1,13 +1,13 @@
 import type { ScheduleBooking } from '@mr-booking/booking-data-access-web';
-import type {
-  CalendarDate,
-  SchedulePresentation,
-  ScheduleRange,
-  ScheduleSlot,
-} from '@mr-booking/booking-ui';
+import type { CalendarDate } from '@mr-booking/shared-date-time';
 import type { Locale } from '@mr-booking/shared-i18n';
 import type { ScheduleMessages } from './schedule-feature.types';
 import type { ScheduleDayViewModel } from '../model/create-schedule-view-model';
+import type {
+  SchedulePresentation,
+  ScheduleRange,
+  ScheduleSlot,
+} from './schedule.types';
 
 export interface ScheduleGridProps {
   readonly locale: Locale;

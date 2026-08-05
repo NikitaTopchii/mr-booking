@@ -1,4 +1,4 @@
-import { calendarDateAt } from '@mr-booking/booking-ui';
+import { calendarDateAt } from '@mr-booking/shared-date-time';
 import { Spinner, cn } from '@mr-booking/shared-ui';
 import { useMemo } from 'react';
 import { createScheduleViewModel } from '../model/create-schedule-view-model';

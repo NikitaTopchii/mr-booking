@@ -1,5 +1,5 @@
 import { BOOKING_SLOT_MILLISECONDS } from '@mr-booking/booking-domain';
-import type { ScheduleRange, ScheduleSlot } from './types/schedule.types';
+import type { ScheduleRange, ScheduleSlot } from '../types/schedule.types';
 
 export function overlapsAbsoluteRange(
   startsAtUtc: string,

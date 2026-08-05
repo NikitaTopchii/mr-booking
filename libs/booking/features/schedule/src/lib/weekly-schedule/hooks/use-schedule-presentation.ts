@@ -1,7 +1,7 @@
 'use client';
 
-import type { SchedulePresentation } from '@mr-booking/booking-ui';
 import { useSyncExternalStore } from 'react';
+import type { SchedulePresentation } from '../types/schedule.types';
 
 const mediumQuery = '(min-width: 640px) and (max-width: 1023px)';
 const expandedQuery = '(min-width: 1024px)';

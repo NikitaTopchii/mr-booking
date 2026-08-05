@@ -1,4 +1,4 @@
-import type { CalendarDate } from '@mr-booking/booking-ui';
+import type { CalendarDate } from '@mr-booking/shared-date-time';
 import type { Locale } from '@mr-booking/shared-i18n';
 
 const formatterCache = new Map<string, Intl.DateTimeFormat>();

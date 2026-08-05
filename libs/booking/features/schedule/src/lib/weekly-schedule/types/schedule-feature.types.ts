@@ -2,12 +2,7 @@ import type {
   Room,
   ScheduleBooking,
 } from '@mr-booking/booking-data-access-web';
-import type {
-  CalendarDate,
-  SchedulePresentation,
-  ScheduleRange,
-  ScheduleSlot,
-} from '@mr-booking/booking-ui';
+import type { CalendarDate } from '@mr-booking/shared-date-time';
 import type { AppDictionary, Locale } from '@mr-booking/shared-i18n';
 import type {
   BookingCancellationFeatureError,
@@ -15,6 +10,11 @@ import type {
   RoomQueryFeatureError,
   ScheduleQueryFeatureError,
 } from '../errors/schedule-error.types';
+import type {
+  SchedulePresentation,
+  ScheduleRange,
+  ScheduleSlot,
+} from './schedule.types';
 
 export type ScheduleMessages = AppDictionary['schedule'];
 

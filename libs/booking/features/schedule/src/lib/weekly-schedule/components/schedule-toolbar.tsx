@@ -17,12 +17,8 @@ import {
   Users,
 } from 'lucide-react';
 import type { Room } from '@mr-booking/booking-data-access-web';
+import type { CalendarDate } from '@mr-booking/shared-date-time';
 import type { Locale } from '@mr-booking/shared-i18n';
-import {
-  type CalendarDate,
-  type SchedulePresentation,
-  type ScheduleRange,
-} from '@mr-booking/booking-ui';
 import { formatScheduleWeekRange } from '../formatting/schedule-date-time.formatter';
 import { IconButton, ScheduleWeekDateStrip } from './schedule-date-navigation';
 import { RoomCapacityFilter } from './room-capacity-filter';
@@ -30,6 +26,10 @@ import type {
   ScheduleMessages,
   ScheduleRoomSelectorProps,
 } from '../types/schedule-feature.types';
+import type {
+  SchedulePresentation,
+  ScheduleRange,
+} from '../types/schedule.types';
 
 export function ScheduleToolbar({
   locale,

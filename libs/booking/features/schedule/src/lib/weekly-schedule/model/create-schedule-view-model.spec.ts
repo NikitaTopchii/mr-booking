@@ -1,5 +1,5 @@
-import { createScheduleRange } from '@mr-booking/booking-ui';
 import { createScheduleViewModel } from './create-schedule-view-model';
+import { createScheduleRange } from './schedule-range';
 
 describe('createScheduleViewModel', () => {
   it('prepares parsed booking ranges and occupied slot lookup once', () => {

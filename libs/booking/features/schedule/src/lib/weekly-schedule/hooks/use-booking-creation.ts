@@ -10,7 +10,6 @@ import {
 import type { Locale } from '@mr-booking/shared-i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWRMutation from 'swr/mutation';
-import type { ScheduleSlot } from '@mr-booking/booking-ui';
 import { createBookingEndOptions } from '../model/create-booking-end-options';
 import { MAX_BOOKING_SLOT_COUNT } from '../constants/schedule.constants';
 import { bookingClientErrorStatus } from '../errors/booking-client-error.context';
@@ -26,6 +25,7 @@ import type {
   BookingSelection,
   ScheduleDataState,
 } from '../types/schedule-feature.types';
+import type { ScheduleSlot } from '../types/schedule.types';
 
 export function useBookingCreation({
   locale,

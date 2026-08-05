@@ -1,7 +1,5 @@
 import type { CalendarDate } from '@mr-booking/shared-date-time';
 
-export type { CalendarDate } from '@mr-booking/shared-date-time';
-
 export interface ScheduleSlot {
   readonly id: string;
   readonly officeDate: string;
