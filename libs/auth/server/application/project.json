@@ -1,0 +1,19 @@
+{
+  "name": "auth-application",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/server/application/src",
+  "projectType": "library",
+  "tags": ["scope:auth", "type:application", "platform:server"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/auth/server/application",
+        "main": "libs/auth/server/application/src/index.ts",
+        "tsConfig": "libs/auth/server/application/tsconfig.lib.json",
+        "assets": []
+      }
+    }
+  }
+}

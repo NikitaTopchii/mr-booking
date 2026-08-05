@@ -58,7 +58,6 @@ decision.
 
 ## Deferred work
 
-This decision does not physically regroup server/web paths, create a complete
-platform-tag migration beyond the current vocabulary, or add scope libraries
-for unimplemented bonuses. A future project changes the exact allowlist only
-with the related ownership decision, source-level policy, and regression test.
+ADR 0014 applies the physical domain/server/web grouping that corresponds to
+this taxonomy. A future project changes the exact allowlist only with the
+related ownership decision, source-level policy, and regression test.

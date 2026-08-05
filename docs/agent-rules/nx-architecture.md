@@ -103,3 +103,22 @@ without permitting their use from Client Components or NestJS.
 Cross-library imports MUST use public entrypoints. Deep imports, source
 dependency cycles, compatibility schema barrels, and moving domain code into
 `shared` to evade a boundary are prohibited.
+
+## Physical library layout
+
+The filesystem makes the same ownership visible as project tags. `auth`,
+`booking`, and `rooms` remain domain-first: an agnostic domain project lives
+at `libs/<scope>/domain`, server projects under `libs/<scope>/server`, and web
+projects under `libs/<scope>/web`. User-facing web feature projects live below
+`libs/<scope>/web/features`.
+
+Shared agnostic, server, and web projects live below
+`libs/shared/agnostic`, `libs/shared/server`, and `libs/shared/web`.
+`libs/shared/config` is the sole approved root exception because its agnostic
+root has a protected server-only `/node` entrypoint. Do not split it or add a
+new root exception without an ownership decision.
+
+`server`, `web`, `agnostic`, and `features` are grouping directories, never
+Nx projects. `yarn audit:boundaries` validates roots, source roots, nesting,
+and package aliases alongside tags and graph direction. Imports remain public
+`@mr-booking/*` aliases rather than filesystem paths.

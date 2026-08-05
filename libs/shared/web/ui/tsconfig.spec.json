@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "rootDir": ".",
+    "jsx": "react-jsx",
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "jest.config.cts",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.d.ts"
+  ]
+}

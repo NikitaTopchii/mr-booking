@@ -1,6 +1,6 @@
 'use client';
 
-import { useLogout } from '@mr-booking/auth-feature-web';
+import { useLogout } from '@mr-booking/auth-feature-access';
 import type { Locale } from '@mr-booking/shared-i18n';
 import {
   Button,

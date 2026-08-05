@@ -1,0 +1,19 @@
+{
+  "name": "auth-feature-access",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/web/features/access/src",
+  "projectType": "library",
+  "tags": ["scope:auth", "type:feature", "platform:web"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/auth/web/features/access",
+        "main": "libs/auth/web/features/access/src/index.ts",
+        "tsConfig": "libs/auth/web/features/access/tsconfig.lib.json",
+        "assets": []
+      }
+    }
+  }
+}

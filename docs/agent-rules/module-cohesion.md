@@ -99,7 +99,7 @@ and query workflows MUST derive their code unions from feature-owned catalogs;
 unrelated operations MUST NOT share a broad error union. Catalogs own stable
 message keys, severity, retryability, and telemetry codes, while localized text
 is resolved only at the presentation boundary. Generic factory mechanics and
-the replaceable reporter port belong in `@mr-booking/shared-feature-error` and
+the replaceable reporter port belong in `@mr-booking/shared-error-handling` and
 MUST remain free of booking policy, UI, routing, SWR, and localized strings.
 
 Feature errors MUST record the feature, operation, injected UTC clock time,

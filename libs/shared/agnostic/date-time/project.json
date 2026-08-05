@@ -1,0 +1,25 @@
+{
+  "name": "shared-date-time",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/agnostic/date-time/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util", "platform:agnostic"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared/agnostic/date-time",
+        "main": "libs/shared/agnostic/date-time/src/index.ts",
+        "tsConfig": "libs/shared/agnostic/date-time/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/shared/agnostic/date-time/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

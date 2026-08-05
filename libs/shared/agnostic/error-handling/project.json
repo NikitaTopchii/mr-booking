@@ -1,0 +1,25 @@
+{
+  "name": "shared-error-handling",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/agnostic/error-handling/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:util", "platform:agnostic"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared/agnostic/error-handling",
+        "main": "libs/shared/agnostic/error-handling/src/index.ts",
+        "tsConfig": "libs/shared/agnostic/error-handling/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/shared/agnostic/error-handling/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

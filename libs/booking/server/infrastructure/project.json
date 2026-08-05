@@ -1,0 +1,35 @@
+{
+  "name": "booking-infrastructure",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/booking/server/infrastructure/src",
+  "projectType": "library",
+  "tags": ["scope:booking", "type:infrastructure", "platform:server"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/booking/server/infrastructure",
+        "main": "libs/booking/server/infrastructure/src/index.ts",
+        "tsConfig": "libs/booking/server/infrastructure/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/booking/server/infrastructure/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/libs/booking/server/infrastructure"
+      ],
+      "options": {
+        "jestConfig": "libs/booking/server/infrastructure/jest.config.cts",
+        "passWithNoTests": false
+      }
+    }
+  }
+}

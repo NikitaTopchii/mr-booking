@@ -1,0 +1,25 @@
+{
+  "name": "booking-data-access",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/booking/server/data-access/src",
+  "projectType": "library",
+  "tags": ["scope:booking", "type:data-access", "platform:server"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/booking/server/data-access",
+        "main": "libs/booking/server/data-access/src/index.ts",
+        "tsConfig": "libs/booking/server/data-access/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/booking/server/data-access/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

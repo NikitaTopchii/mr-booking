@@ -1,0 +1,25 @@
+{
+  "name": "auth-infrastructure",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/server/infrastructure/src",
+  "projectType": "library",
+  "tags": ["scope:auth", "type:infrastructure", "platform:server"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/auth/server/infrastructure",
+        "main": "libs/auth/server/infrastructure/src/index.ts",
+        "tsConfig": "libs/auth/server/infrastructure/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/auth/server/infrastructure/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "booking-feature-my-bookings",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/booking/web/features/my-bookings/src",
+  "projectType": "library",
+  "tags": ["scope:booking", "type:feature", "platform:web"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/booking/web/features/my-bookings/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/booking/web/features/my-bookings",
+        "main": "libs/booking/web/features/my-bookings/src/index.ts",
+        "tsConfig": "libs/booking/web/features/my-bookings/tsconfig.lib.json",
+        "assets": []
+      }
+    }
+  }
+}

@@ -27,17 +27,17 @@ describe('Nx module-boundary configuration', () => {
         'type:tooling',
         'platform:server',
       ],
-      'libs/auth/application/project.json': [
+      'libs/auth/server/application/project.json': [
         'scope:auth',
         'type:application',
         'platform:server',
       ],
-      'libs/auth/data-access/project.json': [
+      'libs/auth/server/data-access/project.json': [
         'scope:auth',
         'type:data-access',
         'platform:server',
       ],
-      'libs/auth/data-access-web/project.json': [
+      'libs/auth/web/data-access/project.json': [
         'scope:auth',
         'type:data-access',
         'platform:web',
@@ -47,33 +47,37 @@ describe('Nx module-boundary configuration', () => {
         'type:domain',
         'platform:agnostic',
       ],
-      'libs/auth/feature-email-verification/project.json': [
+      'libs/auth/web/features/email-verification/project.json': [
         'scope:auth',
         'type:feature',
         'platform:web',
       ],
-      'libs/auth/feature-web/project.json': [
+      'libs/auth/web/features/access/project.json': [
         'scope:auth',
         'type:feature',
         'platform:web',
       ],
-      'libs/auth/infrastructure/project.json': [
+      'libs/auth/server/infrastructure/project.json': [
         'scope:auth',
         'type:infrastructure',
         'platform:server',
       ],
-      'libs/auth/ui/project.json': ['scope:auth', 'type:ui', 'platform:web'],
-      'libs/booking/application/project.json': [
+      'libs/auth/web/ui/project.json': [
+        'scope:auth',
+        'type:ui',
+        'platform:web',
+      ],
+      'libs/booking/server/application/project.json': [
         'scope:booking',
         'type:application',
         'platform:server',
       ],
-      'libs/booking/data-access/project.json': [
+      'libs/booking/server/data-access/project.json': [
         'scope:booking',
         'type:data-access',
         'platform:server',
       ],
-      'libs/booking/data-access-web/project.json': [
+      'libs/booking/web/data-access/project.json': [
         'scope:booking',
         'type:data-access',
         'platform:web',
@@ -83,27 +87,27 @@ describe('Nx module-boundary configuration', () => {
         'type:domain',
         'platform:agnostic',
       ],
-      'libs/booking/features/my-bookings/project.json': [
+      'libs/booking/web/features/my-bookings/project.json': [
         'scope:booking',
         'type:feature',
         'platform:web',
       ],
-      'libs/booking/features/schedule/project.json': [
+      'libs/booking/web/features/schedule/project.json': [
         'scope:booking',
         'type:feature',
         'platform:web',
       ],
-      'libs/booking/infrastructure/project.json': [
+      'libs/booking/server/infrastructure/project.json': [
         'scope:booking',
         'type:infrastructure',
         'platform:server',
       ],
-      'libs/booking/ui/project.json': [
+      'libs/booking/web/ui/project.json': [
         'scope:booking',
         'type:ui',
         'platform:web',
       ],
-      'libs/rooms/data-access/project.json': [
+      'libs/rooms/server/data-access/project.json': [
         'scope:rooms',
         'type:data-access',
         'platform:server',
@@ -113,7 +117,7 @@ describe('Nx module-boundary configuration', () => {
         'type:domain',
         'platform:agnostic',
       ],
-      'libs/rooms/infrastructure/project.json': [
+      'libs/rooms/server/infrastructure/project.json': [
         'scope:rooms',
         'type:infrastructure',
         'platform:server',
@@ -123,27 +127,27 @@ describe('Nx module-boundary configuration', () => {
         'type:util',
         'platform:agnostic',
       ],
-      'libs/shared/database/project.json': [
+      'libs/shared/server/database/project.json': [
         'scope:shared',
         'type:infrastructure',
         'platform:server',
       ],
-      'libs/shared/date-time/project.json': [
+      'libs/shared/agnostic/date-time/project.json': [
         'scope:shared',
         'type:util',
         'platform:agnostic',
       ],
-      'libs/shared/feature-error/project.json': [
+      'libs/shared/agnostic/error-handling/project.json': [
         'scope:shared',
         'type:util',
         'platform:agnostic',
       ],
-      'libs/shared/i18n/project.json': [
+      'libs/shared/web/i18n/project.json': [
         'scope:shared',
         'type:util',
         'platform:web',
       ],
-      'libs/shared/ui/project.json': [
+      'libs/shared/web/ui/project.json': [
         'scope:shared',
         'type:ui',
         'platform:web',
@@ -154,17 +158,58 @@ describe('Nx module-boundary configuration', () => {
       const project = readProject(projectFile);
       expect(project.tags).toEqual(tags);
     }
+
+    expect(readProject('libs/auth/web/features/access/project.json').name).toBe(
+      'auth-feature-access',
+    );
+    expect(
+      readProject('libs/shared/agnostic/error-handling/project.json').name,
+    ).toBe('shared-error-handling');
+  });
+
+  it('uses domain-first physical platform grouping without compatibility aliases', () => {
+    const tsconfig = readFileSync(
+      join(workspaceRoot, 'tsconfig.base.json'),
+      'utf8',
+    );
+    const projectRoots = [
+      'libs/auth/server',
+      'libs/auth/web',
+      'libs/auth/web/features',
+      'libs/booking/server',
+      'libs/booking/web',
+      'libs/booking/web/features',
+      'libs/rooms/server',
+      'libs/shared/agnostic',
+      'libs/shared/server',
+      'libs/shared/web',
+    ];
+
+    for (const groupingDirectory of projectRoots) {
+      expect(existsSync(join(workspaceRoot, groupingDirectory))).toBe(true);
+      expect(
+        existsSync(join(workspaceRoot, groupingDirectory, 'project.json')),
+      ).toBe(false);
+    }
+
+    expect(tsconfig).toContain('@mr-booking/auth-feature-access');
+    expect(tsconfig).toContain('@mr-booking/shared-error-handling');
+    expect(tsconfig).not.toContain('@mr-booking/auth-feature-web');
+    expect(tsconfig).not.toContain('@mr-booking/shared-feature-error');
+    expect(
+      existsSync(join(workspaceRoot, 'libs/shared/config/project.json')),
+    ).toBe(true);
   });
 
   it('keeps backend application libraries inward-facing', () => {
     const applicationProjects = [
       {
-        projectFile: 'libs/auth/application/project.json',
-        sourceDirectory: 'libs/auth/application/src',
+        projectFile: 'libs/auth/server/application/project.json',
+        sourceDirectory: 'libs/auth/server/application/src',
       },
       {
-        projectFile: 'libs/booking/application/project.json',
-        sourceDirectory: 'libs/booking/application/src',
+        projectFile: 'libs/booking/server/application/project.json',
+        sourceDirectory: 'libs/booking/server/application/src',
       },
     ];
 
@@ -184,7 +229,7 @@ describe('Nx module-boundary configuration', () => {
 
   it('keeps persistence schemas behind their owning infrastructure APIs', () => {
     const bookingInfrastructureProject = readProject(
-      'libs/booking/infrastructure/project.json',
+      'libs/booking/server/infrastructure/project.json',
     );
     expect(bookingInfrastructureProject.tags).toEqual(
       expect.arrayContaining([
@@ -194,15 +239,15 @@ describe('Nx module-boundary configuration', () => {
       ]),
     );
     const bookingInfrastructureProjectSource = readFileSync(
-      join(workspaceRoot, 'libs/booking/infrastructure/project.json'),
+      join(workspaceRoot, 'libs/booking/server/infrastructure/project.json'),
       'utf8',
     );
     expect(bookingInfrastructureProjectSource).toContain('"test"');
 
     const schemaEntrypoints = [
-      'libs/auth/infrastructure/src/schema.ts',
-      'libs/booking/infrastructure/src/schema.ts',
-      'libs/rooms/infrastructure/src/schema.ts',
+      'libs/auth/server/infrastructure/src/schema.ts',
+      'libs/booking/server/infrastructure/src/schema.ts',
+      'libs/rooms/server/infrastructure/src/schema.ts',
     ];
 
     for (const schemaEntrypoint of schemaEntrypoints) {
@@ -218,35 +263,41 @@ describe('Nx module-boundary configuration', () => {
 
     expect(
       existsSync(
-        join(workspaceRoot, 'libs/auth/infrastructure/src/lib/auth-schema.ts'),
-      ),
-    ).toBe(true);
-    expect(
-      existsSync(
         join(
           workspaceRoot,
-          'libs/booking/infrastructure/src/lib/booking-schema.ts',
+          'libs/auth/server/infrastructure/src/lib/auth-schema.ts',
         ),
       ),
     ).toBe(true);
     expect(
       existsSync(
-        join(workspaceRoot, 'libs/rooms/infrastructure/src/lib/room-schema.ts'),
+        join(
+          workspaceRoot,
+          'libs/booking/server/infrastructure/src/lib/booking-schema.ts',
+        ),
       ),
     ).toBe(true);
     expect(
       existsSync(
         join(
           workspaceRoot,
-          'libs/booking/data-access/src/lib/booking-schema.ts',
+          'libs/rooms/server/infrastructure/src/lib/room-schema.ts',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(
+          workspaceRoot,
+          'libs/booking/server/data-access/src/lib/booking-schema.ts',
         ),
       ),
     ).toBe(false);
 
     const infrastructureRoots = [
-      'libs/auth/infrastructure/src/index.ts',
-      'libs/booking/infrastructure/src/index.ts',
-      'libs/rooms/infrastructure/src/index.ts',
+      'libs/auth/server/infrastructure/src/index.ts',
+      'libs/booking/server/infrastructure/src/index.ts',
+      'libs/rooms/server/infrastructure/src/index.ts',
     ]
       .map((path) => readFileSync(join(workspaceRoot, path), 'utf8'))
       .join('\n');
@@ -263,15 +314,15 @@ describe('Nx module-boundary configuration', () => {
     }
 
     const authDataAccessBarrel = readFileSync(
-      join(workspaceRoot, 'libs/auth/data-access/src/index.ts'),
+      join(workspaceRoot, 'libs/auth/server/data-access/src/index.ts'),
       'utf8',
     );
     const roomsDataAccessBarrel = readFileSync(
-      join(workspaceRoot, 'libs/rooms/data-access/src/index.ts'),
+      join(workspaceRoot, 'libs/rooms/server/data-access/src/index.ts'),
       'utf8',
     );
     const bookingDataAccessBarrel = readFileSync(
-      join(workspaceRoot, 'libs/booking/data-access/src/index.ts'),
+      join(workspaceRoot, 'libs/booking/server/data-access/src/index.ts'),
       'utf8',
     );
 
@@ -286,17 +337,17 @@ describe('Nx module-boundary configuration', () => {
     );
 
     const bookingDataAccessSource = listSourceFiles(
-      join(workspaceRoot, 'libs/booking/data-access/src'),
+      join(workspaceRoot, 'libs/booking/server/data-access/src'),
     )
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
     const authDataAccessSource = listSourceFiles(
-      join(workspaceRoot, 'libs/auth/data-access/src'),
+      join(workspaceRoot, 'libs/auth/server/data-access/src'),
     )
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
     const roomsDataAccessSource = listSourceFiles(
-      join(workspaceRoot, 'libs/rooms/data-access/src'),
+      join(workspaceRoot, 'libs/rooms/server/data-access/src'),
     )
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
@@ -307,17 +358,17 @@ describe('Nx module-boundary configuration', () => {
 
   it('keeps schedule ownership out of booking-ui and feature boundaries', () => {
     const bookingUiSource = listSourceFiles(
-      join(workspaceRoot, 'libs/booking/ui/src'),
+      join(workspaceRoot, 'libs/booking/web/ui/src'),
     )
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
     const scheduleSource = listSourceFiles(
-      join(workspaceRoot, 'libs/booking/features/schedule/src'),
+      join(workspaceRoot, 'libs/booking/web/features/schedule/src'),
     )
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
     const myBookingsSource = listSourceFiles(
-      join(workspaceRoot, 'libs/booking/features/my-bookings/src'),
+      join(workspaceRoot, 'libs/booking/web/features/my-bookings/src'),
     )
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
@@ -336,13 +387,13 @@ describe('Nx module-boundary configuration', () => {
       existsSync(
         join(
           workspaceRoot,
-          'libs/booking/features/schedule/src/lib/weekly-schedule/model/schedule-range.ts',
+          'libs/booking/web/features/schedule/src/lib/weekly-schedule/model/schedule-range.ts',
         ),
       ),
     ).toBe(true);
     expect(
       existsSync(
-        join(workspaceRoot, 'libs/booking/ui/src/lib/schedule-range.ts'),
+        join(workspaceRoot, 'libs/booking/web/ui/src/lib/schedule-range.ts'),
       ),
     ).toBe(false);
   });
@@ -390,11 +441,11 @@ describe('Nx module-boundary configuration', () => {
   it('keeps database packages out of web source', () => {
     const webDirectories = [
       'apps/web/src',
-      'libs/auth/data-access-web/src',
-      'libs/auth/feature-web/src',
-      'libs/auth/ui/src',
-      'libs/shared/i18n/src',
-      'libs/shared/ui/src',
+      'libs/auth/web/data-access/src',
+      'libs/auth/web/features/access/src',
+      'libs/auth/web/ui/src',
+      'libs/shared/web/i18n/src',
+      'libs/shared/web/ui/src',
     ];
     const webSource = webDirectories
       .flatMap((directory) => listSourceFiles(join(workspaceRoot, directory)))
@@ -408,10 +459,12 @@ describe('Nx module-boundary configuration', () => {
 
   it('keeps server dictionaries out of Client Component entry points', () => {
     const clientSourceFiles = [
-      ...listSourceFiles(join(workspaceRoot, 'libs/auth/feature-web/src')),
-      ...listSourceFiles(join(workspaceRoot, 'libs/auth/ui/src')),
-      join(workspaceRoot, 'libs/auth/data-access-web/src/client.ts'),
-      join(workspaceRoot, 'libs/auth/data-access-web/src/lib/auth-client.ts'),
+      ...listSourceFiles(
+        join(workspaceRoot, 'libs/auth/web/features/access/src'),
+      ),
+      ...listSourceFiles(join(workspaceRoot, 'libs/auth/web/ui/src')),
+      join(workspaceRoot, 'libs/auth/web/data-access/src/client.ts'),
+      join(workspaceRoot, 'libs/auth/web/data-access/src/lib/auth-client.ts'),
     ];
 
     for (const file of clientSourceFiles) {
@@ -423,13 +476,13 @@ describe('Nx module-boundary configuration', () => {
 
   it('keeps auth presentation free of routing and data-access dependencies', () => {
     const authUiSource = listSourceFiles(
-      join(workspaceRoot, 'libs/auth/ui/src'),
+      join(workspaceRoot, 'libs/auth/web/ui/src'),
     )
       .filter((file) => !file.endsWith('/use-auth-expiry-redirect.ts'))
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
     const browserBarrel = readFileSync(
-      join(workspaceRoot, 'libs/auth/data-access-web/src/index.ts'),
+      join(workspaceRoot, 'libs/auth/web/data-access/src/index.ts'),
       'utf8',
     );
 

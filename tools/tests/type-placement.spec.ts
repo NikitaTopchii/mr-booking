@@ -10,7 +10,7 @@ describe('type-placement lint policy', () => {
     ['type alias', 'type MisplacedResult = { readonly status: string }'],
   ])('rejects a top-level %s in an implementation file', async (_, source) => {
     const messages = await lintVirtual(
-      'libs/booking/data-access/src/lib/example-service.ts',
+      'libs/booking/server/data-access/src/lib/example-service.ts',
       `${source}\nexport function run(): void {}`,
     );
 
@@ -24,12 +24,12 @@ describe('type-placement lint policy', () => {
   it.each([
     [
       'types directory',
-      'libs/booking/data-access/src/lib/types/example.types.ts',
+      'libs/booking/server/data-access/src/lib/types/example.types.ts',
       'export interface ExampleOptions { readonly enabled: boolean }',
     ],
     [
       'types suffix',
-      'libs/booking/data-access/src/lib/example.types.ts',
+      'libs/booking/server/data-access/src/lib/example.types.ts',
       'export type ExampleResult = { readonly status: string }',
     ],
     [
@@ -49,7 +49,7 @@ describe('type-placement lint policy', () => {
   it('accepts type-only imports in implementation files', async () => {
     await expect(
       lintVirtual(
-        'libs/booking/data-access/src/lib/example-service.ts',
+        'libs/booking/server/data-access/src/lib/example-service.ts',
         "import type { ExampleOptions } from './types/example.types';\nexport function run(options: ExampleOptions): boolean { return options.enabled; }",
       ),
     ).resolves.toEqual([]);

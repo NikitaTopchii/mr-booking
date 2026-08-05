@@ -20,72 +20,84 @@
     "paths": {
       "@mr-booking/shared-config": ["./libs/shared/config/src/index.ts"],
       "@mr-booking/shared-config/node": ["./libs/shared/config/src/node.ts"],
-      "@mr-booking/shared-date-time": ["./libs/shared/date-time/src/index.ts"],
-      "@mr-booking/shared-database": ["./libs/shared/database/src/index.ts"],
-      "@mr-booking/shared-ui": ["./libs/shared/ui/src/index.ts"],
-      "@mr-booking/shared-i18n": ["./libs/shared/i18n/src/index.ts"],
-      "@mr-booking/shared-feature-error": [
-        "./libs/shared/feature-error/src/index.ts"
+      "@mr-booking/shared-date-time": [
+        "./libs/shared/agnostic/date-time/src/index.ts"
       ],
-      "@mr-booking/shared-i18n/server": ["./libs/shared/i18n/src/server.ts"],
+      "@mr-booking/shared-database": [
+        "./libs/shared/server/database/src/index.ts"
+      ],
+      "@mr-booking/shared-ui": ["./libs/shared/web/ui/src/index.ts"],
+      "@mr-booking/shared-i18n": ["./libs/shared/web/i18n/src/index.ts"],
+      "@mr-booking/shared-error-handling": [
+        "./libs/shared/agnostic/error-handling/src/index.ts"
+      ],
+      "@mr-booking/shared-i18n/server": [
+        "./libs/shared/web/i18n/src/server.ts"
+      ],
       "@mr-booking/booking-domain": ["./libs/booking/domain/src/index.ts"],
       "@mr-booking/booking-infrastructure": [
-        "./libs/booking/infrastructure/src/index.ts"
+        "./libs/booking/server/infrastructure/src/index.ts"
       ],
       "@mr-booking/booking-infrastructure/schema": [
-        "./libs/booking/infrastructure/src/schema.ts"
+        "./libs/booking/server/infrastructure/src/schema.ts"
       ],
       "@mr-booking/booking-data-access": [
-        "./libs/booking/data-access/src/index.ts"
+        "./libs/booking/server/data-access/src/index.ts"
       ],
       "@mr-booking/booking-data-access/seed": [
-        "./libs/booking/data-access/src/seed.ts"
+        "./libs/booking/server/data-access/src/seed.ts"
       ],
       "@mr-booking/booking-application": [
-        "./libs/booking/application/src/index.ts"
+        "./libs/booking/server/application/src/index.ts"
       ],
       "@mr-booking/booking-data-access-web": [
-        "./libs/booking/data-access-web/src/index.ts"
+        "./libs/booking/web/data-access/src/index.ts"
       ],
-      "@mr-booking/booking-ui": ["./libs/booking/ui/src/index.ts"],
+      "@mr-booking/booking-ui": ["./libs/booking/web/ui/src/index.ts"],
       "@mr-booking/booking-feature-schedule": [
-        "./libs/booking/features/schedule/src/index.ts"
+        "./libs/booking/web/features/schedule/src/index.ts"
       ],
       "@mr-booking/booking-feature-my-bookings": [
-        "./libs/booking/features/my-bookings/src/index.ts"
+        "./libs/booking/web/features/my-bookings/src/index.ts"
       ],
       "@mr-booking/rooms-data-access": [
-        "./libs/rooms/data-access/src/index.ts"
+        "./libs/rooms/server/data-access/src/index.ts"
       ],
       "@mr-booking/rooms-domain": ["./libs/rooms/domain/src/index.ts"],
       "@mr-booking/rooms-infrastructure": [
-        "./libs/rooms/infrastructure/src/index.ts"
+        "./libs/rooms/server/infrastructure/src/index.ts"
       ],
       "@mr-booking/rooms-infrastructure/schema": [
-        "./libs/rooms/infrastructure/src/schema.ts"
+        "./libs/rooms/server/infrastructure/src/schema.ts"
       ],
       "@mr-booking/auth-domain": ["./libs/auth/domain/src/index.ts"],
-      "@mr-booking/auth-data-access": ["./libs/auth/data-access/src/index.ts"],
+      "@mr-booking/auth-data-access": [
+        "./libs/auth/server/data-access/src/index.ts"
+      ],
       "@mr-booking/auth-infrastructure": [
-        "./libs/auth/infrastructure/src/index.ts"
+        "./libs/auth/server/infrastructure/src/index.ts"
       ],
       "@mr-booking/auth-infrastructure/schema": [
-        "./libs/auth/infrastructure/src/schema.ts"
+        "./libs/auth/server/infrastructure/src/schema.ts"
       ],
       "@mr-booking/auth-data-access-web": [
-        "./libs/auth/data-access-web/src/index.ts"
+        "./libs/auth/web/data-access/src/index.ts"
       ],
       "@mr-booking/auth-data-access-web/client": [
-        "./libs/auth/data-access-web/src/client.ts"
+        "./libs/auth/web/data-access/src/client.ts"
       ],
       "@mr-booking/auth-data-access-web/server": [
-        "./libs/auth/data-access-web/src/server.ts"
+        "./libs/auth/web/data-access/src/server.ts"
       ],
-      "@mr-booking/auth-application": ["./libs/auth/application/src/index.ts"],
-      "@mr-booking/auth-ui": ["./libs/auth/ui/src/index.ts"],
-      "@mr-booking/auth-feature-web": ["./libs/auth/feature-web/src/index.ts"],
+      "@mr-booking/auth-application": [
+        "./libs/auth/server/application/src/index.ts"
+      ],
+      "@mr-booking/auth-ui": ["./libs/auth/web/ui/src/index.ts"],
+      "@mr-booking/auth-feature-access": [
+        "./libs/auth/web/features/access/src/index.ts"
+      ],
       "@mr-booking/auth-feature-email-verification": [
-        "./libs/auth/feature-email-verification/src/index.ts"
+        "./libs/auth/web/features/email-verification/src/index.ts"
       ]
     }
   }

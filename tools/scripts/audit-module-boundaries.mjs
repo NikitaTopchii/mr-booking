@@ -147,7 +147,7 @@ const crossScopeAllowlist = new Map([
       'auth-data-access-web',
       'auth-domain',
       'auth-feature-email-verification',
-      'auth-feature-web',
+      'auth-feature-access',
       'auth-ui',
       'booking-feature-my-bookings',
       'booking-feature-schedule',
@@ -181,6 +181,18 @@ const crossScopeAllowlist = new Map([
     'booking-infrastructure',
     new Set(['auth-infrastructure', 'rooms-infrastructure']),
   ],
+]);
+const groupingRoots = new Set([
+  'libs/auth/server',
+  'libs/auth/web',
+  'libs/auth/web/features',
+  'libs/booking/server',
+  'libs/booking/web',
+  'libs/booking/web/features',
+  'libs/rooms/server',
+  'libs/shared/agnostic',
+  'libs/shared/server',
+  'libs/shared/web',
 ]);
 
 function findRepositoryRoot(startDirectory) {
@@ -229,6 +241,44 @@ function listSourceFiles(directory) {
 
 function projectTag(project, group) {
   return project.tags.find((tag) => tag.startsWith(`${group}:`));
+}
+
+function layoutExpectation(project) {
+  const scope = projectTag(project, 'scope')?.replace('scope:', '');
+  const platform = projectTag(project, 'platform')?.replace('platform:', '');
+  const type = projectTag(project, 'type')?.replace('type:', '');
+  if (!['auth', 'booking', 'rooms', 'shared'].includes(scope)) return null;
+  if (scope === 'shared' && project.name === 'shared-config') {
+    return {
+      expectedRoot: 'libs/shared/config',
+      reason: 'the approved mixed-entrypoint exception',
+    };
+  }
+  if (scope !== 'shared' && type === 'domain' && platform === 'agnostic') {
+    return { expectedRoot: `libs/${scope}/domain`, reason: 'the domain root' };
+  }
+  if (scope === 'shared') {
+    return {
+      expectedRoot: `libs/shared/${platform}/`,
+      reason: `the shared ${platform} grouping`,
+    };
+  }
+  if (type === 'feature' && platform === 'web') {
+    return {
+      expectedRoot: `libs/${scope}/web/features/`,
+      reason: 'the web feature grouping',
+    };
+  }
+  return {
+    expectedRoot: `libs/${scope}/${platform}/`,
+    reason: `the ${platform} grouping`,
+  };
+}
+
+function rootMatchesExpectation(root, expectedRoot) {
+  return expectedRoot.endsWith('/')
+    ? root.startsWith(expectedRoot)
+    : root === expectedRoot;
 }
 
 function isTestFile(path) {
@@ -397,6 +447,62 @@ for (const project of projects) {
     if (tags.length !== 1 || !vocabulary.has(tags[0])) {
       errors.push(
         `${relative(repositoryRoot, project.projectPath)} must have exactly one approved ${group} tag; found ${tags.join(', ') || 'none'}.`,
+      );
+    }
+  }
+}
+
+const projectRoots = new Map();
+const sourceRoots = new Map();
+const packageNames = new Map();
+for (const project of projects) {
+  const root = relative(repositoryRoot, project.root);
+  const sourceRoot = relative(repositoryRoot, project.sourcePath);
+  const expectation = layoutExpectation(project);
+  if (expectation && !rootMatchesExpectation(root, expectation.expectedRoot)) {
+    errors.push(
+      `${project.name} at ${root} with tags ${project.tags.join(', ')} must live under ${expectation.expectedRoot} (${expectation.reason}).`,
+    );
+  }
+  if (expectation && sourceRoot !== `${root}/src`) {
+    errors.push(
+      `${project.name} has stale sourceRoot ${sourceRoot}; expected ${root}/src for its current root.`,
+    );
+  }
+  if (groupingRoots.has(root)) {
+    errors.push(
+      `${project.name} uses grouping directory ${root} as an Nx project root; grouping directories must not be projects.`,
+    );
+  }
+  if (projectRoots.has(root)) {
+    errors.push(
+      `${project.name} and ${projectRoots.get(root)} share project root ${root}.`,
+    );
+  }
+  projectRoots.set(root, project.name);
+  if (sourceRoots.has(sourceRoot)) {
+    errors.push(
+      `${project.name} and ${sourceRoots.get(sourceRoot)} share sourceRoot ${sourceRoot}.`,
+    );
+  }
+  sourceRoots.set(sourceRoot, project.name);
+  const packagePath = join(project.root, 'package.json');
+  if (existsSync(packagePath)) {
+    const packageName = JSON.parse(readFileSync(packagePath, 'utf8')).name;
+    if (packageNames.has(packageName)) {
+      errors.push(
+        `${project.name} and ${packageNames.get(packageName)} share package alias ${packageName}.`,
+      );
+    }
+    packageNames.set(packageName, project.name);
+  }
+}
+
+for (const [root, projectName] of projectRoots) {
+  for (const [candidateRoot, candidateName] of projectRoots) {
+    if (root !== candidateRoot && root.startsWith(`${candidateRoot}/`)) {
+      errors.push(
+        `${projectName} root ${root} is nested inside ${candidateName} root ${candidateRoot}.`,
       );
     }
   }

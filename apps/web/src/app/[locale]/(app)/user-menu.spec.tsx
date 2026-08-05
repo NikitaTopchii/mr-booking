@@ -1,11 +1,11 @@
 /** @jest-environment jsdom */
 
-import { useLogout } from '@mr-booking/auth-feature-web';
+import { useLogout } from '@mr-booking/auth-feature-access';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { UserMenu } from './user-menu';
 
-jest.mock('@mr-booking/auth-feature-web', () => ({
+jest.mock('@mr-booking/auth-feature-access', () => ({
   useLogout: jest.fn(),
 }));
 jest.mock('next/navigation', () => ({

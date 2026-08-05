@@ -58,4 +58,4 @@ interactive child; do not add a global client dictionary provider.
 Domain and API validation contracts use stable error codes. Client Components
 keep codes in state and translate them at render time; they MUST NOT translate
 backend prose or contain reusable hardcoded user-facing strings. Add future
-translations to both dictionaries under `libs/shared/i18n`.
+translations to both dictionaries under `libs/shared/web/i18n`.

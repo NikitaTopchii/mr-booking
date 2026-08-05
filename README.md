@@ -180,7 +180,7 @@ known records.
   default. Auth pages and the protected layout redirect on the server based on
   the NestJS API result.
 
-Authentication dictionaries live in `libs/shared/i18n`. They are typed,
+Authentication dictionaries live in `libs/shared/web/i18n`. They are typed,
 dynamically imported by Server Components, and never loaded in Client
 Components. API validation returns stable field codes; the active dictionary
 provides user-facing text.
@@ -411,36 +411,45 @@ Deferred to later bonus phases:
 
 ## Workspace projects
 
-| Project                           | Location                               | Nx tags                                             |
-| --------------------------------- | -------------------------------------- | --------------------------------------------------- |
-| `web`                             | `apps/web`                             | `scope:app,type:app,platform:web`                   |
-| `api`                             | `apps/api`                             | `scope:app,type:app,platform:server`                |
-| `workspace-tooling`               | `tools`                                | `scope:workspace,type:tooling,platform:server`      |
-| `shared-config`                   | `libs/shared/config`                   | `scope:shared,type:util,platform:agnostic`          |
-| `shared-database`                 | `libs/shared/database`                 | `scope:shared,type:infrastructure,platform:server`  |
-| `shared-date-time`                | `libs/shared/date-time`                | `scope:shared,type:util,platform:agnostic`          |
-| `shared-feature-error`            | `libs/shared/feature-error`            | `scope:shared,type:util,platform:agnostic`          |
-| `shared-i18n`                     | `libs/shared/i18n`                     | `scope:shared,type:util,platform:web`               |
-| `shared-ui`                       | `libs/shared/ui`                       | `scope:shared,type:ui,platform:web`                 |
-| `booking-domain`                  | `libs/booking/domain`                  | `scope:booking,type:domain,platform:agnostic`       |
-| `booking-infrastructure`          | `libs/booking/infrastructure`          | `scope:booking,type:infrastructure,platform:server` |
-| `booking-data-access`             | `libs/booking/data-access`             | `scope:booking,type:data-access,platform:server`    |
-| `booking-application`             | `libs/booking/application`             | `scope:booking,type:application,platform:server`    |
-| `booking-data-access-web`         | `libs/booking/data-access-web`         | `scope:booking,type:data-access,platform:web`       |
-| `booking-feature-schedule`        | `libs/booking/features/schedule`       | `scope:booking,type:feature,platform:web`           |
-| `booking-feature-my-bookings`     | `libs/booking/features/my-bookings`    | `scope:booking,type:feature,platform:web`           |
-| `booking-ui`                      | `libs/booking/ui`                      | `scope:booking,type:ui,platform:web`                |
-| `rooms-domain`                    | `libs/rooms/domain`                    | `scope:rooms,type:domain,platform:agnostic`         |
-| `rooms-infrastructure`            | `libs/rooms/infrastructure`            | `scope:rooms,type:infrastructure,platform:server`   |
-| `rooms-data-access`               | `libs/rooms/data-access`               | `scope:rooms,type:data-access,platform:server`      |
-| `auth-domain`                     | `libs/auth/domain`                     | `scope:auth,type:domain,platform:agnostic`          |
-| `auth-infrastructure`             | `libs/auth/infrastructure`             | `scope:auth,type:infrastructure,platform:server`    |
-| `auth-data-access`                | `libs/auth/data-access`                | `scope:auth,type:data-access,platform:server`       |
-| `auth-data-access-web`            | `libs/auth/data-access-web`            | `scope:auth,type:data-access,platform:web`          |
-| `auth-application`                | `libs/auth/application`                | `scope:auth,type:application,platform:server`       |
-| `auth-feature-web`                | `libs/auth/feature-web`                | `scope:auth,type:feature,platform:web`              |
-| `auth-feature-email-verification` | `libs/auth/feature-email-verification` | `scope:auth,type:feature,platform:web`              |
-| `auth-ui`                         | `libs/auth/ui`                         | `scope:auth,type:ui,platform:web`                   |
+Libraries are domain-first. Within `auth`, `booking`, and `rooms`, domains
+remain at the scope root, server projects live under `server/`, and web
+projects live under `web/` (with user workflows in `web/features/`). Shared
+libraries are grouped by runtime under `agnostic/`, `server/`, and `web/`.
+The one intentional exception is `libs/shared/config`: its root is agnostic
+and its protected `/node` entrypoint is server-only. These grouping folders
+are not Nx projects; tags and `yarn audit:boundaries` enforce the same layout.
+See [libs/README.md](libs/README.md) for the compact map.
+
+| Project                           | Location                                    | Nx tags                                             |
+| --------------------------------- | ------------------------------------------- | --------------------------------------------------- |
+| `web`                             | `apps/web`                                  | `scope:app,type:app,platform:web`                   |
+| `api`                             | `apps/api`                                  | `scope:app,type:app,platform:server`                |
+| `workspace-tooling`               | `tools`                                     | `scope:workspace,type:tooling,platform:server`      |
+| `shared-config`                   | `libs/shared/config`                        | `scope:shared,type:util,platform:agnostic`          |
+| `shared-database`                 | `libs/shared/server/database`               | `scope:shared,type:infrastructure,platform:server`  |
+| `shared-date-time`                | `libs/shared/agnostic/date-time`            | `scope:shared,type:util,platform:agnostic`          |
+| `shared-error-handling`           | `libs/shared/agnostic/error-handling`       | `scope:shared,type:util,platform:agnostic`          |
+| `shared-i18n`                     | `libs/shared/web/i18n`                      | `scope:shared,type:util,platform:web`               |
+| `shared-ui`                       | `libs/shared/web/ui`                        | `scope:shared,type:ui,platform:web`                 |
+| `booking-domain`                  | `libs/booking/domain`                       | `scope:booking,type:domain,platform:agnostic`       |
+| `booking-infrastructure`          | `libs/booking/server/infrastructure`        | `scope:booking,type:infrastructure,platform:server` |
+| `booking-data-access`             | `libs/booking/server/data-access`           | `scope:booking,type:data-access,platform:server`    |
+| `booking-application`             | `libs/booking/server/application`           | `scope:booking,type:application,platform:server`    |
+| `booking-data-access-web`         | `libs/booking/web/data-access`              | `scope:booking,type:data-access,platform:web`       |
+| `booking-feature-schedule`        | `libs/booking/web/features/schedule`        | `scope:booking,type:feature,platform:web`           |
+| `booking-feature-my-bookings`     | `libs/booking/web/features/my-bookings`     | `scope:booking,type:feature,platform:web`           |
+| `booking-ui`                      | `libs/booking/web/ui`                       | `scope:booking,type:ui,platform:web`                |
+| `rooms-domain`                    | `libs/rooms/domain`                         | `scope:rooms,type:domain,platform:agnostic`         |
+| `rooms-infrastructure`            | `libs/rooms/server/infrastructure`          | `scope:rooms,type:infrastructure,platform:server`   |
+| `rooms-data-access`               | `libs/rooms/server/data-access`             | `scope:rooms,type:data-access,platform:server`      |
+| `auth-domain`                     | `libs/auth/domain`                          | `scope:auth,type:domain,platform:agnostic`          |
+| `auth-infrastructure`             | `libs/auth/server/infrastructure`           | `scope:auth,type:infrastructure,platform:server`    |
+| `auth-data-access`                | `libs/auth/server/data-access`              | `scope:auth,type:data-access,platform:server`       |
+| `auth-data-access-web`            | `libs/auth/web/data-access`                 | `scope:auth,type:data-access,platform:web`          |
+| `auth-application`                | `libs/auth/server/application`              | `scope:auth,type:application,platform:server`       |
+| `auth-feature-access`             | `libs/auth/web/features/access`             | `scope:auth,type:feature,platform:web`              |
+| `auth-feature-email-verification` | `libs/auth/web/features/email-verification` | `scope:auth,type:feature,platform:web`              |
+| `auth-ui`                         | `libs/auth/web/ui`                          | `scope:auth,type:ui,platform:web`                   |
 
 Persistence schemas are scope-owned and available only through explicit
 infrastructure entry points:
@@ -454,9 +463,9 @@ data-access roots do not expose schema or seed internals.
 
 Platform tags are enforced as `web -> web/agnostic`,
 `server -> server/agnostic`, and `agnostic -> agnostic`. Run
-`yarn audit:boundaries` to validate project tags, the Nx graph, exact
-cross-scope exceptions, and protected public entrypoints. `verify:commit`
-runs this audit before the full quality suite.
+`yarn audit:boundaries` to validate project tags, physical roots, the Nx
+graph, exact cross-scope exceptions, and protected public entrypoints.
+`verify:commit` runs this audit before the full quality suite.
 
 ## Responsive schedule and timezone responsibilities
 

@@ -1,0 +1,35 @@
+{
+  "name": "auth-feature-email-verification",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/web/features/email-verification/src",
+  "projectType": "library",
+  "tags": ["scope:auth", "type:feature", "platform:web"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/auth/web/features/email-verification",
+        "main": "libs/auth/web/features/email-verification/src/index.ts",
+        "tsConfig": "libs/auth/web/features/email-verification/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/auth/web/features/email-verification/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/libs/auth/web/features/email-verification"
+      ],
+      "options": {
+        "jestConfig": "libs/auth/web/features/email-verification/jest.config.cts",
+        "passWithNoTests": false
+      }
+    }
+  }
+}

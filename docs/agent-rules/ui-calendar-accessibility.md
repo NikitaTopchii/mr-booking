@@ -6,7 +6,7 @@ one shadcn preset, preferably the chosen Luma-style foundation, before feature
 development. Do not install MUI, Chakra, Mantine, Ant Design, or another
 complete UI system.
 
-Generic primitives belong in `libs/shared/ui`; domain components stay in
+Generic primitives belong in `libs/shared/web/ui`; domain components stay in
 their owning domain. `Button` and `Dialog` are generic; `BookingCard`,
 `WeeklyScheduleGrid`, and `RoomCapacityFilter` are domain UI.
 

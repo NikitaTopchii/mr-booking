@@ -1,4 +1,4 @@
-import { AuthForm } from '@mr-booking/auth-feature-web';
+import { AuthForm } from '@mr-booking/auth-feature-access';
 import {
   AuthCard,
   AuthLanguageSwitcher,

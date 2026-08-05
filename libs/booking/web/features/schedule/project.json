@@ -1,0 +1,25 @@
+{
+  "name": "booking-feature-schedule",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/booking/web/features/schedule/src",
+  "projectType": "library",
+  "tags": ["scope:booking", "type:feature", "platform:web"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/booking/web/features/schedule/tsconfig.lib.json --noEmit --rootDir ."
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/booking/web/features/schedule",
+        "main": "libs/booking/web/features/schedule/src/index.ts",
+        "tsConfig": "libs/booking/web/features/schedule/tsconfig.lib.json",
+        "assets": []
+      }
+    }
+  }
+}

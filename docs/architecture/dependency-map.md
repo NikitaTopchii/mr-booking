@@ -35,6 +35,16 @@ agnostic -> agnostic
 Each real Nx project uses applicable `scope:*`, `type:*`, and `platform:*`
 tags defined in `docs/agent-rules/nx-architecture.md`.
 
+## Physical layout
+
+The library tree is domain-first. `auth`, `booking`, and `rooms` keep domain
+at `<scope>/domain`, place server code under `<scope>/server`, and place web
+code under `<scope>/web`; web workflows are in `<scope>/web/features`.
+`shared` uses `agnostic`, `server`, and `web` runtime groupings. These folders
+are not Nx projects. `shared/config` is the documented mixed-entrypoint
+exception: its root is agnostic and `/node` is server-only. ADR 0014 records
+the layout, while the boundary audit enforces its agreement with tags.
+
 ## Boundary intent
 
 - `domain` is framework-independent and depends only on domain/shared
@@ -72,7 +82,7 @@ Authentication makes the platform split explicit:
 ````text
 API: auth-application -> auth-domain
      apps/api -> auth-application + auth-data-access
-Web: auth-feature-web -> auth-ui / auth-data-access-web -> auth-domain
+Web: auth-feature-access -> auth-ui / auth-data-access-web -> auth-domain
                      -> shared-ui
 App routes -> shared-i18n/server
 
@@ -82,7 +92,7 @@ Email verification is a separate web feature boundary:
 auth-feature-email-verification
   -> auth-data-access-web/client
   -> auth-domain (safe user contracts)
-  -> shared-feature-error / shared-i18n / shared-ui
+  -> shared-error-handling / shared-i18n / shared-ui
 ````
 
 The booking write foundation adds:
