@@ -32,7 +32,9 @@
       "@mr-booking/booking-data-access": [
         "./libs/booking/data-access/src/index.ts"
       ],
-      "@mr-booking/booking-feature": ["./libs/booking/feature/src/index.ts"],
+      "@mr-booking/booking-application": [
+        "./libs/booking/application/src/index.ts"
+      ],
       "@mr-booking/booking-data-access-web": [
         "./libs/booking/data-access-web/src/index.ts"
       ],
@@ -64,7 +66,7 @@
       "@mr-booking/auth-data-access-web/server": [
         "./libs/auth/data-access-web/src/server.ts"
       ],
-      "@mr-booking/auth-feature": ["./libs/auth/feature/src/index.ts"],
+      "@mr-booking/auth-application": ["./libs/auth/application/src/index.ts"],
       "@mr-booking/auth-ui": ["./libs/auth/ui/src/index.ts"],
       "@mr-booking/auth-feature-web": ["./libs/auth/feature-web/src/index.ts"],
       "@mr-booking/auth-feature-email-verification": [

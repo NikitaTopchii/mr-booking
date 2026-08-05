@@ -9,8 +9,8 @@ live in an owning library.
 
 Libraries MUST be feature-first and domain-scoped. Expected scopes are
 `auth`, `rooms`, `booking`, `notifications`, `pwa`, and `shared`. Expected
-types are `domain`, `feature`, `ui`, `data-access`, `infrastructure`, and
-`util`.
+types are `application`, `domain`, `feature`, `ui`, `data-access`,
+`infrastructure`, and `util`.
 
 A feature is an independently meaningful user or business capability, not a
 file-size category. Examples include register, log in, view weekly schedule,
@@ -26,7 +26,7 @@ Every project MUST carry one relevant tag from each applicable group:
 
 - scope: `scope:shared`, `scope:auth`, `scope:rooms`, `scope:booking`,
   `scope:notifications`, or `scope:pwa`;
-- type: `type:app`, `type:domain`, `type:feature`, `type:ui`,
+- type: `type:app`, `type:application`, `type:domain`, `type:feature`, `type:ui`,
   `type:data-access`, `type:infrastructure`, or `type:util`;
 - platform: `platform:web`, `platform:api`, or `platform:shared`.
 
@@ -34,8 +34,13 @@ Every project MUST carry one relevant tag from each applicable group:
 approximately:
 
 ```text
-app -> feature -> ui / data-access -> domain -> shared
+app -> application / feature -> ui / data-access -> domain -> shared
 ```
+
+Backend application libraries own CQRS commands, queries, handlers, and
+use-case orchestration. They depend on inward-defined domain ports and MUST
+NOT import data-access or infrastructure projects. Concrete Nest provider
+composition belongs in `apps/api`.
 
 Infrastructure implements inward-defined ports. Domain libraries MUST NOT
 depend on UI, features, data access, infrastructure, Next.js, NestJS, Drizzle,

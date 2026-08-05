@@ -1,16 +1,13 @@
 {
-  "name": "@mr-booking/booking-feature",
+  "name": "@mr-booking/booking-application",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@mr-booking/auth-data-access": "0.0.1",
     "@mr-booking/auth-domain": "0.0.1",
-    "@mr-booking/booking-data-access": "0.0.1",
     "@mr-booking/booking-domain": "0.0.1",
-    "@mr-booking/rooms-data-access": "0.0.1",
     "@mr-booking/rooms-domain": "0.0.1",
     "@nestjs/common": "11.1.28",
     "@nestjs/cqrs": "11.0.3",

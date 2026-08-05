@@ -420,7 +420,7 @@ Deferred to later bonus phases:
 | `shared-ui`                   | `libs/shared/ui`                    | `scope:shared,type:ui,platform:web`             |
 | `booking-domain`              | `libs/booking/domain`               | `scope:booking,type:domain,platform:shared`     |
 | `booking-data-access`         | `libs/booking/data-access`          | `scope:booking,type:data-access,platform:api`   |
-| `booking-feature`             | `libs/booking/feature`              | `scope:booking,type:feature,platform:api`       |
+| `booking-application`         | `libs/booking/application`          | `scope:booking,type:application,platform:api`   |
 | `booking-data-access-web`     | `libs/booking/data-access-web`      | `scope:booking,type:data-access,platform:web`   |
 | `booking-feature-schedule`    | `libs/booking/features/schedule`    | `scope:booking,type:feature,platform:web`       |
 | `booking-feature-my-bookings` | `libs/booking/features/my-bookings` | `scope:booking,type:feature,platform:web`       |
@@ -432,7 +432,7 @@ Deferred to later bonus phases:
 | `auth-infrastructure`         | `libs/auth/infrastructure`          | `scope:auth,type:infrastructure,platform:api`   |
 | `auth-data-access`            | `libs/auth/data-access`             | `scope:auth,type:data-access,platform:api`      |
 | `auth-data-access-web`        | `libs/auth/data-access-web`         | `scope:auth,type:data-access,platform:web`      |
-| `auth-feature`                | `libs/auth/feature`                 | `scope:auth,type:feature,platform:api`          |
+| `auth-application`            | `libs/auth/application`             | `scope:auth,type:application,platform:api`      |
 | `auth-feature-web`            | `libs/auth/feature-web`             | `scope:auth,type:feature,platform:web`          |
 | `auth-ui`                     | `libs/auth/ui`                      | `scope:auth,type:ui,platform:web`               |
 | `workspace-tooling`           | `tools`                             | `scope:shared,type:app,platform:api`            |

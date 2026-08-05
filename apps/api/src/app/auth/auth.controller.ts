@@ -23,7 +23,7 @@ import {
   RegisterUserCommand,
   RequestEmailVerificationCommand,
   VerifyEmailCommand,
-} from '@mr-booking/auth-feature';
+} from '@mr-booking/auth-application';
 import type { Request, Response } from 'express';
 import { AuthExceptionFilter } from './auth-exception.filter';
 import { CurrentUser } from './auth-request';

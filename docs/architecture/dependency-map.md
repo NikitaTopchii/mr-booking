@@ -4,7 +4,7 @@ Nx projects use feature-first ownership and the enforced direction:
 
 ```text
 app
-  -> feature
+  -> application / feature
       -> ui / data-access
           -> domain
               -> shared
@@ -33,7 +33,9 @@ tags defined in `docs/agent-rules/nx-architecture.md`.
 
 - `domain` is framework-independent and depends only on domain/shared
   utilities.
-- `feature` coordinates a user or application capability.
+- `application` owns backend commands, queries, handlers, and use-case
+  orchestration over domain ports.
+- `feature` coordinates a user-facing or browser business capability.
 - `ui` renders reusable presentation for its owning scope.
 - `data-access` handles API-facing client state or application persistence
   ports, depending on platform.
@@ -51,7 +53,8 @@ layers but do not depend on each other.
 Authentication makes the platform split explicit:
 
 ````text
-API: auth-feature -> auth-data-access -> auth-domain
+API: auth-application -> auth-domain
+     apps/api -> auth-application + auth-data-access
 Web: auth-feature-web -> auth-ui / auth-data-access-web -> auth-domain
                      -> shared-ui
 App routes -> shared-i18n/server
@@ -65,19 +68,17 @@ auth-feature-email-verification
   -> shared-feature-error / shared-i18n / shared-ui
 ````
 
-````
-
 The booking write foundation adds:
 
 ```text
-booking-feature
-  -> booking-domain
+apps/api
+  -> booking-application -> booking-domain
   -> booking-data-access -> booking-domain
                          -> auth-infrastructure / rooms-infrastructure
                          -> shared-database
-  -> rooms-domain / rooms-data-access
-  -> auth-domain / auth-data-access for composition-time Clock/UUID aliases
-````
+  -> rooms-data-access -> rooms-domain
+  -> auth-data-access -> auth-domain
+```
 
 `auth-infrastructure` and `rooms-infrastructure` own only their feature's
 Drizzle table declarations. This lets booking foreign keys reuse authoritative

@@ -28,7 +28,7 @@ describe('Nx module-boundary configuration', () => {
       'libs/shared/ui/project.json',
       'libs/booking/domain/project.json',
       'libs/booking/data-access/project.json',
-      'libs/booking/feature/project.json',
+      'libs/booking/application/project.json',
       'libs/rooms/domain/project.json',
       'libs/rooms/infrastructure/project.json',
       'libs/rooms/data-access/project.json',
@@ -36,7 +36,7 @@ describe('Nx module-boundary configuration', () => {
       'libs/auth/infrastructure/project.json',
       'libs/auth/data-access/project.json',
       'libs/auth/data-access-web/project.json',
-      'libs/auth/feature/project.json',
+      'libs/auth/application/project.json',
       'libs/auth/feature-web/project.json',
       'libs/auth/feature-email-verification/project.json',
       'libs/auth/ui/project.json',
@@ -50,6 +50,32 @@ describe('Nx module-boundary configuration', () => {
         true,
       );
       expect(project.tags.some((tag) => tag.startsWith('scope:'))).toBe(true);
+    }
+  });
+
+  it('keeps backend application libraries inward-facing', () => {
+    const applicationProjects = [
+      {
+        projectFile: 'libs/auth/application/project.json',
+        sourceDirectory: 'libs/auth/application/src',
+      },
+      {
+        projectFile: 'libs/booking/application/project.json',
+        sourceDirectory: 'libs/booking/application/src',
+      },
+    ];
+
+    for (const { projectFile, sourceDirectory } of applicationProjects) {
+      const project = readProject(projectFile);
+      expect(project.tags).toContain('type:application');
+
+      const source = listSourceFiles(join(workspaceRoot, sourceDirectory))
+        .map((file) => readFileSync(file, 'utf8'))
+        .join('\n');
+
+      expect(source).not.toMatch(
+        /@mr-booking\/(?:auth-data-access|booking-data-access|rooms-data-access|auth-infrastructure|rooms-infrastructure|shared-database|shared-config)/,
+      );
     }
   });
 

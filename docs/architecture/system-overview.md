@@ -36,12 +36,18 @@ The hackathon deployment uses one API process as the only SQLite writer. Web
 and API should preferably share one public origin. The frontend never mounts
 or opens the database volume.
 
-Phase 3A realizes the booking write side as three Nx boundaries:
+Phase 3A realizes the booking write side as application, domain, and
+data-access Nx boundaries:
 
 ```text
-booking-feature -> booking-domain <- booking-data-access
+apps/api -> booking-application -> booking-domain <- booking-data-access
                                   -> SQLite bookings + booking_slots
 ```
+
+Backend application libraries contain CQRS handlers and use-case
+orchestration. `apps/api` owns Nest provider composition, binding concrete
+data-access adapters to application/domain ports. Application libraries do
+not import data-access or infrastructure projects.
 
 `rooms-domain` exposes only the room-existence port. Feature-owned
 `auth-infrastructure` and `rooms-infrastructure` expose Drizzle table

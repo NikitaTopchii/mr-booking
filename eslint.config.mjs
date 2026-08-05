@@ -52,12 +52,17 @@ export default [
               sourceTag: 'type:app',
               onlyDependOnLibsWithTags: [
                 'type:feature',
+                'type:application',
                 'type:ui',
                 'type:data-access',
                 'type:infrastructure',
                 'type:domain',
                 'type:util',
               ],
+            },
+            {
+              sourceTag: 'type:application',
+              onlyDependOnLibsWithTags: ['type:domain', 'type:util'],
             },
             {
               sourceTag: 'type:feature',

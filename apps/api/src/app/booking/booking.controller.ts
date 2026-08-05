@@ -27,7 +27,7 @@ import {
   GetMyUpcomingBookingsQuery,
   GetRoomsQuery,
   GetRoomScheduleQuery,
-} from '@mr-booking/booking-feature';
+} from '@mr-booking/booking-application';
 import type { Room } from '@mr-booking/rooms-domain';
 import { CurrentUser } from '../auth/auth-request';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
