@@ -38,6 +38,9 @@ export function CreateBookingDialog({
     [2, messages.duration.oneHour],
     [3, messages.duration.ninetyMinutes],
     [4, messages.duration.twoHours],
+    [5, messages.duration.twoAndHalfHours],
+    [7, messages.duration.threeAndHalfHours],
+    [8, messages.duration.fourHours],
   ] as const;
   return (
     <Dialog

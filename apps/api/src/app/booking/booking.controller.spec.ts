@@ -183,6 +183,20 @@ describe('rooms and bookings API', () => {
         'room-orbit',
         'room-kyiv',
       ]);
+      expect(
+        parsed.rooms.map(({ id, floor, capacity }) => ({
+          id,
+          floor,
+          capacity,
+        })),
+      ).toEqual([
+        { id: 'room-aquarium', floor: 1, capacity: 4 },
+        { id: 'room-gagarin', floor: 2, capacity: 8 },
+        { id: 'room-mars', floor: 2, capacity: 6 },
+        { id: 'room-dnipro', floor: 3, capacity: 12 },
+        { id: 'room-orbit', floor: 3, capacity: 10 },
+        { id: 'room-kyiv', floor: 4, capacity: 16 },
+      ]);
       expect(JSON.stringify(parsed)).not.toMatch(/created|metadata/iu);
     });
   });
@@ -401,6 +415,24 @@ describe('rooms and bookings API', () => {
     });
 
     it.each([
+      ['four-hour booking', createStart + 5 * day, 4 * hour],
+      ['15:00–19:00 booking', createStart + 6 * day + 6 * hour, 4 * hour],
+    ])('accepts a %s through the API', async (_name, startsAtUtc, duration) => {
+      const response = await alice
+        .post('/api/bookings')
+        .send({
+          ...validBookingInput(startsAtUtc, _name),
+          endsAtUtc: iso(startsAtUtc + duration),
+        })
+        .expect(201);
+
+      expect(response.body.booking).toMatchObject({
+        startsAtUtc: iso(startsAtUtc),
+        endsAtUtc: iso(startsAtUtc + duration),
+      });
+    });
+
+    it.each([
       [
         'timezone-less strings',
         {
@@ -477,6 +509,14 @@ describe('rooms and bookings API', () => {
         'BOOKING_INVALID_DURATION',
       ],
       [
+        'over-four-hour duration',
+        {
+          ...validBookingInput(createStart + 3 * day),
+          endsAtUtc: iso(createStart + 3 * day + 4 * hour + halfHour),
+        },
+        'BOOKING_INVALID_DURATION',
+      ],
+      [
         'slot alignment',
         {
           ...validBookingInput(createStart + 2 * day),
@@ -491,6 +531,15 @@ describe('rooms and bookings API', () => {
           ...validBookingInput(createStart + 2 * day),
           startsAtUtc: iso(createStart + 2 * day - halfHour),
           endsAtUtc: iso(createStart + 2 * day),
+        },
+        'BOOKING_OUTSIDE_OFFICE_HOURS',
+      ],
+      [
+        'after office close',
+        {
+          ...validBookingInput(createStart + 4 * day),
+          startsAtUtc: iso(createStart + 4 * day + 6 * hour + halfHour),
+          endsAtUtc: iso(createStart + 4 * day + 10 * hour + halfHour),
         },
         'BOOKING_OUTSIDE_OFFICE_HOURS',
       ],

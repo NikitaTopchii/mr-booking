@@ -184,6 +184,9 @@ export const dictionary = {
       oneHour: '1 година',
       ninetyMinutes: '1,5 години',
       twoHours: '2 години',
+      twoAndHalfHours: '2,5 години',
+      threeAndHalfHours: '3,5 години',
+      fourHours: '4 години',
       custom: 'Інший час завершення',
     },
     accessibility: {
@@ -201,7 +204,7 @@ export const dictionary = {
         conflict: 'Цей час щойно забронював хтось інший. Оберіть інший слот.',
         startNotInFuture: 'Бронювання має починатися в майбутньому.',
         outsideHours: 'Оберіть час у межах робочих годин.',
-        invalidDuration: 'Оберіть коректну тривалість бронювання.',
+        invalidDuration: 'Оберіть тривалість від 30 хвилин до 4 годин включно.',
         invalidSlotAlignment: 'Оберіть час із кроком у 30 хвилин.',
         invalidTitle: 'Введіть назву зустрічі.',
         validation: 'Перевірте дані бронювання та спробуйте ще раз.',

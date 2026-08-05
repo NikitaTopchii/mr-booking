@@ -182,6 +182,9 @@ export const dictionary = {
       oneHour: '1 hour',
       ninetyMinutes: '1.5 hours',
       twoHours: '2 hours',
+      twoAndHalfHours: '2.5 hours',
+      threeAndHalfHours: '3.5 hours',
+      fourHours: '4 hours',
       custom: 'Other end time',
     },
     accessibility: {
@@ -199,7 +202,7 @@ export const dictionary = {
           'This time was just booked by someone else. Choose another slot.',
         startNotInFuture: 'Bookings must start in the future.',
         outsideHours: 'Choose a time within office hours.',
-        invalidDuration: 'Choose a valid booking duration.',
+        invalidDuration: 'Choose a duration from 30 minutes through 4 hours.',
         invalidSlotAlignment: 'Choose a time aligned to a 30-minute slot.',
         invalidTitle: 'Enter a meeting title.',
         validation: 'Check the booking details and try again.',

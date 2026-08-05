@@ -199,7 +199,8 @@ function RoomSelector({
         <SelectContent>
           {rooms.map((option) => (
             <SelectItem key={option.id} value={option.id}>
-              {option.name} · {option.capacity} {messages.roomDetailsLabel}
+              {option.name} · {messages.mobile.floor} {option.floor} ·{' '}
+              {option.capacity} {messages.mobile.capacity}
             </SelectItem>
           ))}
         </SelectContent>
@@ -208,11 +209,11 @@ function RoomSelector({
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <MapPin aria-hidden="true" className="size-3.5" />
-            {messages.roomDetailsLabel} {room.floor}
+            {messages.mobile.floor} {room.floor}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Users aria-hidden="true" className="size-3.5" />
-            {room.capacity}
+            {room.capacity} {messages.mobile.capacity}
           </span>
         </p>
       ) : null}

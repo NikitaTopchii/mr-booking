@@ -37,6 +37,14 @@ describe('SQLite foundation', () => {
       .get();
 
     expect(roomTable).toEqual({ name: 'rooms' });
+    expect(
+      connection.sqlite
+        .pragma('table_info(rooms)')
+        .map((column: { name: string }) => column.name),
+    ).toContain('floor');
+    expect(connection.sqlite.pragma('integrity_check')).toEqual([
+      { integrity_check: 'ok' },
+    ]);
   });
 
   it('applies committed migrations repeatedly without changing schema', () => {

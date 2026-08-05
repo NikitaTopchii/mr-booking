@@ -100,3 +100,62 @@ test('booking API uses ISO 8601 timestamps through the gateway', async ({
     code: 'VALIDATION_ERROR',
   });
 });
+
+test('booking API accepts four-hour and adjacent intervals but rejects 4.5 hours', async ({
+  request,
+}) => {
+  const loginResponse = await request.post('/api/auth/login', {
+    data: {
+      email: 'alice@example.com',
+      password: 'password123',
+    },
+  });
+  expect(loginResponse.status()).toBe(200);
+
+  const roomsResponse = await request.get('/api/rooms');
+  const rooms = (await roomsResponse.json()) as {
+    rooms: { id: string }[];
+  };
+  const roomId = rooms.rooms.at(-1)?.id;
+  if (!roomId) throw new Error('Expected a seeded room');
+
+  const startsAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+  startsAt.setUTCHours(6, 0, 0, 0);
+  const fourHourEnd = new Date(startsAt.getTime() + 4 * 60 * 60 * 1000);
+  const adjacentEnd = new Date(fourHourEnd.getTime() + 30 * 60 * 1000);
+
+  const fourHourResponse = await request.post('/api/bookings', {
+    data: {
+      roomId,
+      title: 'Four-hour API booking',
+      startsAtUtc: startsAt.toISOString(),
+      endsAtUtc: fourHourEnd.toISOString(),
+    },
+  });
+  expect(fourHourResponse.status()).toBe(201);
+
+  const adjacentResponse = await request.post('/api/bookings', {
+    data: {
+      roomId,
+      title: 'Adjacent API booking',
+      startsAtUtc: fourHourEnd.toISOString(),
+      endsAtUtc: adjacentEnd.toISOString(),
+    },
+  });
+  expect(adjacentResponse.status()).toBe(201);
+
+  const tooLongResponse = await request.post('/api/bookings', {
+    data: {
+      roomId,
+      title: 'Too long API booking',
+      startsAtUtc: startsAt.toISOString(),
+      endsAtUtc: new Date(
+        startsAt.getTime() + 4.5 * 60 * 60 * 1000,
+      ).toISOString(),
+    },
+  });
+  expect(tooLongResponse.status()).toBe(400);
+  await expect(tooLongResponse.json()).resolves.toEqual({
+    code: 'BOOKING_INVALID_DURATION',
+  });
+});

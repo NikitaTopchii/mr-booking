@@ -58,7 +58,7 @@ describe('booking interval', () => {
 
   it.each([
     [29 * 60 * 1000, '29 minutes'],
-    [4 * 60 * 60 * 1000 + BOOKING_SLOT_MILLISECONDS, 'over four hours'],
+    [4 * 60 * 60 * 1000 + BOOKING_SLOT_MILLISECONDS, '4.5 hours'],
     [45 * 60 * 1000, 'not divisible by 30 minutes'],
   ])('rejects an invalid duration: %s', (durationMilliseconds) => {
     const startsAtUtc = Date.UTC(2026, 0, 10, 7);
@@ -70,6 +70,55 @@ describe('booking interval', () => {
         nowUtc,
       ),
     ).toThrow(InvalidBookingDurationError);
+  });
+
+  it.each([
+    [1, '30 minutes'],
+    [4, '2 hours'],
+    [5, '2.5 hours'],
+    [7, '3.5 hours'],
+    [8, '4 hours'],
+  ])('accepts a valid %s duration', (slotCount) => {
+    const startsAtUtc = Date.UTC(2026, 0, 10, 7);
+
+    expect(() =>
+      validateBookingInterval(
+        startsAtUtc,
+        startsAtUtc + slotCount * BOOKING_SLOT_MILLISECONDS,
+        nowUtc,
+      ),
+    ).not.toThrow();
+  });
+
+  it.each([
+    [0, 'zero'],
+    [-BOOKING_SLOT_MILLISECONDS, 'negative'],
+  ])('rejects a %s duration as an invalid interval', (durationMilliseconds) => {
+    const startsAtUtc = Date.UTC(2026, 0, 10, 7);
+
+    expect(() =>
+      validateBookingInterval(
+        startsAtUtc,
+        startsAtUtc + durationMilliseconds,
+        nowUtc,
+      ),
+    ).toThrow(InvalidBookingIntervalError);
+  });
+
+  it.each([
+    [Date.UTC(2026, 0, 10, 7), Date.UTC(2026, 0, 10, 11), '09:00–13:00'],
+    [Date.UTC(2026, 0, 10, 12), Date.UTC(2026, 0, 10, 16), '15:00–19:00'],
+  ])('accepts valid four-hour office interval %s', (start, end) => {
+    expect(() => validateBookingInterval(start, end, nowUtc)).not.toThrow();
+  });
+
+  it.each([
+    [Date.UTC(2026, 0, 10, 6, 30), Date.UTC(2026, 0, 10, 10, 30)],
+    [Date.UTC(2026, 0, 10, 13, 30), Date.UTC(2026, 0, 10, 17, 30)],
+  ])('rejects a four-hour interval outside Kyiv office hours', (start, end) => {
+    expect(() => validateBookingInterval(start, end, nowUtc)).toThrow(
+      BookingOutsideOfficeHoursError,
+    );
   });
 
   it.each([BOOKING_SLOT_MILLISECONDS, 4 * 60 * 60 * 1000])(

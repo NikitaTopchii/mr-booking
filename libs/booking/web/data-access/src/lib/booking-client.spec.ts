@@ -114,6 +114,20 @@ describe('booking browser client', () => {
     ).rejects.toBeInstanceOf(BookingClientError);
   });
 
+  it('rejects room responses that omit the required floor', async () => {
+    jest.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          rooms: [{ id: 'room-1', name: 'Aquarium', capacity: 4 }],
+        }),
+      ),
+    );
+
+    await expect(listRooms()).rejects.toMatchObject({
+      code: 'INVALID_RESPONSE',
+    });
+  });
+
   it('normalizes API errors and cancellation', async () => {
     jest
       .mocked(fetch)

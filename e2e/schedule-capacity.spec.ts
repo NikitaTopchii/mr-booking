@@ -172,6 +172,9 @@ test.describe('room capacity filter', () => {
     await expect(
       page.getByRole('grid', { name: 'Тижневий розклад' }),
     ).toBeVisible();
+    await expect(
+      page.getByRole('status', { name: /Обрана кімната/u }),
+    ).toContainText('Поверх');
   });
 });
 

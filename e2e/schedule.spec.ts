@@ -21,8 +21,15 @@ test.describe('interactive weekly schedule', () => {
       name: 'Select meeting room',
     });
     await roomSelect.click();
-    await page.getByRole('option', { name: /Марс/u }).click();
+    await expect(
+      page.getByRole('option', { name: /Марс.*Floor 2.*6 people/u }),
+    ).toBeVisible();
+    await page
+      .getByRole('option', { name: /Марс.*Floor 2.*6 people/u })
+      .click();
     await expect(page).toHaveURL(/roomId=room-mars/u);
+    await expect(page.getByText('Floor 2', { exact: true })).toBeVisible();
+    await expect(page.getByText('6 people', { exact: true })).toBeVisible();
 
     const currentUrl = page.url();
     await page.getByRole('button', { name: 'Next week' }).click();
@@ -37,6 +44,107 @@ test.describe('interactive weekly schedule', () => {
     await expect(
       page.getByRole('heading', { name: 'Тижневий розклад' }),
     ).toBeVisible();
+  });
+
+  test('creates a four-hour booking, renders eight slots, and allows adjacency', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const previousWeek = new URL(page.url()).searchParams.get('week');
+    await page.getByRole('button', { name: 'Next week' }).click();
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('week'))
+      .not.toBe(previousWeek);
+    await expect(page.locator('[data-schedule-presentation]')).toHaveAttribute(
+      'aria-busy',
+      'false',
+    );
+
+    const findAvailableRun = async (slotCount: number) => {
+      const run = await page
+        .getByRole('gridcell', { name: /Available/u })
+        .evaluateAll((cells, requestedSlotCount) => {
+          const available = cells
+            .map((cell) => ({
+              id: cell.getAttribute('data-slot-id'),
+              row: Number(cell.getAttribute('data-row')),
+              startsAtUtc: Number(cell.getAttribute('data-starts-at-utc')),
+            }))
+            .filter(
+              ({ id, row, startsAtUtc }) =>
+                id && Number.isFinite(row) && Number.isFinite(startsAtUtc),
+            )
+            .sort((left, right) => left.startsAtUtc - right.startsAtUtc);
+          for (
+            let index = 0;
+            index <= available.length - requestedSlotCount;
+            index += 1
+          ) {
+            const candidate = available[index];
+            if (!candidate) continue;
+            const isConsecutive = Array.from(
+              { length: requestedSlotCount },
+              (_, offset) => available[index + offset],
+            ).every(
+              (slot, offset) =>
+                slot?.startsAtUtc ===
+                candidate.startsAtUtc + offset * 30 * 60 * 1000,
+            );
+            if (isConsecutive) return candidate;
+          }
+          return undefined;
+        }, slotCount);
+      expect(run).toBeTruthy();
+      return run as { id: string; row: number; startsAtUtc: number };
+    };
+
+    const fourHourTitle = `Four hour E2E ${Date.now()}`;
+    const fourHourRun = await findAvailableRun(8);
+    await page.locator(`[data-slot-id="${fourHourRun.id}"]`).click();
+    await expect(page.getByRole('button', { name: '4 hours' })).toBeEnabled();
+    await page.getByRole('button', { name: '4 hours' }).click();
+    await page.getByLabel('Meeting title').fill(fourHourTitle);
+    await page.getByRole('button', { name: 'Book room' }).click();
+    await expect(page.getByText('Booking created.')).toBeVisible();
+
+    const fourHourBooking = page.getByRole('button', {
+      name: new RegExp(`${fourHourTitle}.*Your booking`, 'u'),
+    });
+    await expect(fourHourBooking).toBeVisible();
+    await expect
+      .poll(() =>
+        fourHourBooking.evaluate(
+          (element) => getComputedStyle(element).gridRow,
+        ),
+      )
+      .toBe(`${fourHourRun.row + 1} / span 8`);
+
+    const adjacentTitle = `Adjacent E2E ${Date.now()}`;
+    const adjacentSlot = page.locator(
+      `[data-starts-at-utc="${fourHourRun.startsAtUtc + 4 * 60 * 60 * 1000}"]`,
+    );
+    await expect(adjacentSlot).toBeEnabled();
+    await adjacentSlot.click();
+    await page.getByRole('button', { name: '30 min' }).click();
+    await page.getByLabel('Meeting title').fill(adjacentTitle);
+    await page.getByRole('button', { name: 'Book room' }).click();
+    await expect(page.getByText('Booking created.')).toBeVisible();
+    await expect(
+      page.getByRole('button', {
+        name: new RegExp(`${adjacentTitle}.*Your booking`, 'u'),
+      }),
+    ).toBeVisible();
+
+    for (const title of [adjacentTitle, fourHourTitle]) {
+      const booking = page.getByRole('button', {
+        name: new RegExp(`${title}.*Your booking`, 'u'),
+      });
+      await booking.click();
+      await page.getByRole('button', { name: 'Cancel booking' }).click();
+      await expect(page.getByText(/release the room/u)).toBeVisible();
+      await page.getByRole('button', { name: 'Cancel booking' }).click();
+      await expect(page.getByText('Booking cancelled.')).toBeVisible();
+    }
   });
 
   test('creates, displays, inspects, and cancels an owned booking', async ({

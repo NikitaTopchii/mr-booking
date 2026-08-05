@@ -131,6 +131,9 @@ const messages: AppDictionary['schedule'] = {
     oneHour: '1 hour',
     ninetyMinutes: '1.5 hours',
     twoHours: '2 hours',
+    twoAndHalfHours: '2.5 hours',
+    threeAndHalfHours: '3.5 hours',
+    fourHours: '4 hours',
     custom: 'Other end time',
   },
   accessibility: {
@@ -253,6 +256,35 @@ describe('weekly schedule', () => {
       { scroll: false },
     );
     expect((input as HTMLInputElement).value).toBe('6');
+  });
+
+  it('offers quick durations through four hours when the office window allows them', async () => {
+    renderSchedule();
+    const morningSlot = (
+      await screen.findAllByRole('gridcell', { name: /Available/u })
+    ).find((cell) => {
+      const parts = getOfficeDateTimeParts(
+        Number(cell.getAttribute('data-starts-at-utc')),
+      );
+      return parts.hour === 9 && parts.minute === 0;
+    });
+    if (!morningSlot) throw new Error('Expected a 09:00 office slot');
+
+    fireEvent.click(morningSlot);
+
+    expect(
+      (await screen.findByRole('button', { name: '2.5 hours' })).hasAttribute(
+        'disabled',
+      ),
+    ).toBe(false);
+    expect(
+      screen
+        .getByRole('button', { name: '3.5 hours' })
+        .hasAttribute('disabled'),
+    ).toBe(false);
+    expect(
+      screen.getByRole('button', { name: '4 hours' }).hasAttribute('disabled'),
+    ).toBe(false);
   });
 
   it('submits capacity with Enter exactly once through the canonical route', async () => {

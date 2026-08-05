@@ -168,6 +168,9 @@ export interface AppDictionary {
       readonly oneHour: string;
       readonly ninetyMinutes: string;
       readonly twoHours: string;
+      readonly twoAndHalfHours: string;
+      readonly threeAndHalfHours: string;
+      readonly fourHours: string;
       readonly custom: string;
     };
     readonly accessibility: {

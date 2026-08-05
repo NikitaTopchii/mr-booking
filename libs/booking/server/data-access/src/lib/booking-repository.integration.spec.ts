@@ -124,6 +124,22 @@ describe('Drizzle booking persistence', () => {
     ]);
   });
 
+  it('persists the inclusive four-hour booking as eight slots', () => {
+    const booking = bookingRecord('booking-four-hours', {
+      endsAtUtc: startsAtUtc + 8 * slotMilliseconds,
+    });
+
+    createBooking(repository, booking);
+
+    expect(
+      connection.drizzle
+        .select()
+        .from(bookingSlots)
+        .where(eq(bookingSlots.bookingId, booking.id))
+        .all(),
+    ).toHaveLength(8);
+  });
+
   it('maps only room-slot uniqueness to conflict and rolls back the losing booking', () => {
     createBooking(repository, bookingRecord('winner'));
 
@@ -457,10 +473,15 @@ function createBooking(
   booking: Booking,
 ): void {
   repository.withImmediateTransaction((transaction) => {
-    transaction.createBookingWithSlots(booking, [
-      booking.startsAtUtc,
-      booking.startsAtUtc + slotMilliseconds,
-    ]);
+    transaction.createBookingWithSlots(
+      booking,
+      Array.from(
+        {
+          length: (booking.endsAtUtc - booking.startsAtUtc) / slotMilliseconds,
+        },
+        (_, index) => booking.startsAtUtc + index * slotMilliseconds,
+      ),
+    );
   });
 }
 

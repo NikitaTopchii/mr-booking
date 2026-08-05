@@ -58,10 +58,11 @@ line renders only inside the visible day and office interval.
 
 Creation and details dialogs become bottom sheets below 640 pixels, preserve
 Radix focus trapping/restoration, and respect the bottom safe area. Creation
-offers valid 30-, 60-, 90-, and 120-minute shortcuts plus all valid end times.
-It shows the browser-local interval and, when different, the corresponding
-`Europe/Kyiv` interval. These controls only assist input; the API remains
-authoritative.
+offers valid 30-, 60-, 90-, 120-, 150-, 210-, and 240-minute shortcuts plus
+all valid end times. End choices are bounded by the four-hour domain maximum
+and the 19:00 `Europe/Kyiv` office close. It shows the browser-local interval
+and, when different, the corresponding `Europe/Kyiv` interval. These controls
+only assist input; the API remains authoritative.
 
 ## Scrolling and safe areas
 

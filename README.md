@@ -142,8 +142,9 @@ yarn db:migrate
 yarn db:seed
 ```
 
-The seed owns six stable room records: Акваріум, Марс, Гагарін, Орбіта,
-Дніпро, and Київ. Re-running it updates those stable records safely, creates
+The seed owns six stable room records with deterministic floors and capacities:
+Акваріум (1, 4), Марс (2, 6), Гагарін (2, 8), Орбіта (3, 10), Дніпро (3, 12),
+and Київ (4, 16). Re-running it updates those stable records safely, creates
 no duplicates, and does not delete user-created rooms.
 
 The seed also creates missing demo users without changing an existing matching
@@ -314,7 +315,8 @@ The authoritative booking rules are:
 - office policy is evaluated in `Europe/Kyiv`, every day from 09:00 through
   19:00;
 - boundaries use a 30-minute grid and duration is 30 minutes through four
-  hours;
+  hours; the creation dialog offers quick choices through 4 hours, while the
+  server and database remain authoritative;
 - intervals are half-open, so 10:00–11:00 and 11:00–12:00 are adjacent and
   valid;
 - each active interval owns deterministic 30-minute rows in `booking_slots`;
