@@ -23,6 +23,147 @@ const typePlacementExceptions = [
   'libs/shared/config/src/lib/environment.ts',
 ];
 
+const typeDependencyConstraints = [
+  {
+    sourceTag: 'type:app',
+    onlyDependOnLibsWithTags: [
+      'type:feature',
+      'type:application',
+      'type:api',
+      'type:ui',
+      'type:data-access',
+      'type:infrastructure',
+      'type:domain',
+      'type:util',
+    ],
+  },
+  {
+    sourceTag: 'type:application',
+    onlyDependOnLibsWithTags: ['type:domain', 'type:util'],
+  },
+  {
+    sourceTag: 'type:api',
+    onlyDependOnLibsWithTags: [
+      'type:application',
+      'type:data-access',
+      'type:infrastructure',
+      'type:domain',
+      'type:util',
+    ],
+  },
+  {
+    sourceTag: 'type:feature',
+    onlyDependOnLibsWithTags: [
+      'type:ui',
+      'type:data-access',
+      'type:domain',
+      'type:util',
+    ],
+  },
+  {
+    sourceTag: 'type:ui',
+    onlyDependOnLibsWithTags: ['type:ui', 'type:domain', 'type:util'],
+  },
+  {
+    sourceTag: 'type:data-access',
+    onlyDependOnLibsWithTags: [
+      'type:application',
+      'type:infrastructure',
+      'type:domain',
+      'type:util',
+    ],
+  },
+  {
+    sourceTag: 'type:infrastructure',
+    onlyDependOnLibsWithTags: [
+      'type:infrastructure',
+      'type:domain',
+      'type:util',
+    ],
+  },
+  {
+    sourceTag: 'type:domain',
+    onlyDependOnLibsWithTags: ['type:domain', 'type:util'],
+  },
+  {
+    sourceTag: 'type:util',
+    onlyDependOnLibsWithTags: ['type:util'],
+  },
+  {
+    sourceTag: 'type:tooling',
+    onlyDependOnLibsWithTags: [
+      'type:application',
+      'type:data-access',
+      'type:infrastructure',
+      'type:domain',
+      'type:util',
+      'type:tooling',
+    ],
+  },
+];
+
+const platformDependencyConstraints = [
+  {
+    sourceTag: 'platform:web',
+    onlyDependOnLibsWithTags: ['platform:web', 'platform:agnostic'],
+  },
+  {
+    sourceTag: 'platform:server',
+    onlyDependOnLibsWithTags: ['platform:server', 'platform:agnostic'],
+  },
+  {
+    sourceTag: 'platform:agnostic',
+    onlyDependOnLibsWithTags: ['platform:agnostic'],
+  },
+];
+
+const scopeDependencyConstraints = [
+  {
+    sourceTag: 'scope:shared',
+    onlyDependOnLibsWithTags: ['scope:shared'],
+  },
+  {
+    sourceTag: 'scope:auth',
+    onlyDependOnLibsWithTags: ['scope:auth', 'scope:shared'],
+  },
+  {
+    sourceTag: 'scope:rooms',
+    onlyDependOnLibsWithTags: ['scope:rooms', 'scope:shared'],
+  },
+  {
+    // The graph audit narrows every booking-to-auth/rooms edge to its exact pair.
+    sourceTag: 'scope:booking',
+    onlyDependOnLibsWithTags: [
+      'scope:booking',
+      'scope:shared',
+      'scope:auth',
+      'scope:rooms',
+    ],
+  },
+  {
+    // Applications compose real business scopes; platform and type rules still apply.
+    sourceTag: 'scope:app',
+    onlyDependOnLibsWithTags: [
+      'scope:app',
+      'scope:shared',
+      'scope:auth',
+      'scope:booking',
+      'scope:rooms',
+    ],
+  },
+  {
+    // Workspace scripts and architecture tests are server-only composition tooling.
+    sourceTag: 'scope:workspace',
+    onlyDependOnLibsWithTags: [
+      'scope:workspace',
+      'scope:shared',
+      'scope:auth',
+      'scope:booking',
+      'scope:rooms',
+    ],
+  },
+];
+
 export default [
   ...nx.configs['flat/base'],
   ...tseslint.configs.recommended,
@@ -48,71 +189,9 @@ export default [
           allow: [],
           banTransitiveDependencies: true,
           depConstraints: [
-            {
-              sourceTag: 'type:app',
-              onlyDependOnLibsWithTags: [
-                'type:feature',
-                'type:application',
-                'type:ui',
-                'type:data-access',
-                'type:infrastructure',
-                'type:domain',
-                'type:util',
-              ],
-            },
-            {
-              sourceTag: 'type:application',
-              onlyDependOnLibsWithTags: ['type:domain', 'type:util'],
-            },
-            {
-              sourceTag: 'type:feature',
-              onlyDependOnLibsWithTags: [
-                'type:ui',
-                'type:data-access',
-                'type:domain',
-                'type:util',
-              ],
-            },
-            {
-              sourceTag: 'type:ui',
-              onlyDependOnLibsWithTags: ['type:ui', 'type:domain', 'type:util'],
-            },
-            {
-              sourceTag: 'type:data-access',
-              onlyDependOnLibsWithTags: [
-                'type:infrastructure',
-                'type:domain',
-                'type:util',
-              ],
-            },
-            {
-              sourceTag: 'type:infrastructure',
-              onlyDependOnLibsWithTags: [
-                'type:infrastructure',
-                'type:domain',
-                'type:util',
-              ],
-            },
-            {
-              sourceTag: 'type:domain',
-              onlyDependOnLibsWithTags: ['type:domain', 'type:util'],
-            },
-            {
-              sourceTag: 'type:util',
-              onlyDependOnLibsWithTags: ['type:util'],
-            },
-            {
-              sourceTag: 'platform:web',
-              onlyDependOnLibsWithTags: ['platform:web', 'platform:shared'],
-            },
-            {
-              sourceTag: 'platform:api',
-              onlyDependOnLibsWithTags: ['platform:api', 'platform:shared'],
-            },
-            {
-              sourceTag: 'platform:shared',
-              onlyDependOnLibsWithTags: ['platform:shared'],
-            },
+            ...typeDependencyConstraints,
+            ...platformDependencyConstraints,
+            ...scopeDependencyConstraints,
           ],
           enforceBuildableLibDependency: true,
         },

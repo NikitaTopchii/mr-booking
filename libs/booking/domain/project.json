@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/booking/domain/src",
   "projectType": "library",
-  "tags": ["scope:booking", "type:domain", "platform:shared"],
+  "tags": ["scope:booking", "type:domain", "platform:agnostic"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

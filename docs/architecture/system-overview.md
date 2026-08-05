@@ -36,6 +36,16 @@ The hackathon deployment uses one API process as the only SQLite writer. Web
 and API should preferably share one public origin. The frontend never mounts
 or opens the database volume.
 
+Nx tags make the runtime boundary explicit: browser and Next web-runtime
+projects are `platform:web`; NestJS, persistence, and command-line projects
+are `platform:server`; framework-neutral contracts and utilities are
+`platform:agnostic`. Web can depend only on web/agnostic code, server can
+depend only on server/agnostic code, and agnostic code can depend only on
+agnostic code. `apps/web` and `apps/api` are `scope:app` composition roots;
+workspace scripts are `scope:workspace`, never `scope:shared` business code.
+The generated graph and protected public entrypoints are checked by
+`yarn audit:boundaries` before normal commit verification.
+
 Phase 3A realizes the booking write side as application, domain, data-access,
 and infrastructure Nx boundaries:
 

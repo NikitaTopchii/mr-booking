@@ -19,38 +19,140 @@ function listSourceFiles(directory: string): string[] {
 
 describe('Nx module-boundary configuration', () => {
   it('assigns platform and type tags to every foundation project', () => {
-    const projectFiles = [
-      'apps/web/project.json',
-      'apps/api/project.json',
-      'libs/shared/config/project.json',
-      'libs/shared/database/project.json',
-      'libs/shared/i18n/project.json',
-      'libs/shared/ui/project.json',
-      'libs/booking/domain/project.json',
-      'libs/booking/infrastructure/project.json',
-      'libs/booking/data-access/project.json',
-      'libs/booking/application/project.json',
-      'libs/rooms/domain/project.json',
-      'libs/rooms/infrastructure/project.json',
-      'libs/rooms/data-access/project.json',
-      'libs/auth/domain/project.json',
-      'libs/auth/infrastructure/project.json',
-      'libs/auth/data-access/project.json',
-      'libs/auth/data-access-web/project.json',
-      'libs/auth/application/project.json',
-      'libs/auth/feature-web/project.json',
-      'libs/auth/feature-email-verification/project.json',
-      'libs/auth/ui/project.json',
-      'tools/project.json',
-    ];
+    const expectedTags = {
+      'apps/api/project.json': ['scope:app', 'type:app', 'platform:server'],
+      'apps/web/project.json': ['scope:app', 'type:app', 'platform:web'],
+      'tools/project.json': [
+        'scope:workspace',
+        'type:tooling',
+        'platform:server',
+      ],
+      'libs/auth/application/project.json': [
+        'scope:auth',
+        'type:application',
+        'platform:server',
+      ],
+      'libs/auth/data-access/project.json': [
+        'scope:auth',
+        'type:data-access',
+        'platform:server',
+      ],
+      'libs/auth/data-access-web/project.json': [
+        'scope:auth',
+        'type:data-access',
+        'platform:web',
+      ],
+      'libs/auth/domain/project.json': [
+        'scope:auth',
+        'type:domain',
+        'platform:agnostic',
+      ],
+      'libs/auth/feature-email-verification/project.json': [
+        'scope:auth',
+        'type:feature',
+        'platform:web',
+      ],
+      'libs/auth/feature-web/project.json': [
+        'scope:auth',
+        'type:feature',
+        'platform:web',
+      ],
+      'libs/auth/infrastructure/project.json': [
+        'scope:auth',
+        'type:infrastructure',
+        'platform:server',
+      ],
+      'libs/auth/ui/project.json': ['scope:auth', 'type:ui', 'platform:web'],
+      'libs/booking/application/project.json': [
+        'scope:booking',
+        'type:application',
+        'platform:server',
+      ],
+      'libs/booking/data-access/project.json': [
+        'scope:booking',
+        'type:data-access',
+        'platform:server',
+      ],
+      'libs/booking/data-access-web/project.json': [
+        'scope:booking',
+        'type:data-access',
+        'platform:web',
+      ],
+      'libs/booking/domain/project.json': [
+        'scope:booking',
+        'type:domain',
+        'platform:agnostic',
+      ],
+      'libs/booking/features/my-bookings/project.json': [
+        'scope:booking',
+        'type:feature',
+        'platform:web',
+      ],
+      'libs/booking/features/schedule/project.json': [
+        'scope:booking',
+        'type:feature',
+        'platform:web',
+      ],
+      'libs/booking/infrastructure/project.json': [
+        'scope:booking',
+        'type:infrastructure',
+        'platform:server',
+      ],
+      'libs/booking/ui/project.json': [
+        'scope:booking',
+        'type:ui',
+        'platform:web',
+      ],
+      'libs/rooms/data-access/project.json': [
+        'scope:rooms',
+        'type:data-access',
+        'platform:server',
+      ],
+      'libs/rooms/domain/project.json': [
+        'scope:rooms',
+        'type:domain',
+        'platform:agnostic',
+      ],
+      'libs/rooms/infrastructure/project.json': [
+        'scope:rooms',
+        'type:infrastructure',
+        'platform:server',
+      ],
+      'libs/shared/config/project.json': [
+        'scope:shared',
+        'type:util',
+        'platform:agnostic',
+      ],
+      'libs/shared/database/project.json': [
+        'scope:shared',
+        'type:infrastructure',
+        'platform:server',
+      ],
+      'libs/shared/date-time/project.json': [
+        'scope:shared',
+        'type:util',
+        'platform:agnostic',
+      ],
+      'libs/shared/feature-error/project.json': [
+        'scope:shared',
+        'type:util',
+        'platform:agnostic',
+      ],
+      'libs/shared/i18n/project.json': [
+        'scope:shared',
+        'type:util',
+        'platform:web',
+      ],
+      'libs/shared/ui/project.json': [
+        'scope:shared',
+        'type:ui',
+        'platform:web',
+      ],
+    } as const;
 
-    for (const projectFile of projectFiles) {
+    for (const [projectFile, tags] of Object.entries(expectedTags)) {
       const project = readProject(projectFile);
-      expect(project.tags.some((tag) => tag.startsWith('type:'))).toBe(true);
-      expect(project.tags.some((tag) => tag.startsWith('platform:'))).toBe(
-        true,
-      );
-      expect(project.tags.some((tag) => tag.startsWith('scope:'))).toBe(true);
+      expect(project.tags).toEqual(tags);
     }
   });
 
@@ -88,7 +190,7 @@ describe('Nx module-boundary configuration', () => {
       expect.arrayContaining([
         'scope:booking',
         'type:infrastructure',
-        'platform:api',
+        'platform:server',
       ]),
     );
     const bookingInfrastructureProjectSource = readFileSync(
@@ -254,7 +356,35 @@ describe('Nx module-boundary configuration', () => {
     expect(eslintConfiguration).toContain("'@nx/enforce-module-boundaries': [");
     expect(eslintConfiguration).toContain("'error'");
     expect(eslintConfiguration).toContain("'platform:web'");
-    expect(eslintConfiguration).toContain("'platform:api'");
+    expect(eslintConfiguration).toContain("'platform:server'");
+    expect(eslintConfiguration).toContain("'platform:agnostic'");
+    expect(eslintConfiguration).toContain("'scope:workspace'");
+    expect(eslintConfiguration).not.toContain("'platform:api'");
+    expect(eslintConfiguration).not.toContain("'platform:shared'");
+  });
+
+  it('runs deterministic graph and source-import auditing before commit verification', () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(workspaceRoot, 'package.json'), 'utf8'),
+    ) as { scripts: Record<string, string> };
+    const verificationScript = readFileSync(
+      join(workspaceRoot, 'tools/scripts/verify-commit.mjs'),
+      'utf8',
+    );
+    const auditScript = readFileSync(
+      join(workspaceRoot, 'tools/scripts/audit-module-boundaries.mjs'),
+      'utf8',
+    );
+
+    expect(packageJson.scripts['audit:boundaries']).toBe(
+      'node tools/scripts/audit-module-boundaries.mjs',
+    );
+    expect(verificationScript).toContain("'audit:boundaries'");
+    expect(auditScript).toContain('crossScopeAllowlist');
+    expect(auditScript).toContain('may not import persistence schemas');
+    expect(auditScript).toContain(
+      'may not import the Next server-only entry point',
+    );
   });
 
   it('keeps database packages out of web source', () => {

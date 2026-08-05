@@ -79,7 +79,14 @@ const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
 const scripts = packageJson.scripts ?? {};
 const packageManager = parsePackageManager(packageJson.packageManager);
 
-const requiredScripts = ['test', 'lint', 'typecheck', 'build', 'format:check'];
+const requiredScripts = [
+  'audit:boundaries',
+  'test',
+  'lint',
+  'typecheck',
+  'build',
+  'format:check',
+];
 for (const scriptName of requiredScripts) {
   if (
     typeof scripts[scriptName] !== 'string' ||
@@ -89,7 +96,7 @@ for (const scriptName of requiredScripts) {
   }
 }
 
-const commands = ['test'];
+const commands = ['audit:boundaries', 'test'];
 for (const optionalSuite of ['test:integration', 'test:e2e']) {
   if (typeof scripts[optionalSuite] === 'string') {
     commands.push(optionalSuite);

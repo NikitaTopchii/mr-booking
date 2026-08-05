@@ -18,6 +18,7 @@
     "lint": "node tools/scripts/run-nx-target.mjs lint",
     "typecheck": "node tools/scripts/run-nx-target.mjs typecheck",
     "build": "node tools/scripts/run-nx-target.mjs build",
+    "audit:boundaries": "node tools/scripts/audit-module-boundaries.mjs",
     "audit:cohesion": "node tools/scripts/audit-module-cohesion.mjs",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",

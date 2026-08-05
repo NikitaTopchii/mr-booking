@@ -1,13 +1,11 @@
 # Nx Dependency Map
 
-Nx projects use feature-first ownership and the enforced direction:
+Nx projects use feature-first ownership and a two-part enforced direction:
 
 ```text
-app
-  -> application / feature
-      -> ui / data-access
-          -> domain
-              -> shared
+app / workspace composition
+  -> application / feature / data-access / infrastructure
+      -> domain / util
 ```
 
 Applications are composition roots:
@@ -17,14 +15,22 @@ Applications are composition roots:
 
 Applications do not own reusable business logic.
 
+Projects have one platform tag with strict direction:
+
+```text
+web -> web, agnostic
+server -> server, agnostic
+agnostic -> agnostic
+```
+
 ## Expected scopes
 
 - `auth`;
 - `rooms`;
 - `booking`;
 - `shared`;
-- `notifications` only when that bonus is implemented;
-- `pwa` only when that bonus is implemented.
+- `app` for application composition roots;
+- `workspace` for repository tooling.
 
 Each real Nx project uses applicable `scope:*`, `type:*`, and `platform:*`
 tags defined in `docs/agent-rules/nx-architecture.md`.
@@ -43,7 +49,10 @@ tags defined in `docs/agent-rules/nx-architecture.md`.
 - `shared` contains only truly cross-domain, platform-appropriate code.
 
 Cross-library imports use public entry points. Deep imports and cycles are
-prohibited. Web cannot import API-only code; API cannot import browser code.
+prohibited. `yarn audit:boundaries` validates the real Nx graph, platform and
+layer direction, project cycles, protected subpaths, and the exact current
+cross-scope pairs. It complements the coarse Nx ESLint rules rather than
+replacing them.
 
 Booking's browser features are separate composition boundaries: the schedule
 feature owns schedule navigation, room selection, filtering, and booking
@@ -111,6 +120,26 @@ compatibility barrels.
 `auth-data-access-web` owns browser HTTP parsing and server-side current-user
 resolution through the NestJS API. Their public entry points are separate, so
 the web graph cannot transitively include API persistence.
+
+The only non-shared business-scope edges are explicitly audited:
+
+```text
+booking-application -> auth-domain, rooms-domain
+booking-data-access -> auth-domain, auth-infrastructure, rooms-domain, rooms-infrastructure
+booking-infrastructure -> auth-infrastructure, rooms-infrastructure
+booking-feature-schedule -> auth-ui
+booking-feature-my-bookings -> auth-ui
+```
+
+The API and workspace tooling are composition roots with their current direct
+business-scope dependencies enumerated by the audit. This keeps a new
+cross-scope import from becoming an accidental convention. Schema entrypoints
+remain server-only: booking persistence owns the documented auth/rooms schema
+edges, while API and tooling access schemas directly only from focused tests.
+`shared-config` root is agnostic; its `/node` entrypoint is restricted to
+API/database/tooling. `auth-data-access-web/server` and
+`shared-i18n/server` are Next server-runtime entrypoints restricted to
+`apps/web` Server Components.
 
 This map does not predeclare a library per box. Create a library only when it
 owns real code, has a meaningful boundary, and benefits from independent

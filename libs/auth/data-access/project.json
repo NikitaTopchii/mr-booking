@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/auth/data-access/src",
   "projectType": "library",
-  "tags": ["scope:auth", "type:data-access", "platform:api"],
+  "tags": ["scope:auth", "type:data-access", "platform:server"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
