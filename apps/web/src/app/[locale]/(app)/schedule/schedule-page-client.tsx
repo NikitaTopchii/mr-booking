@@ -1,7 +1,7 @@
 'use client';
 
 import { useCurrentUser } from '@mr-booking/auth-feature-email-verification';
-import { WeeklySchedule } from '@mr-booking/booking-feature-web';
+import { WeeklySchedule } from '@mr-booking/booking-feature-schedule';
 import {
   localizedRoute,
   type AppDictionary,

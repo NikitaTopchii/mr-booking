@@ -86,24 +86,26 @@ describe('createBookingEndOptions', () => {
   it('requires the selected slot identity and office day to be present', () => {
     const slots = makeSlots('2030-06-03T07:00:00.000Z', 2);
 
-    expect(createOptions({ ...slots[0], id: 'stale-slot' }, slots)).toEqual([]);
+    expect(createOptions({ ...slots[0]!, id: 'stale-slot' }, slots)).toEqual(
+      [],
+    );
     expect(
-      createOptions({ ...slots[0], officeDate: '2030-06-04' }, slots),
+      createOptions({ ...slots[0]!, officeDate: '2030-06-04' }, slots),
     ).toEqual([]);
   });
 
   it('is stable for unsorted equivalent input and ignores malformed duplicates', () => {
     const slots = makeSlots('2030-06-03T07:00:00.000Z', 3);
     const malformed = {
-      ...slots[1],
+      ...slots[1]!,
       id: 'malformed',
       startsAtUtc: Number.NaN,
     } as ScheduleSlot;
-    const duplicate = { ...slots[1] };
+    const duplicate = { ...slots[1]! };
     const equivalent = slots.map((slot) => ({ ...slot }));
 
     expect(
-      createOptions(slots[0], [malformed, duplicate, slots[2], slots[0]]),
+      createOptions(slots[0], [malformed, duplicate, slots[2]!, slots[0]!]),
     ).toEqual(createOptions(equivalent[0], equivalent.slice().reverse()));
   });
 });

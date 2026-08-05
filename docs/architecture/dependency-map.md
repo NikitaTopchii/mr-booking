@@ -43,6 +43,11 @@ tags defined in `docs/agent-rules/nx-architecture.md`.
 Cross-library imports use public entry points. Deep imports and cycles are
 prohibited. Web cannot import API-only code; API cannot import browser code.
 
+Booking's browser features are separate composition boundaries: the schedule
+feature owns schedule navigation, room selection, filtering, and booking
+surfaces; My Bookings owns upcoming and past booking lists. They share lower
+layers but do not depend on each other.
+
 Authentication makes the platform split explicit:
 
 ````text

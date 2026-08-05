@@ -1,4 +1,4 @@
-import { MyBookings } from '@mr-booking/booking-feature-web';
+import { MyBookings } from '@mr-booking/booking-feature-my-bookings';
 import { getDictionary } from '@mr-booking/shared-i18n/server';
 import { requireLocale } from '../../locale';
 import type { LocalePageProps } from '../../types/locale-route.types';

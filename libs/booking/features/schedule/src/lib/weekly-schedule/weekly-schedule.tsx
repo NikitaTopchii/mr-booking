@@ -1,13 +1,13 @@
 'use client';
 
-import { useBrowserTimeZone } from './use-browser-time-zone';
-import { useBookingCancellation } from './weekly-schedule/hooks/use-booking-cancellation';
-import { useBookingCreation } from './weekly-schedule/hooks/use-booking-creation';
-import { useScheduleClock } from './weekly-schedule/hooks/use-schedule-clock';
-import { useScheduleData } from './weekly-schedule/hooks/use-schedule-data';
-import { useScheduleNavigation } from './weekly-schedule/hooks/use-schedule-navigation';
-import { WeeklyScheduleView } from './weekly-schedule/weekly-schedule-view';
-import type { WeeklyScheduleProps } from './weekly-schedule/types/schedule-feature.types';
+import { useBrowserTimeZone } from '@mr-booking/booking-ui';
+import { useBookingCancellation } from './hooks/use-booking-cancellation';
+import { useBookingCreation } from './hooks/use-booking-creation';
+import { useScheduleClock } from './hooks/use-schedule-clock';
+import { useScheduleData } from './hooks/use-schedule-data';
+import { useScheduleNavigation } from './hooks/use-schedule-navigation';
+import { WeeklyScheduleView } from './weekly-schedule-view';
+import type { WeeklyScheduleProps } from './types/schedule-feature.types';
 
 export function WeeklySchedule({
   locale,

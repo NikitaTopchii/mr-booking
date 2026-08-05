@@ -15,7 +15,7 @@ import {
 import type { Locale } from '@mr-booking/shared-i18n';
 import useSWR from 'swr';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSchedulePresentation } from '../../use-schedule-presentation';
+import { useSchedulePresentation } from './use-schedule-presentation';
 import { bookingClientErrorStatus } from '../errors/booking-client-error.context';
 import { classifyRoomQueryError } from '../errors/room-query-error.classifier';
 import { roomQueryErrorCatalog } from '../errors/room-query-error.catalog';

@@ -1,9 +1,9 @@
 /** @jest-environment jsdom */
 
-import type { MyBookingsProps } from '@mr-booking/booking-feature-web';
+import type { MyBookingsProps } from '@mr-booking/booking-feature-my-bookings';
 
 jest.mock('server-only', () => ({}));
-jest.mock('@mr-booking/booking-feature-web', () => ({
+jest.mock('@mr-booking/booking-feature-my-bookings', () => ({
   MyBookings: ({ locale, messages }: MyBookingsProps) => (
     <div data-locale={locale}>{messages.title}</div>
   ),

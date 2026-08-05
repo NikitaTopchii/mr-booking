@@ -1,6 +1,6 @@
 'use client';
 
-import { useBrowserTimeZone } from '../use-browser-time-zone';
+import { useBrowserTimeZone } from '@mr-booking/booking-ui';
 import { useBookingCancellation } from './hooks/use-booking-cancellation';
 import { useMyPastBookings } from './hooks/use-my-past-bookings';
 import { useMyUpcomingBookings } from './hooks/use-my-upcoming-bookings';

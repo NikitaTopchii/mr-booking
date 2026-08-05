@@ -49,11 +49,20 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   useSearchParams: jest.fn(),
 }));
-jest.mock('./use-browser-time-zone', () => ({
+jest.mock('@mr-booking/booking-ui', () => ({
+  ...jest.requireActual('@mr-booking/booking-ui'),
   useBrowserTimeZone: () => 'Europe/Lisbon',
 }));
 
-const router = { push: jest.fn(), replace: jest.fn() };
+const router = {
+  back: jest.fn(),
+  forward: jest.fn(),
+  refresh: jest.fn(),
+  hmrRefresh: jest.fn(),
+  push: jest.fn(),
+  replace: jest.fn(),
+  prefetch: jest.fn(),
+};
 let viewportWidth = 375;
 const messages: AppDictionary['schedule'] = {
   title: 'Weekly schedule',
@@ -143,6 +152,7 @@ const messages: AppDictionary['schedule'] = {
       invalidTitle: 'Title invalid',
       validation: 'Validation',
       roomNotFound: 'Room not found',
+      emailVerificationRequired: 'Email verification required',
       generic: 'Generic error',
     },
     cancellation: {
@@ -173,10 +183,12 @@ describe('weekly schedule', () => {
     jest.useFakeTimers().setSystemTime(new Date('2029-12-01T10:00:00.000Z'));
     router.push.mockReset();
     router.replace.mockReset();
-    jest.mocked(useRouter).mockReturnValue(router);
+    jest
+      .mocked(useRouter)
+      .mockReturnValue(router as ReturnType<typeof useRouter>);
     jest
       .mocked(useSearchParams)
-      .mockReturnValue(new URLSearchParams('roomId=room-1&week=2030-06-03'));
+      .mockReturnValue(createSearchParams('roomId=room-1&week=2030-06-03'));
     jest
       .mocked(listRooms)
       .mockResolvedValue([
@@ -246,7 +258,7 @@ describe('weekly schedule', () => {
     jest
       .mocked(useSearchParams)
       .mockReturnValue(
-        new URLSearchParams(
+        createSearchParams(
           'roomId=room-1&date=2030-06-03&week=2030-06-03&minCapacity=6',
         ),
       );
@@ -271,7 +283,7 @@ describe('weekly schedule', () => {
     jest
       .mocked(useSearchParams)
       .mockReturnValue(
-        new URLSearchParams(
+        createSearchParams(
           'roomId=room-1&date=2030-06-03&week=2030-06-03&minCapacity=20',
         ),
       );
@@ -298,7 +310,9 @@ describe('weekly schedule', () => {
       .getByText('No rooms can accommodate at least 20 people.')
       .closest('[role="status"]');
     if (!emptyState) throw new Error('Expected no-match status');
-    fireEvent.click(emptyState.querySelector('button') ?? clearButtons[1]);
+    const clearButton = clearButtons[1] ?? clearButtons[0];
+    if (!clearButton) throw new Error('Expected a clear filter button');
+    fireEvent.click(emptyState.querySelector('button') ?? clearButton);
     expect(router.push).toHaveBeenCalledWith(
       expect.stringMatching(
         /date=2030-06-03.*week=2030-06-03(?!.*minCapacity)/u,
@@ -325,7 +339,7 @@ describe('weekly schedule', () => {
     jest
       .mocked(useSearchParams)
       .mockReturnValue(
-        new URLSearchParams(
+        createSearchParams(
           'roomId=room-1&date=2030-06-03&week=2030-06-03&minCapacity=4.5&unrelated=keep',
         ),
       );
@@ -602,7 +616,7 @@ describe('weekly schedule', () => {
   it('normalizes invalid week URL state to the browser-local Monday', async () => {
     jest
       .mocked(useSearchParams)
-      .mockReturnValue(new URLSearchParams('roomId=room-1&week=not-a-week'));
+      .mockReturnValue(createSearchParams('roomId=room-1&week=not-a-week'));
     renderSchedule();
 
     await waitFor(() =>
@@ -622,4 +636,10 @@ function renderSchedule() {
       <WeeklySchedule locale="en" messages={messages} />
     </SWRConfig>,
   );
+}
+
+function createSearchParams(value: string): ReturnType<typeof useSearchParams> {
+  return new URLSearchParams(value) as unknown as ReturnType<
+    typeof useSearchParams
+  >;
 }

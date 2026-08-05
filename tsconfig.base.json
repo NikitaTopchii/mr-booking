@@ -37,8 +37,11 @@
         "./libs/booking/data-access-web/src/index.ts"
       ],
       "@mr-booking/booking-ui": ["./libs/booking/ui/src/index.ts"],
-      "@mr-booking/booking-feature-web": [
-        "./libs/booking/feature-web/src/index.ts"
+      "@mr-booking/booking-feature-schedule": [
+        "./libs/booking/features/schedule/src/index.ts"
+      ],
+      "@mr-booking/booking-feature-my-bookings": [
+        "./libs/booking/features/my-bookings/src/index.ts"
       ],
       "@mr-booking/rooms-data-access": [
         "./libs/rooms/data-access/src/index.ts"

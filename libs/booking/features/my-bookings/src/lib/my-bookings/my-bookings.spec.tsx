@@ -15,7 +15,7 @@ import {
 } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { SWRConfig } from 'swr';
-import { MyBookings } from './my-bookings/my-bookings';
+import { MyBookings } from './my-bookings';
 
 jest.mock('@mr-booking/booking-data-access-web', () => {
   class BookingClientError extends Error {
@@ -53,7 +53,15 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
 }));
 
-const router = { replace: jest.fn() };
+const router = {
+  back: jest.fn(),
+  forward: jest.fn(),
+  refresh: jest.fn(),
+  hmrRefresh: jest.fn(),
+  push: jest.fn(),
+  replace: jest.fn(),
+  prefetch: jest.fn(),
+};
 const room = { id: 'room-1', name: 'Aquarium', floor: 1, capacity: 4 };
 const upcoming: MyBooking = {
   id: 'upcoming-1',
@@ -127,7 +135,9 @@ const messages: AppDictionary['myBookings'] = {
 describe('my bookings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mocked(useRouter).mockReturnValue(router);
+    jest
+      .mocked(useRouter)
+      .mockReturnValue(router as ReturnType<typeof useRouter>);
     jest.mocked(listMyUpcomingBookings).mockResolvedValue({
       items: [upcoming],
       serverNowUtc: '2030-06-03T06:00:00.000Z',
@@ -207,7 +217,9 @@ describe('my bookings', () => {
         serverNowUtc: '2030-06-03T06:00:00.000Z',
         nextCursor: 'next-page',
       })
-      .mockRejectedValueOnce(new BookingClientError('NETWORK_ERROR'));
+      .mockRejectedValueOnce(
+        new BookingClientError('NETWORK_ERROR', undefined),
+      );
     renderMyBookings();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Load more' }));

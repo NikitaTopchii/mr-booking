@@ -12,7 +12,7 @@ import {
 import type { Locale } from '@mr-booking/shared-i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useBrowserTimeZone } from '../../use-browser-time-zone';
+import { useBrowserTimeZone } from '@mr-booking/booking-ui';
 import {
   parseMinimumCapacity,
   serializeMinimumCapacity,
