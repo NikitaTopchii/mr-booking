@@ -22,6 +22,7 @@ export function PastBookingsSection({
       id="past-bookings"
       title={messages.past.title}
       icon={History}
+      {...(!isLoading && error !== 'initial' ? { count: items.length } : {})}
     >
       {isLoading ? (
         <LoadingState message={messages.loading} />

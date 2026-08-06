@@ -1,6 +1,6 @@
-import { MyBookingCard } from '@mr-booking/booking-ui';
 import type { BookingListProps } from '../types/my-bookings.types';
 import { createBookingScheduleHref } from '../navigation/create-booking-schedule-href';
+import { BookingListItem } from './booking-list-item';
 
 export function BookingList({
   bookings,
@@ -10,9 +10,9 @@ export function BookingList({
   onCancel,
 }: BookingListProps) {
   return (
-    <ul className="grid gap-3">
+    <ul>
       {bookings.map((booking) => (
-        <MyBookingCard
+        <BookingListItem
           key={booking.id}
           booking={booking}
           href={createBookingScheduleHref(
@@ -23,13 +23,7 @@ export function BookingList({
           )}
           locale={locale}
           browserTimeZone={browserTimeZone}
-          messages={{
-            openSchedule: messages.actions.openSchedule,
-            cancel: messages.actions.cancel,
-            floor: messages.floor,
-            capacity: messages.capacity,
-            statuses: messages.statuses,
-          }}
+          messages={messages}
           {...(onCancel ? { onCancel: () => onCancel(booking) } : {})}
         />
       ))}

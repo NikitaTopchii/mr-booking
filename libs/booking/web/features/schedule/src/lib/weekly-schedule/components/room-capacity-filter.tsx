@@ -8,6 +8,8 @@ export function RoomCapacityFilter({
   minimumCapacity,
   onApply,
   onClear,
+  onApplied,
+  onCleared,
 }: RoomCapacityFilterProps) {
   const [draft, setDraft] = useState(
     minimumCapacity === undefined ? '' : String(minimumCapacity),
@@ -39,6 +41,7 @@ export function RoomCapacityFilter({
 
     setShowValidationError(false);
     onApply(parsedDraft);
+    onApplied?.(parsedDraft);
   }
 
   return (
@@ -52,11 +55,15 @@ export function RoomCapacityFilter({
     >
       <fieldset
         aria-label={messages.filterButtonLabel}
-        className="grid min-w-0 gap-2 rounded-lg border border-border bg-card p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:min-w-80 lg:max-w-md"
+        data-schedule-capacity-filter
+        className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-3"
       >
         <legend className="sr-only">{messages.filterButtonLabel}</legend>
-        <div className="grid min-w-0 gap-2">
-          <Label htmlFor="schedule-minimum-capacity">
+        <div className="grid min-w-0 gap-1">
+          <Label
+            htmlFor="schedule-minimum-capacity"
+            className="block text-xs leading-4 text-muted-foreground"
+          >
             {messages.minimumCapacityLabel}
           </Label>
           <Input
@@ -67,6 +74,7 @@ export function RoomCapacityFilter({
             min={1}
             step={1}
             placeholder={messages.minimumCapacityPlaceholder}
+            className="bg-card"
             value={draft}
             aria-invalid={showValidationError}
             aria-describedby={showValidationError ? errorId : undefined}
@@ -84,7 +92,7 @@ export function RoomCapacityFilter({
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="submit"
-            className="min-h-11 touch-manipulation"
+            className="min-h-11 touch-manipulation border border-primary bg-primary text-primary-foreground hover:border-secondary hover:bg-secondary disabled:border-transparent disabled:bg-muted disabled:text-muted-foreground"
             disabled={isUnchanged}
           >
             {messages.applyCapacityFilter}
@@ -94,7 +102,10 @@ export function RoomCapacityFilter({
               type="button"
               variant="outline"
               className="min-h-11 touch-manipulation"
-              onClick={onClear}
+              onClick={() => {
+                onClear();
+                onCleared?.();
+              }}
             >
               {messages.clearCapacityFilter}
             </Button>
@@ -104,7 +115,7 @@ export function RoomCapacityFilter({
           <div
             role="status"
             aria-live="polite"
-            className="flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-sm text-muted-foreground sm:col-span-2"
+            className="flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground sm:col-span-2"
           >
             <span className="font-medium text-foreground">
               {messages.activeCapacity}

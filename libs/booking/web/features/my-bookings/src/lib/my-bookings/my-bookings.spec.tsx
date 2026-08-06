@@ -84,7 +84,6 @@ const pastBooking = (id: string): MyBooking => ({
 const messages: AppDictionary['myBookings'] = {
   title: 'My bookings',
   description: 'Review meetings.',
-  localTime: 'Times shown in',
   loading: 'Loading',
   retry: 'Retry',
   loadMore: 'Load more',

@@ -15,7 +15,10 @@ import {
   parseScheduleRouteState,
   updateScheduleSearchParams,
 } from '../model/schedule-navigation';
-import type { ScheduleRoutePatch } from '../types/schedule.types';
+import type {
+  ScheduleRoutePatch,
+  ScheduleWeekTransition,
+} from '../types/schedule.types';
 import type { ScheduleNavigationState } from '../types/schedule-feature.types';
 
 export function useScheduleNavigation(
@@ -26,6 +29,8 @@ export function useScheduleNavigation(
   const searchParams = useSearchParams();
   const browserTimeZone = useBrowserTimeZone();
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [weekTransition, setWeekTransition] =
+    useState<ScheduleWeekTransition>(undefined);
   const observedSearch = searchParams.toString();
   const latestRouteSearch = useRef(observedSearch);
   const pendingRouteSearch = useRef<string | undefined>(undefined);
@@ -110,9 +115,19 @@ export function useScheduleNavigation(
     selectedWeek,
     requestedRoomId,
     minimumCapacity,
-    selectDate: (date) => navigate({ date: formatCalendarDate(date) }),
-    selectRoom: (roomId) => navigate({ roomId }),
-    normalizeRoom: (roomId) => navigate({ roomId: roomId ?? null }, true),
+    weekTransition,
+    selectDate: (date) => {
+      setWeekTransition(undefined);
+      navigate({ date: formatCalendarDate(date) });
+    },
+    selectRoom: (roomId) => {
+      setWeekTransition(undefined);
+      navigate({ roomId });
+    },
+    normalizeRoom: (roomId) => {
+      setWeekTransition(undefined);
+      navigate({ roomId: roomId ?? null }, true);
+    },
     setMinimumCapacity: (value, roomId) =>
       navigate(
         {
@@ -121,23 +136,32 @@ export function useScheduleNavigation(
         },
         false,
       ),
-    clearMinimumCapacity: () => navigate({ minimumCapacity: null }),
-    goToPreviousWeek: () =>
+    clearMinimumCapacity: () => {
+      setWeekTransition(undefined);
+      navigate({ minimumCapacity: null });
+    },
+    goToPreviousWeek: () => {
+      setWeekTransition('previous');
       navigate({
         date: formatCalendarDate(
           addCalendarDays(authoritativeSelectedDate(), -7),
         ),
-      }),
-    goToNextWeek: () =>
+      });
+    },
+    goToNextWeek: () => {
+      setWeekTransition('next');
       navigate({
         date: formatCalendarDate(
           addCalendarDays(authoritativeSelectedDate(), 7),
         ),
-      }),
-    goToToday: () =>
+      });
+    },
+    goToToday: () => {
+      setWeekTransition(undefined);
       navigate({
         date: formatCalendarDate(calendarDateAt(nowUtc, browserTimeZone)),
-      }),
+      });
+    },
     openCalendar: () => setCalendarOpen(true),
     calendarOpen,
     setCalendarOpen,

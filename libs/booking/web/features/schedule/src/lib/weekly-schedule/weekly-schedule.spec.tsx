@@ -51,7 +51,7 @@ jest.mock('next/navigation', () => ({
 }));
 jest.mock('@mr-booking/booking-ui', () => ({
   ...jest.requireActual('@mr-booking/booking-ui'),
-  useBrowserTimeZone: () => 'Europe/Lisbon',
+  useBrowserTimeZone: () => mockBrowserTimeZone,
 }));
 
 const router = {
@@ -64,28 +64,30 @@ const router = {
   prefetch: jest.fn(),
 };
 let viewportWidth = 375;
+let mockBrowserTimeZone = 'Europe/Lisbon';
 const messages: AppDictionary['schedule'] = {
-  title: 'Weekly schedule',
-  description: 'Choose a room.',
+  title: 'Schedule',
+  description: '',
   roomLabel: 'Meeting room',
   previousWeek: 'Previous week',
   currentWeek: 'This week',
   nextWeek: 'Next week',
-  officeHours: 'Office hours',
-  localTime: 'Local time',
+  officeTimezoneIndicator: 'Office timezone: Kyiv',
+  timezoneAccessibilityDescription:
+    'Schedule times are shown in your local timezone. Office-hour validation uses 09:00–19:00 Europe/Kyiv.',
   loadingRooms: 'Loading rooms',
   loadingSchedule: 'Loading schedule',
   emptyRooms: 'No rooms',
   emptySchedule: 'No bookings',
-  minimumCapacityLabel: 'Minimum capacity',
+  minimumCapacityLabel: 'From people',
   minimumCapacityPlaceholder: 'People',
-  applyCapacityFilter: 'Apply filter',
-  clearCapacityFilter: 'Clear filter',
-  activeCapacity: 'Capacity filter active',
+  applyCapacityFilter: 'Apply',
+  clearCapacityFilter: 'Clear',
+  activeCapacity: 'Capacity:',
   invalidCapacity: 'Enter a positive whole number of people.',
   noMatchingRooms: 'No rooms can accommodate at least {capacity} people.',
-  filterButtonLabel: 'Filter rooms by capacity',
-  currentFilterSummary: 'Showing rooms for at least {capacity} people.',
+  filterButtonLabel: 'Filter by capacity',
+  currentFilterSummary: 'At least {capacity} people',
   retry: 'Retry',
   available: 'Available',
   unavailable: 'Unavailable',
@@ -103,7 +105,7 @@ const messages: AppDictionary['schedule'] = {
   cancelBooking: 'Cancel booking',
   cancelling: 'Cancelling',
   keepBooking: 'Keep booking',
-  close: 'Close dialog',
+  close: 'Close',
   requiredTitle: 'Title required',
   invalidEnd: 'Invalid end',
   cancelConfirmation: 'Confirm cancellation',
@@ -121,9 +123,7 @@ const messages: AppDictionary['schedule'] = {
     floor: 'Floor',
     capacity: 'people',
     noBookingsForDay: 'No bookings for this day',
-    browserTimezone: 'Your time',
-    officeTimezone: 'Office hours',
-    officeInterval: 'Kyiv',
+    browserTimezone: 'Time',
   },
   duration: {
     label: 'Duration',
@@ -140,6 +140,7 @@ const messages: AppDictionary['schedule'] = {
     selectDay: 'Select',
     selectedDay: 'selected',
     currentDay: 'today',
+    currentTime: 'Current time',
     bookingAtTime: 'Booking',
   },
   errors: {
@@ -172,6 +173,7 @@ describe('weekly schedule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     viewportWidth = 375;
+    mockBrowserTimeZone = 'Europe/Lisbon';
     window.matchMedia = jest.fn().mockImplementation((query: string) => ({
       matches: query.includes('min-width: 1024')
         ? viewportWidth >= 1024
@@ -209,13 +211,13 @@ describe('weekly schedule', () => {
     renderSchedule();
 
     expect(
-      (await screen.findByRole('combobox', { name: 'Select meeting room' }))
-        .textContent,
-    ).toContain('Change');
-    expect(
-      screen.getByRole('status', { name: 'Selected room: Aquarium' })
-        .textContent,
+      (await screen.findByTestId('mobile-room-summary')).textContent,
     ).toContain('Floor 2 · 6 people');
+    expect(
+      screen
+        .getByRole('button', { name: /Selected room: Aquarium/u })
+        .getAttribute('aria-expanded'),
+    ).toBe('false');
     expect(
       document.querySelector('[data-schedule-presentation="compact"]'),
     ).toBeDefined();
@@ -245,10 +247,10 @@ describe('weekly schedule', () => {
     ]);
     renderSchedule();
 
-    await screen.findByRole('status', { name: 'Selected room: Aquarium' });
-    const input = await screen.findByLabelText('Minimum capacity');
+    await openMobileDock();
+    const input = await screen.findByLabelText('From people');
     fireEvent.change(input, { target: { value: '6' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
     expect(router.push).toHaveBeenCalledWith(
       expect.stringMatching(
@@ -295,8 +297,8 @@ describe('weekly schedule', () => {
     ]);
     renderSchedule();
 
-    await screen.findByRole('status', { name: 'Selected room: Aquarium' });
-    const input = await screen.findByLabelText('Minimum capacity');
+    await openMobileDock();
+    const input = await screen.findByLabelText('From people');
     fireEvent.change(input, { target: { value: '10' } });
     const form = input.closest('form');
     if (!form) throw new Error('Expected capacity filter form');
@@ -327,8 +329,8 @@ describe('weekly schedule', () => {
     renderSchedule();
 
     expect(
-      await screen.findByRole('status', { name: 'Selected room: Mars' }),
-    ).toBeDefined();
+      (await screen.findByTestId('mobile-room-summary')).textContent,
+    ).toContain('Mars');
     expect(router.replace).toHaveBeenCalledWith(
       expect.stringMatching(/roomId=room-2.*minCapacity=6/u),
       { scroll: false },
@@ -354,6 +356,7 @@ describe('weekly schedule', () => {
       await screen.findByText('No rooms can accommodate at least 20 people.'),
     ).toBeDefined();
     expect(listRoomBookings).not.toHaveBeenCalled();
+    await openMobileDock();
     expect(
       screen
         .getByRole('combobox', { name: 'Select meeting room' })
@@ -361,7 +364,7 @@ describe('weekly schedule', () => {
     ).toBe(true);
 
     const clearButtons = screen.getAllByRole('button', {
-      name: 'Clear filter',
+      name: 'Clear',
     });
     const emptyState = screen
       .getByText('No rooms can accommodate at least 20 people.')
@@ -380,9 +383,10 @@ describe('weekly schedule', () => {
 
   it('rejects decimal capacity input with an associated validation message', async () => {
     renderSchedule();
-    const input = await screen.findByLabelText('Minimum capacity');
+    await openMobileDock();
+    const input = await screen.findByLabelText('From people');
     fireEvent.change(input, { target: { value: '4.5' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
     expect(
       (
@@ -390,6 +394,32 @@ describe('weekly schedule', () => {
       ).getAttribute('role'),
     ).toBe('alert');
     expect(router.push).not.toHaveBeenCalled();
+    expect(
+      screen
+        .getByRole('button', { name: /Selected room: Aquarium/u })
+        .getAttribute('aria-expanded'),
+    ).toBe('true');
+  });
+
+  it('discloses compact room and filter controls with an accessible relationship', async () => {
+    renderSchedule();
+
+    const trigger = await openMobileDock();
+    expect(trigger.getAttribute('aria-controls')).toBe(
+      'mobile-schedule-control-dock-panel',
+    );
+    expect(
+      screen.getByRole('combobox', { name: 'Select meeting room' }),
+    ).toBeDefined();
+    expect(screen.getByLabelText('From people')).toBeDefined();
+    fireEvent.keyDown(
+      document.getElementById('mobile-schedule-control-dock-panel')!,
+      {
+        key: 'Escape',
+      },
+    );
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('normalizes an invalid capacity URL value while preserving other query state', async () => {
@@ -465,6 +495,47 @@ describe('weekly schedule', () => {
     });
     expect(grid).not.toBeNull();
     expect(grid?.querySelector('[role="grid"]')?.children).toHaveLength(8);
+    expect(
+      document.querySelector('[data-schedule-toolbar="expanded"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-schedule-capacity-filter]'),
+    ).not.toBeNull();
+    expect(screen.getByRole('group', { name: 'This week' })).toBeDefined();
+    expect(screen.getByText('Office timezone: Kyiv')).toBeDefined();
+  });
+
+  it('omits the office indicator when the browser uses Kyiv time', async () => {
+    mockBrowserTimeZone = 'Europe/Kyiv';
+    viewportWidth = 1440;
+    renderSchedule();
+
+    await screen.findByRole('grid', { name: 'Schedule' });
+    expect(screen.queryByRole('note')).toBeNull();
+  });
+
+  it('exposes the current day and time with semantic visual-boundary hooks', async () => {
+    jest.setSystemTime(new Date('2030-06-03T06:15:00.000Z'));
+    viewportWidth = 1440;
+    renderSchedule();
+
+    const grid = await screen.findByRole('grid', { name: 'Schedule' });
+    expect(grid.getAttribute('aria-describedby')).toBe(
+      'schedule-current-time-expanded',
+    );
+    expect(
+      document.getElementById('schedule-current-time-expanded')?.textContent,
+    ).toContain('Current time: 07:15');
+    expect(document.querySelector('[data-current-day="true"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-current-time-indicator]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-time-boundary="hour"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-time-boundary="half-hour"]'),
+    ).not.toBeNull();
   });
 
   it('updates selected date and normalized week from the compact strip', async () => {
@@ -493,12 +564,45 @@ describe('weekly schedule', () => {
         author: { id: 'user-1', name: 'Alice' },
         isMine: true,
       },
+      {
+        id: 'booking-2',
+        roomId: 'room-1',
+        title: 'Room check',
+        startsAtUtc: '2030-06-03T07:00:00.000Z',
+        endsAtUtc: '2030-06-03T08:00:00.000Z',
+        author: { id: 'user-2', name: 'Bob' },
+        isMine: false,
+      },
     ]);
     renderSchedule();
     const booking = await screen.findByRole('button', {
       name: /Design sync.*07:00–08:00.*Your booking/u,
     });
     expect(booking.style.gridColumn).toBe('1');
+    expect(booking.getAttribute('data-booking-ownership')).toBe('mine');
+    const foreignBooking = await screen.findByRole('button', {
+      name: /Room check.*08:00–09:00.*Bob/u,
+    });
+    expect(foreignBooking.getAttribute('data-booking-ownership')).toBe(
+      'foreign',
+    );
+    expect(foreignBooking.getAttribute('data-booking-author-color')).toBe(
+      'terracotta',
+    );
+    expect(foreignBooking.textContent).toContain('Bob');
+  });
+
+  it('marks the grid with the selected directional week transition', async () => {
+    renderSchedule();
+
+    await screen.findByRole('grid', { name: 'Schedule' });
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+
+    expect(
+      document
+        .querySelector('[data-schedule-wide-breakout]')
+        ?.getAttribute('data-week-transition'),
+    ).toBe('next');
   });
 
   it('stops booking durations at the next occupied interval', async () => {
@@ -716,7 +820,7 @@ describe('weekly schedule', () => {
       ),
     );
     expect(router.replace).toHaveBeenCalledTimes(1);
-    await screen.findByRole('combobox', { name: 'Select meeting room' });
+    await screen.findByTestId('mobile-room-summary');
   });
 });
 
@@ -726,6 +830,15 @@ function renderSchedule() {
       <WeeklySchedule locale="en" messages={messages} />
     </SWRConfig>,
   );
+}
+
+async function openMobileDock(): Promise<HTMLButtonElement> {
+  const trigger = await screen.findByRole('button', {
+    name: /Selected room:/u,
+  });
+  fireEvent.click(trigger);
+  expect(trigger.getAttribute('aria-expanded')).toBe('true');
+  return trigger;
 }
 
 function createSearchParams(value: string): ReturnType<typeof useSearchParams> {

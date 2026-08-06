@@ -16,15 +16,10 @@ export function ApplicationNavigation({
     { ...schedule, icon: CalendarDays },
     { ...myBookings, icon: ListChecks },
   ] as const;
-  const activeIndex = Math.max(
-    items.findIndex((item) => isActivePath(pathname, item.href)),
-    0,
-  );
-
   return (
     <>
       <nav aria-label={label} className="hidden md:block">
-        <ul className="flex items-center gap-1">
+        <ul className="flex items-stretch">
           {items.map((item) => {
             const active = isActivePath(pathname, item.href);
 
@@ -34,9 +29,8 @@ export function ApplicationNavigation({
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                    active &&
-                      'bg-accent font-semibold text-accent-foreground shadow-sm',
+                    'inline-flex min-h-16 items-center gap-2 border-b-2 border-transparent px-4 text-sm font-medium text-muted-foreground transition-colors duration-150 outline-none hover:bg-accent/55 hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                    active && 'border-primary font-semibold text-foreground',
                   )}
                 >
                   <item.icon aria-hidden="true" className="size-4" />
@@ -51,27 +45,15 @@ export function ApplicationNavigation({
       <div
         aria-hidden="true"
         data-mobile-navigation-scrim
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-[var(--mobile-navigation-occupied-space)] bg-gradient-to-t from-background via-background/95 to-transparent md:hidden"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-[var(--mobile-navigation-occupied-space)] border-t border-border bg-background md:hidden"
       />
 
       <nav
         aria-label={label}
         data-mobile-navigation
-        className="fixed inset-x-4 bottom-[var(--mobile-navigation-bottom-offset)] z-30 mx-auto min-h-[var(--mobile-navigation-height)] max-w-sm rounded-[2rem] border border-border/80 bg-card p-1.5 shadow-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 min-h-[var(--mobile-navigation-height)] border-y border-border bg-card px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden"
       >
-        <ul className="relative grid grid-cols-2 gap-2">
-          <li
-            aria-hidden="true"
-            data-mobile-navigation-indicator
-            className="pointer-events-none absolute inset-y-0 left-0 w-[calc((100%_-_0.5rem)/2)] rounded-[1.625rem] bg-accent shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
-            style={{
-              transform:
-                activeIndex === 1
-                  ? 'translate3d(calc(100% + 0.5rem), 0, 0)'
-                  : 'translate3d(0, 0, 0)',
-            }}
-          />
-
+        <ul className="mx-auto grid max-w-sm grid-cols-2">
           {items.map((item) => {
             const active = isActivePath(pathname, item.href);
 
@@ -81,8 +63,9 @@ export function ApplicationNavigation({
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'flex min-h-14 touch-manipulation flex-col items-center justify-center gap-1 rounded-[1.625rem] px-3 py-2 text-center text-xs leading-4 font-medium text-muted-foreground outline-none transition-colors duration-300 hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card active:opacity-80',
-                    active && 'font-semibold text-accent-foreground',
+                    'flex min-h-14 touch-manipulation flex-col items-center justify-center gap-1 border-b-2 border-transparent px-3 py-2 text-center text-xs leading-4 font-medium text-muted-foreground outline-none transition-colors duration-150 hover:bg-accent/55 hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:translate-y-px',
+                    active &&
+                      'border-primary bg-accent font-semibold text-accent-foreground',
                   )}
                 >
                   <item.icon aria-hidden="true" className="size-5" />

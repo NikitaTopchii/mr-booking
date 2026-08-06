@@ -1,4 +1,5 @@
 import type { WeeklyScheduleViewProps } from './types/schedule-feature.types';
+import { cn } from '@mr-booking/shared-ui';
 import { ScheduleToolbar } from './components/schedule-toolbar';
 import {
   SelectedDayHeading,
@@ -27,6 +28,7 @@ export function WeeklyScheduleView({
   emailVerified = true,
   onVerificationRequired,
 }: WeeklyScheduleViewProps) {
+  const compactPresentation = data.presentation === 'compact';
   const roomsError = data.roomsError
     ? resolveFeatureErrorMessage(data.roomsError, messages.errors)
     : undefined;
@@ -45,121 +47,164 @@ export function WeeklyScheduleView({
   return (
     <main
       id="main-content"
-      className="mx-auto min-h-[calc(100dvh-4.5rem)] max-w-screen-2xl overflow-x-clip px-3 py-4 sm:px-6 sm:py-6 lg:py-8"
+      className={cn(
+        'mx-auto w-full max-w-screen-2xl overflow-x-clip py-2 md:min-h-[calc(100dvh-var(--app-header-height))] md:py-4 lg:py-5',
+        compactPresentation &&
+          'flex h-[calc(100dvh-var(--app-header-height)-var(--mobile-navigation-occupied-space))] min-h-0 flex-col overflow-hidden',
+      )}
     >
-      <section aria-label={messages.title} className="lg:py-5">
-        <div className="sticky top-[4.5rem] z-30 -mx-3 border-b border-border bg-background/95 px-3 pb-3 backdrop-blur-sm sm:top-[4.5rem] sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:backdrop-blur-none">
-          <ScheduleToolbar
-            locale={locale}
-            messages={messages}
-            rooms={data.rooms}
-            room={data.selectedRoom}
-            schedule={data.presentationRange}
-            presentation={data.presentation}
-            selectedDate={navigation.selectedDate}
-            nowUtc={clock.nowUtc}
-            loadingRooms={data.isLoadingRooms}
-            browserTimeZone={browserTimeZone}
-            onRoomChange={navigation.selectRoom}
-            onPrevious={navigation.goToPreviousWeek}
-            onCurrent={navigation.goToToday}
-            onNext={navigation.goToNextWeek}
-            onOpenCalendar={navigation.openCalendar}
-            onSelectDate={navigation.selectDate}
-            minimumCapacity={navigation.minimumCapacity}
-            onApplyCapacity={data.applyMinimumCapacity}
-            onClearCapacity={navigation.clearMinimumCapacity}
-          />
-        </div>
-        {creation.notice === 'created' ? (
-          <p
-            role="status"
-            className="mt-3 rounded-md border border-border bg-muted px-4 py-3 text-sm font-medium"
-          >
-            {messages.successCreated}
-          </p>
-        ) : null}
-        {cancellation.notice === 'cancelled' ? (
-          <p
-            role="status"
-            className="mt-3 rounded-md border border-border bg-muted px-4 py-3 text-sm font-medium"
-          >
-            {messages.successCancelled}
-          </p>
-        ) : null}
-        {data.isLoadingRooms || !data.presentation ? (
-          <ScheduleLoading
-            presentation={data.presentation}
-            message={
-              data.isLoadingRooms
-                ? messages.loadingRooms
-                : messages.loadingSchedule
-            }
-          />
-        ) : roomsError ? (
-          <ScheduleErrorState
-            message={roomsError}
-            retry={messages.retry}
-            onRetry={data.retryRooms}
-          />
-        ) : data.noMatchingRooms && navigation.minimumCapacity !== undefined ? (
-          <ScheduleNoMatchingRoomsState
-            message={messages.noMatchingRooms.replace(
-              '{capacity}',
-              String(navigation.minimumCapacity),
+      <section
+        aria-label={messages.title}
+        className={cn(compactPresentation && 'flex min-h-0 flex-1 flex-col')}
+      >
+        <div
+          data-schedule-standard-content
+          className={cn(
+            'mx-auto w-full max-w-6xl px-3 sm:px-6',
+            compactPresentation && 'flex min-h-0 flex-1 flex-col',
+          )}
+        >
+          <h1 className="sr-only lg:hidden">{messages.title}</h1>
+          <div
+            className={cn(
+              'z-30 -mx-3 bg-background px-3 sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:bg-transparent lg:px-0',
+              !compactPresentation &&
+                'sticky top-[var(--app-header-height)] border-b border-border pb-2 lg:border-0 lg:pb-0',
+              compactPresentation && 'shrink-0',
             )}
-            clearLabel={messages.clearCapacityFilter}
-            onClear={navigation.clearMinimumCapacity}
-          />
-        ) : !data.hasRooms ? (
-          <ScheduleEmptyState message={messages.emptyRooms} />
-        ) : scheduleError ? (
-          <ScheduleErrorState
-            message={scheduleError}
-            retry={messages.retry}
-            onRetry={data.retrySchedule}
-          />
-        ) : data.isLoadingSchedule || !data.presentationRange ? (
-          <ScheduleLoading
-            presentation={data.presentation}
-            message={messages.loadingSchedule}
-          />
-        ) : data.selectedRoom ? (
-          <>
-            {data.presentation !== 'expanded' ? (
-              <SelectedDayHeading
-                locale={locale}
-                messages={messages}
-                selectedDate={navigation.selectedDate}
-                browserTimeZone={browserTimeZone}
-              />
-            ) : null}
-            {data.bookings.length === 0 && data.presentation === 'compact' ? (
-              <p className="mt-3 text-sm text-muted-foreground" role="status">
-                {messages.mobile.noBookingsForDay}
-              </p>
-            ) : null}
-            <ScheduleGrid
+          >
+            <ScheduleToolbar
               locale={locale}
               messages={messages}
+              rooms={data.rooms}
+              room={data.selectedRoom}
               schedule={data.presentationRange}
               presentation={data.presentation}
-              bookings={data.bookings}
-              now={clock.nowUtc}
-              browserTimeZone={browserTimeZone}
-              revalidating={data.isRevalidating}
               selectedDate={navigation.selectedDate}
-              onSelectSlot={(slot) => {
-                if (!emailVerified) {
-                  onVerificationRequired?.();
-                  return;
-                }
-                creation.openForSlot(slot);
-              }}
-              onSelectBooking={cancellation.openBooking}
+              nowUtc={clock.nowUtc}
+              loadingRooms={data.isLoadingRooms}
+              browserTimeZone={browserTimeZone}
+              onRoomChange={navigation.selectRoom}
+              onPrevious={navigation.goToPreviousWeek}
+              onCurrent={navigation.goToToday}
+              onNext={navigation.goToNextWeek}
+              onOpenCalendar={navigation.openCalendar}
+              onSelectDate={navigation.selectDate}
+              minimumCapacity={navigation.minimumCapacity}
+              onApplyCapacity={data.applyMinimumCapacity}
+              onClearCapacity={navigation.clearMinimumCapacity}
+              loadingSchedule={data.isLoadingSchedule}
+              hasScheduleError={scheduleError !== undefined}
+              noMatchingRooms={data.noMatchingRooms}
             />
-          </>
-        ) : null}
+          </div>
+          {creation.notice === 'created' ? (
+            <p
+              role="status"
+              className="mt-3 border-y border-border bg-transparent px-1 py-3 text-sm font-medium"
+            >
+              {messages.successCreated}
+            </p>
+          ) : null}
+          {cancellation.notice === 'cancelled' ? (
+            <p
+              role="status"
+              className="mt-3 border-y border-border bg-transparent px-1 py-3 text-sm font-medium"
+            >
+              {messages.successCancelled}
+            </p>
+          ) : null}
+          {data.isLoadingRooms || !data.presentation ? (
+            <ScheduleLoading
+              presentation={data.presentation}
+              message={
+                data.isLoadingRooms
+                  ? messages.loadingRooms
+                  : messages.loadingSchedule
+              }
+            />
+          ) : roomsError ? (
+            <ScheduleErrorState
+              message={roomsError}
+              retry={messages.retry}
+              onRetry={data.retryRooms}
+            />
+          ) : data.noMatchingRooms &&
+            navigation.minimumCapacity !== undefined ? (
+            <ScheduleNoMatchingRoomsState
+              message={messages.noMatchingRooms.replace(
+                '{capacity}',
+                String(navigation.minimumCapacity),
+              )}
+              clearLabel={messages.clearCapacityFilter}
+              onClear={navigation.clearMinimumCapacity}
+            />
+          ) : !data.hasRooms ? (
+            <ScheduleEmptyState message={messages.emptyRooms} />
+          ) : scheduleError ? (
+            <ScheduleErrorState
+              message={scheduleError}
+              retry={messages.retry}
+              onRetry={data.retrySchedule}
+            />
+          ) : data.isLoadingSchedule || !data.presentationRange ? (
+            <ScheduleLoading
+              presentation={data.presentation}
+              message={messages.loadingSchedule}
+            />
+          ) : data.selectedRoom ? (
+            <div
+              className={cn(
+                compactPresentation && 'flex min-h-0 flex-1 flex-col',
+              )}
+            >
+              {data.presentation !== 'expanded' ? (
+                <div className="hidden md:block">
+                  <SelectedDayHeading
+                    locale={locale}
+                    messages={messages}
+                    selectedDate={navigation.selectedDate}
+                    browserTimeZone={browserTimeZone}
+                  />
+                </div>
+              ) : null}
+              {data.bookings.length === 0 && data.presentation === 'compact' ? (
+                <p className="sr-only" role="status">
+                  {messages.mobile.noBookingsForDay}
+                </p>
+              ) : null}
+              <div
+                key={data.presentationRange.weekKey}
+                data-schedule-wide-breakout
+                data-week-transition={navigation.weekTransition}
+                className={cn(
+                  'schedule-wide-breakout schedule-week-transition',
+                  compactPresentation && 'mt-2 flex min-h-0 flex-1 flex-col',
+                )}
+              >
+                <ScheduleGrid
+                  locale={locale}
+                  messages={messages}
+                  schedule={data.presentationRange}
+                  presentation={data.presentation}
+                  bookings={data.bookings}
+                  now={clock.nowUtc}
+                  browserTimeZone={browserTimeZone}
+                  revalidating={data.isRevalidating}
+                  selectedDate={navigation.selectedDate}
+                  onSelectSlot={(slot) => {
+                    if (!emailVerified) {
+                      onVerificationRequired?.();
+                      return;
+                    }
+                    creation.openForSlot(slot);
+                  }}
+                  onSelectBooking={cancellation.openBooking}
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
       </section>
       <ScheduleDatePicker
         locale={locale}

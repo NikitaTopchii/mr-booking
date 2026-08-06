@@ -108,8 +108,8 @@ export interface AppDictionary {
     readonly previousWeek: string;
     readonly currentWeek: string;
     readonly nextWeek: string;
-    readonly officeHours: string;
-    readonly localTime: string;
+    readonly officeTimezoneIndicator: string;
+    readonly timezoneAccessibilityDescription: string;
     readonly loadingRooms: string;
     readonly loadingSchedule: string;
     readonly emptyRooms: string;
@@ -159,8 +159,6 @@ export interface AppDictionary {
       readonly capacity: string;
       readonly noBookingsForDay: string;
       readonly browserTimezone: string;
-      readonly officeTimezone: string;
-      readonly officeInterval: string;
     };
     readonly duration: {
       readonly label: string;
@@ -177,6 +175,7 @@ export interface AppDictionary {
       readonly selectDay: string;
       readonly selectedDay: string;
       readonly currentDay: string;
+      readonly currentTime: string;
       readonly bookingAtTime: string;
     };
     readonly errors: {
@@ -207,7 +206,6 @@ export interface AppDictionary {
   readonly myBookings: {
     readonly title: string;
     readonly description: string;
-    readonly localTime: string;
     readonly loading: string;
     readonly retry: string;
     readonly loadMore: string;

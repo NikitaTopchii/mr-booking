@@ -1,31 +1,15 @@
-import {
-  Button,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@mr-booking/shared-ui';
-import {
-  Building2,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  MapPin,
-  Users,
-} from 'lucide-react';
+import { Button } from '@mr-booking/shared-ui';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Room } from '@mr-booking/booking-data-access-web';
 import type { CalendarDate } from '@mr-booking/shared-date-time';
 import type { Locale } from '@mr-booking/shared-i18n';
 import { formatScheduleWeekRange } from '../formatting/schedule-date-time.formatter';
 import { IconButton, ScheduleWeekDateStrip } from './schedule-date-navigation';
 import { RoomCapacityFilter } from './room-capacity-filter';
-import type {
-  ScheduleMessages,
-  ScheduleRoomSelectorProps,
-} from '../types/schedule-feature.types';
+import { MobileScheduleControlDock } from './mobile-schedule-control-dock';
+import { ScheduleRoomSelector } from './schedule-room-selector';
+import { ScheduleTimeZoneSummary } from './schedule-time-zone-summary';
+import type { ScheduleMessages } from '../types/schedule-feature.types';
 import type {
   SchedulePresentation,
   ScheduleRange,
@@ -51,6 +35,9 @@ export function ScheduleToolbar({
   minimumCapacity,
   onApplyCapacity,
   onClearCapacity,
+  loadingSchedule,
+  hasScheduleError,
+  noMatchingRooms,
 }: {
   readonly locale: Locale;
   readonly messages: ScheduleMessages;
@@ -71,29 +58,33 @@ export function ScheduleToolbar({
   readonly minimumCapacity: number | undefined;
   readonly onApplyCapacity: (minimumCapacity: number) => void;
   readonly onClearCapacity: () => void;
+  readonly loadingSchedule: boolean;
+  readonly hasScheduleError: boolean;
+  readonly noMatchingRooms: boolean;
 }) {
   return (
     <>
-      {presentation === 'expanded' ? (
-        <div className="hidden border-b border-border pb-6 lg:flex lg:items-end lg:justify-between">
-          <div>
-            <h1 className="text-4xl font-semibold tracking-tight">
-              {messages.title}
-            </h1>
-            <p className="mt-2 max-w-2xl leading-7 text-muted-foreground">
-              {messages.description}
-            </p>
-          </div>
-          <TimeZoneSummary
-            messages={messages}
-            browserTimeZone={browserTimeZone}
-          />
-        </div>
-      ) : null}
+      <div
+        data-schedule-heading
+        className="hidden items-center justify-between gap-4 border-b border-border pb-3 lg:flex"
+      >
+        <h1 className="text-2xl font-semibold tracking-tight lg:text-3xl">
+          {messages.title}
+        </h1>
+        <ScheduleTimeZoneSummary
+          messages={messages}
+          browserTimeZone={browserTimeZone}
+          compact={presentation !== 'expanded'}
+          className="mb-0.5 shrink-0"
+        />
+      </div>
       {presentation === 'expanded' && schedule ? (
-        <div className="hidden rounded-xl border border-border bg-card p-4 shadow-sm lg:flex lg:items-end lg:justify-between">
-          <div className="flex min-w-0 flex-1 flex-wrap items-end gap-4">
-            <RoomSelector
+        <div
+          data-schedule-toolbar="expanded"
+          className="hidden border-b border-border py-4 lg:flex lg:flex-wrap lg:items-start lg:justify-between lg:gap-x-6 lg:gap-y-3"
+        >
+          <div className="grid min-w-0 items-start gap-4 lg:w-[36rem] lg:grid-cols-[16rem_minmax(0,1fr)] xl:w-[38rem]">
+            <ScheduleRoomSelector
               messages={messages}
               rooms={rooms}
               room={room}
@@ -107,208 +98,113 @@ export function ScheduleToolbar({
               onClear={onClearCapacity}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            role="group"
+            aria-label={messages.currentWeek}
+            data-schedule-week-navigation
+            className="mt-5 flex flex-wrap items-center gap-2"
+          >
             <IconButton label={messages.previousWeek} onClick={onPrevious}>
               <ChevronLeft aria-hidden="true" />
             </IconButton>
-            <Button type="button" variant="outline" onClick={onCurrent}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="min-h-11"
+              onClick={onCurrent}
+            >
               {messages.currentWeek}
             </Button>
             <IconButton label={messages.nextWeek} onClick={onNext}>
               <ChevronRight aria-hidden="true" />
             </IconButton>
-            <strong className="ml-1 min-w-44 text-center text-sm">
+            <strong className="min-w-44 text-center text-sm tabular-nums">
               {formatScheduleWeekRange(schedule.visibleDates, locale)}
             </strong>
           </div>
         </div>
       ) : null}
       {presentation !== 'expanded' ? (
-        <div className="grid gap-2 pt-1 lg:hidden">
-          <CompactRoomSelector
-            messages={messages}
-            rooms={rooms}
-            room={room}
-            loading={loadingRooms}
-            onChange={onRoomChange}
-          />
-          <RoomCapacityFilter
-            messages={messages}
-            minimumCapacity={minimumCapacity}
-            onApply={onApplyCapacity}
-            onClear={onClearCapacity}
-          />
-          <div className="flex items-center gap-2">
-            <IconButton label={messages.previousWeek} onClick={onPrevious}>
-              <ChevronLeft aria-hidden="true" />
-            </IconButton>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-11 px-3"
-              onClick={onCurrent}
+        <div data-schedule-toolbar="compact" className="grid lg:hidden">
+          {presentation === 'compact' ? (
+            <MobileScheduleControlDock
+              messages={messages}
+              rooms={rooms}
+              room={room}
+              loading={loadingRooms}
+              onChange={onRoomChange}
+              browserTimeZone={browserTimeZone}
+              minimumCapacity={minimumCapacity}
+              loadingSchedule={loadingSchedule}
+              hasScheduleError={hasScheduleError}
+              noMatchingRooms={noMatchingRooms}
+              onApplyCapacity={onApplyCapacity}
+              onClearCapacity={onClearCapacity}
+            />
+          ) : null}
+          {presentation === 'medium' ? (
+            <div className="grid grid-cols-[minmax(16rem,18rem)_minmax(18rem,1fr)] items-end gap-4 border-b border-border py-3">
+              <ScheduleRoomSelector
+                messages={messages}
+                rooms={rooms}
+                room={room}
+                loading={loadingRooms}
+                onChange={onRoomChange}
+              />
+              <RoomCapacityFilter
+                messages={messages}
+                minimumCapacity={minimumCapacity}
+                onApply={onApplyCapacity}
+                onClear={onClearCapacity}
+              />
+            </div>
+          ) : null}
+          <div className="grid gap-2 py-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div
+              role="group"
+              aria-label={messages.currentWeek}
+              data-schedule-week-navigation
+              className="flex items-center gap-2"
             >
-              {messages.mobile.today}
-            </Button>
-            <IconButton label={messages.nextWeek} onClick={onNext}>
-              <ChevronRight aria-hidden="true" />
-            </IconButton>
-            <IconButton
-              label={messages.mobile.openCalendar}
-              onClick={onOpenCalendar}
-            >
-              <span aria-hidden="true">▦</span>
-            </IconButton>
+              <IconButton label={messages.previousWeek} onClick={onPrevious}>
+                <ChevronLeft aria-hidden="true" />
+              </IconButton>
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 px-3"
+                onClick={onCurrent}
+              >
+                {messages.mobile.today}
+              </Button>
+              <IconButton label={messages.nextWeek} onClick={onNext}>
+                <ChevronRight aria-hidden="true" />
+              </IconButton>
+              <IconButton
+                label={messages.mobile.openCalendar}
+                onClick={onOpenCalendar}
+              >
+                <span aria-hidden="true">▦</span>
+              </IconButton>
+              {schedule ? (
+                <strong className="ml-auto hidden text-right text-sm tabular-nums md:block">
+                  {formatScheduleWeekRange(schedule.visibleDates, locale)}
+                </strong>
+              ) : null}
+            </div>
+            <div className="md:hidden">
+              <ScheduleWeekDateStrip
+                locale={locale}
+                messages={messages}
+                selectedDate={selectedDate}
+                nowUtc={nowUtc}
+                browserTimeZone={browserTimeZone}
+                onSelect={onSelectDate}
+              />
+            </div>
           </div>
-          <ScheduleWeekDateStrip
-            locale={locale}
-            messages={messages}
-            selectedDate={selectedDate}
-            nowUtc={nowUtc}
-            browserTimeZone={browserTimeZone}
-            onSelect={onSelectDate}
-          />
         </div>
       ) : null}
     </>
-  );
-}
-
-function RoomSelector({
-  messages,
-  rooms,
-  room,
-  loading,
-  onChange,
-}: ScheduleRoomSelectorProps) {
-  return (
-    <div className="w-full lg:max-w-sm">
-      <Label htmlFor="schedule-room">{messages.roomLabel}</Label>
-      <Select
-        value={room?.id ?? ''}
-        disabled={loading || rooms.length === 0}
-        onValueChange={onChange}
-      >
-        <SelectTrigger
-          id="schedule-room"
-          aria-label={messages.mobile.selectRoom}
-          className="mt-2"
-        >
-          <SelectValue placeholder={messages.loadingRooms} />
-        </SelectTrigger>
-        <SelectContent>
-          {rooms.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.name} · {messages.mobile.floor} {option.floor} ·{' '}
-              {option.capacity} {messages.mobile.capacity}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {room ? (
-        <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <MapPin aria-hidden="true" className="size-3.5" />
-            {messages.mobile.floor} {room.floor}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Users aria-hidden="true" className="size-3.5" />
-            {room.capacity} {messages.mobile.capacity}
-          </span>
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function CompactRoomSelector({
-  messages,
-  rooms,
-  room,
-  loading,
-  onChange,
-}: ScheduleRoomSelectorProps) {
-  const statusLabel = room
-    ? `${messages.mobile.selectedRoom}: ${room.name}`
-    : messages.loadingRooms;
-  return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2">
-      <div
-        role="status"
-        aria-label={statusLabel}
-        className="flex min-w-0 items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2"
-      >
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-          <Check aria-hidden="true" className="size-4" />
-        </span>
-        <span className="min-w-0">
-          <span className="block text-[0.6875rem] font-medium text-muted-foreground">
-            {messages.mobile.selectedRoom}
-          </span>
-          {room ? (
-            <>
-              <strong className="block truncate text-sm font-semibold">
-                {room.name}
-              </strong>
-              <span className="block truncate text-xs text-muted-foreground">
-                {messages.mobile.floor} {room.floor} · {room.capacity}{' '}
-                {messages.mobile.capacity}
-              </span>
-            </>
-          ) : (
-            <span className="block truncate text-sm">
-              {messages.loadingRooms}
-            </span>
-          )}
-        </span>
-      </div>
-      <div className="self-center">
-        <Label htmlFor="schedule-room-compact" className="sr-only">
-          {messages.roomLabel}
-        </Label>
-        <Select
-          value={room?.id ?? ''}
-          disabled={loading || rooms.length === 0}
-          onValueChange={onChange}
-        >
-          <SelectTrigger
-            id="schedule-room-compact"
-            aria-label={messages.mobile.selectRoom}
-            className="w-auto touch-manipulation px-3"
-          >
-            <Building2 aria-hidden="true" className="size-4" />
-            <span>{messages.mobile.changeRoom}</span>
-          </SelectTrigger>
-          <SelectContent align="end">
-            {rooms.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.name} · {messages.mobile.floor} {option.floor} ·{' '}
-                {option.capacity} {messages.mobile.capacity}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
-
-function TimeZoneSummary({
-  messages,
-  browserTimeZone,
-}: {
-  readonly messages: ScheduleMessages;
-  readonly browserTimeZone: string;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-      <span className="inline-flex items-center gap-2">
-        <Clock3 aria-hidden="true" className="size-4" />
-        {messages.officeHours}
-      </span>
-      <span>
-        {messages.localTime}: {browserTimeZone}
-      </span>
-    </div>
   );
 }

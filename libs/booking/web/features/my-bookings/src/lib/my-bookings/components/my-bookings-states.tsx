@@ -15,7 +15,7 @@ import type {
 export function LoadingState({ message }: MyBookingsLoadingStateProps) {
   return (
     <div
-      className="flex min-h-40 items-center justify-center gap-3 text-sm text-muted-foreground"
+      className="flex min-h-28 items-center gap-3 border-b border-border text-sm text-muted-foreground"
       role="status"
     >
       <Spinner />
@@ -48,13 +48,13 @@ export function EmptyState({
   action,
 }: MyBookingsEmptyStateProps) {
   return (
-    <div className="flex min-h-48 flex-col items-center justify-center text-center">
+    <div className="flex flex-col justify-center border-b border-border py-5 text-left">
       <h3 className="font-semibold">{title}</h3>
       <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
         {description}
       </p>
       {action ? (
-        <Button asChild className="mt-5">
+        <Button asChild className="mt-4 w-fit">
           <Link href={action.href}>{action.label}</Link>
         </Button>
       ) : null}

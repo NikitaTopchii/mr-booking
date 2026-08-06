@@ -38,7 +38,7 @@ export function BookingDetailsDialog({
           </DialogDescription>
         </DialogHeader>
         {booking ? (
-          <dl className="grid gap-4 text-sm">
+          <dl className="grid divide-y divide-border border-y border-border text-sm">
             <Detail
               label={messages.roomDetailsLabel}
               value={booking.roomId === room?.id ? (room?.name ?? '—') : '—'}
@@ -101,7 +101,8 @@ export function BookingDetailsDialog({
               {canCancel ? (
                 <Button
                   type="button"
-                  variant="destructive"
+                  variant="ghost"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={onRequestConfirmation}
                 >
                   {messages.cancelBooking}
@@ -123,7 +124,7 @@ function Detail({
   readonly value: string;
 }) {
   return (
-    <div className="grid gap-1 border-b border-border pb-3 last:border-0">
+    <div className="grid gap-1 py-3 first:pt-3 last:pb-3">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </dt>

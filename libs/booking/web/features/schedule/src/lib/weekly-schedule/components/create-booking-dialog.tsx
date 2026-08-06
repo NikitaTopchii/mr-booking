@@ -74,7 +74,7 @@ export function CreateBookingDialog({
           </DialogDescription>
         </DialogHeader>
         {slot ? (
-          <div className="grid gap-1 rounded-lg bg-muted p-3 text-sm">
+          <div className="grid gap-1 border-y border-border py-3 text-sm">
             <span>
               {messages.mobile.browserTimezone}:{' '}
               {formatScheduleTimeRange(
@@ -84,19 +84,6 @@ export function CreateBookingDialog({
                 browserTimeZone,
               )}
             </span>
-            {browserTimeZone !== 'Europe/Kyiv' ? (
-              <span>
-                {messages.mobile.officeInterval}:{' '}
-                {formatScheduleTimeRange(
-                  slot.startsAtUtc,
-                  creation.endsAt
-                    ? Date.parse(creation.endsAt)
-                    : slot.endsAtUtc,
-                  locale,
-                  'Europe/Kyiv',
-                )}
-              </span>
-            ) : null}
           </div>
         ) : null}
         <form

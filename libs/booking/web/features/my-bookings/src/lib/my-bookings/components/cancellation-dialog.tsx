@@ -38,7 +38,7 @@ export function CancellationDialog({
           </DialogDescription>
         </DialogHeader>
         {booking ? (
-          <div className="grid gap-2 rounded-lg border border-border bg-muted/50 p-4 text-sm">
+          <div className="grid gap-2 border-y border-border py-4 text-sm">
             <strong>{booking.title}</strong>
             <span>{booking.room.name}</span>
             <span>

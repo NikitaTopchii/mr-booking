@@ -4,10 +4,7 @@ import {
   calendarDateAt,
   type CalendarDate,
 } from '@mr-booking/shared-date-time';
-import {
-  OFFICE_TIME_ZONE,
-  startOfOfficeWeek as startOfCalendarWeek,
-} from '@mr-booking/booking-domain';
+import { startOfOfficeWeek as startOfCalendarWeek } from '@mr-booking/booking-domain';
 import {
   Button,
   Dialog,
@@ -21,6 +18,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { Locale } from '@mr-booking/shared-i18n';
 import { AdaptiveDialogContent } from './adaptive-dialog-content';
 import { formatScheduleCalendarDate } from '../formatting/schedule-date-time.formatter';
+import { ScheduleTimeZoneSummary } from './schedule-time-zone-summary';
 import type { ScheduleMessages } from '../types/schedule-feature.types';
 
 export function ScheduleWeekDateStrip({
@@ -45,7 +43,7 @@ export function ScheduleWeekDateStrip({
     <div
       role="group"
       aria-label={messages.mobile.selectedDate}
-      className="grid grid-cols-7 gap-1"
+      className="grid grid-cols-7 gap-0.5"
     >
       {Array.from({ length: 7 }, (_, index) => {
         const date = addCalendarDays(weekStart, index);
@@ -60,7 +58,7 @@ export function ScheduleWeekDateStrip({
             aria-pressed={selected}
             aria-current={today ? 'date' : undefined}
             className={cn(
-              'min-h-14 touch-manipulation rounded-lg border px-0.5 py-1 text-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
+              'min-h-11 touch-manipulation rounded-sm border px-0.5 py-1 text-center outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none',
               selected
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-transparent bg-card text-foreground hover:bg-accent',
@@ -120,21 +118,17 @@ export function SelectedDayHeading({
 }) {
   return (
     <div className="mt-4">
-      <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+      <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
         {formatScheduleCalendarDate(selectedDate, locale, {
           dateStyle: 'full',
         })}
-      </h1>
-      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        <span>
-          {messages.mobile.browserTimezone}: {browserTimeZone}
-        </span>
-        {browserTimeZone !== OFFICE_TIME_ZONE ? (
-          <span>
-            {messages.mobile.officeTimezone}: 09:00–19:00 {OFFICE_TIME_ZONE}
-          </span>
-        ) : null}
-      </div>
+      </h2>
+      <ScheduleTimeZoneSummary
+        messages={messages}
+        browserTimeZone={browserTimeZone}
+        compact
+        className="mt-1"
+      />
     </div>
   );
 }

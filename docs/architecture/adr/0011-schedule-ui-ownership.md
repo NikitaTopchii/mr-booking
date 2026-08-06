@@ -18,11 +18,13 @@ boundaries and must not depend on one another.
 navigation contracts and normalization, slot and indicator models, schedule
 presentation types, and schedule-only date helpers and formatting.
 
-`booking-ui` owns reusable booking presentation (`MyBookingCard` and booking
-date/time formatting) plus `useBrowserTimeZone`. The hook remains there because
-it is a browser-only capability consumed by both booking web features, while
-the platform-neutral `shared-date-time` library remains React-free and owns
-calendar-date and named-timezone primitives.
+`booking-ui` owns reusable booking date/time formatting plus
+`useBrowserTimeZone`. My Bookings owns its booking-row composition because its
+section hierarchy, cancellation affordance, and schedule deep-link are feature
+behavior rather than reusable presentation. The hook remains in `booking-ui`
+because it is a browser-only capability consumed by both booking web features,
+while the platform-neutral `shared-date-time` library remains React-free and
+owns calendar-date and named-timezone primitives.
 
 My Bookings owns its outbound schedule deep-link adapter. This keeps the
 features independent while preserving links from a personal booking to the

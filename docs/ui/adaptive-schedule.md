@@ -60,9 +60,9 @@ Creation and details dialogs become bottom sheets below 640 pixels, preserve
 Radix focus trapping/restoration, and respect the bottom safe area. Creation
 offers valid 30-, 60-, 90-, 120-, 150-, 210-, and 240-minute shortcuts plus
 all valid end times. End choices are bounded by the four-hour domain maximum
-and the 19:00 `Europe/Kyiv` office close. It shows the browser-local interval
-and, when different, the corresponding `Europe/Kyiv` interval. These controls
-only assist input; the API remains authoritative.
+and the 19:00 `Europe/Kyiv` office close. It shows the selected interval in
+the browser-local timezone only. These controls only assist input; the API
+remains authoritative.
 
 ## Scrolling and safe areas
 
@@ -88,3 +88,91 @@ tokens, Lucide icon set, reduced-motion handling, keyboard focus, localized
 loading/error/empty states, and browser-timezone display. It does not add a
 calendar framework, fake availability, device detection, or client-side
 authoritative validation.
+
+## Schedule Phase 2 visual hierarchy
+
+The authenticated header content and schedule standard content use the same
+centered max-width strategy. The schedule grid is wrapped in an explicit wide
+breakout so the operational timeline can use the available viewport while the
+heading and controls retain a readable measure. The breakout is clipped by the
+schedule page and is verified at supported widths for no document overflow.
+
+The toolbar uses a flat or single low-chrome surface rather than a large card.
+Expanded layouts place the room group and the visually quieter capacity filter
+on the left and keep previous/current/next week controls plus the visible date
+range together on the right. Medium layouts use two intentional rows; compact
+layouts keep the selected-room summary, change-room control, capacity filter,
+navigation, and date strip discoverable without changing URL ownership or
+filter behavior. Room options use the room name only; floor and capacity
+remain visible in the selected-room metadata.
+
+The grid exposes stable semantic markers for current-day treatment,
+full-hour/half-hour boundaries, the current-time indicator, and own/foreign
+booking ownership. These markers support focused visual and accessibility
+tests without coupling tests to exact Tailwind color strings. The current-time
+text equivalent is attached to the grid through `aria-describedby`; it is not a
+live announcement. All existing loading, error, empty, no-match, keyboard,
+capacity-filter, and mobile bottom-navigation-clearance behavior remains
+feature-owned and unchanged.
+
+## Schedule visual-direction reset
+
+The approved reference direction is a confident operational calendar: concise
+titles, minimal explanation, reduced borders/shadows, compact controls, and
+the calendar as the dominant surface. The supplied palette is `#020608`,
+`#1C252B`, `#486B85`, `#93B4BC`, and `#CAD2CB`. Dark text is used on the two
+light palette colors; white text is reserved for sufficiently dark primary or
+secondary surfaces. Derived off-white canvas and half-hour tokens keep the
+calendar readable without introducing unrelated blue or purple values.
+
+When the browser timezone differs from `Europe/Kyiv`, the schedule shows one
+small localized office-timezone indicator. When it matches Kyiv, the indicator
+is omitted. Calendar, booking-dialog, and My Bookings times remain in the
+browser timezone; the booking dialog does not show a duplicate Kyiv interval.
+The permanent content rule is: explain exceptions and errors, not obvious
+primary interactions.
+
+## Operational calendar details
+
+The schedule is a calendar-first workspace, not a stack of cards. On compact
+screens below 768px, its visible page heading is screen-reader-only because
+the active bottom-navigation destination already establishes the location. The
+default order is room/filter summary, compact week navigation, day strip, then
+the calendar. The room/filter dock is collapsed by default and exposes the
+room name, floor, capacity, and any applied capacity summary. It uses a real
+button with `aria-expanded` and `aria-controls`; Escape returns focus to that
+button.
+
+The expanded dock contains the existing room selector and capacity form. Its
+local presentation state is not part of the schedule URL. After a successful
+room change, valid capacity application, or clear action, it collapses only
+when the resulting schedule state is ready and error-free. Validation,
+no-match, and query-error states leave the controls available. Expansion uses
+only a grid-row, opacity, and chevron transition, and the global
+reduced-motion policy makes it effectively immediate.
+
+The compact main layout owns one `100dvh` contract through
+`--app-header-height` and `--mobile-navigation-occupied-space`: the grid gets
+the remaining flex space and is the vertical calendar scroll container. It
+keeps native scrolling, sticky time rail support, focus scroll-into-view, and
+bottom scroll padding without a scattered fixed-height calculation. Medium
+layouts from 768px use an always-visible two-column toolbar; the expanded
+desktop toolbar uses one aligned room/filter group and one week/range group.
+
+The desktop title has a subtle structural rule rather than a heavy divider,
+and active desktop navigation uses one steel-blue underline treatment. The
+grid stays wide at desktop sizes, with day separators stronger than hourly
+lines and hourly lines stronger than half-hour lines. Current-day treatment
+and the thin current-time marker stay informative without producing a glow or
+a second visual focal point.
+
+Own bookings retain the steel-blue ownership treatment. Each foreign booking
+uses a deterministic controlled color derived from the safe schedule DTO
+`author.id`; the visible author name and ownership icon remain mandatory cues.
+Foreign colors also select a controlled light/dark text treatment. Booking
+blocks use only a compact three-pixel accent edge, small radius, and restrained
+fill—never a card shadow or full dark outline. The assignment is
+presentation-only and never participates in authorization, availability, or
+booking rules. Hover, keyboard focus, and pressed slot/block states remain
+visible, and directional week transitions are CSS-only and disabled for
+reduced-motion users.

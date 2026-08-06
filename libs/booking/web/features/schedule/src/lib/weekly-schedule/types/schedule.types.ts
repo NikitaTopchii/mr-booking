@@ -9,6 +9,8 @@ export interface ScheduleSlot {
 
 export type SchedulePresentation = 'compact' | 'medium' | 'expanded';
 
+export type ScheduleWeekTransition = 'previous' | 'next' | undefined;
+
 export interface ScheduleRange {
   readonly weekKey: string;
   readonly selectedDate: CalendarDate;

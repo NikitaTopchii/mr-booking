@@ -18,7 +18,7 @@ export function ScheduleLoading({
     presentation === 'expanded' ? 7 : presentation === 'medium' ? 3 : 1;
   return (
     <div
-      className="mt-4 rounded-xl border border-border bg-card p-4"
+      className="mt-3 border-y border-border py-3"
       role="status"
       aria-label={message}
     >
@@ -28,11 +28,11 @@ export function ScheduleLoading({
       </div>
       <div
         data-loading-columns={columns}
-        className="grid min-h-80 animate-pulse gap-2"
+        className="grid min-h-80 animate-pulse gap-1"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {Array.from({ length: columns }, (_, index) => (
-          <div key={index} className="rounded-lg bg-muted" />
+          <div key={index} className="bg-muted" />
         ))}
       </div>
     </div>
@@ -63,7 +63,7 @@ export function ScheduleErrorState({
 
 export function ScheduleEmptyState({ message }: { readonly message: string }) {
   return (
-    <div className="mt-4 grid min-h-64 place-items-center rounded-xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
+    <div className="mt-3 grid min-h-48 place-items-center border-y border-dashed border-border p-8 text-center text-muted-foreground">
       {message}
     </div>
   );
@@ -80,7 +80,7 @@ export function ScheduleNoMatchingRoomsState({
 }) {
   return (
     <div
-      className="mt-4 grid min-h-64 place-items-center rounded-xl border border-dashed border-border bg-card p-8 text-center"
+      className="mt-3 grid min-h-48 place-items-center border-y border-dashed border-border p-8 text-center"
       role="status"
       aria-live="polite"
     >

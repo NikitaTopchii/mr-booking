@@ -16,8 +16,8 @@ test.describe('room capacity filter', () => {
       }
     });
 
-    await page.getByLabel('Minimum capacity').fill('6');
-    await page.getByRole('button', { name: 'Apply filter' }).click();
+    await page.getByLabel('From people').fill('6');
+    await page.getByRole('button', { name: 'Apply' }).click();
     await expect(page).toHaveURL(/minCapacity=6/u);
     await expect(page).toHaveURL(/roomId=room-gagarin/u);
     expect(new URL(page.url()).searchParams.get('date')).toBe(
@@ -44,9 +44,9 @@ test.describe('room capacity filter', () => {
     await expect(page).toHaveURL(
       /roomId=room-gagarin&.*minCapacity=6|.*minCapacity=6.*roomId=room-gagarin/u,
     );
-    await expect(page.getByLabel('Minimum capacity')).toHaveValue('6');
+    await expect(page.getByLabel('From people')).toHaveValue('6');
 
-    await page.getByRole('button', { name: 'Clear filter' }).click();
+    await page.getByRole('button', { name: 'Clear' }).click();
     await expect(page).not.toHaveURL(/minCapacity=/u);
     expect(new URL(page.url()).searchParams.get('date')).toBe(
       initialState.get('date'),
@@ -64,13 +64,11 @@ test.describe('room capacity filter', () => {
         scheduleRequests.push(request.url());
       }
     });
-    await expect(
-      page.getByRole('grid', { name: 'Weekly schedule' }),
-    ).toBeVisible();
+    await expect(page.getByRole('grid', { name: 'Schedule' })).toBeVisible();
     const initialRequestCount = scheduleRequests.length;
 
-    await page.getByLabel('Minimum capacity').fill('20');
-    await page.getByRole('button', { name: 'Apply filter' }).click();
+    await page.getByLabel('From people').fill('20');
+    await page.getByRole('button', { name: 'Apply' }).click();
     await expect(
       page.getByText('No rooms can accommodate at least 20 people.'),
     ).toBeVisible();
@@ -83,23 +81,21 @@ test.describe('room capacity filter', () => {
     const noMatchState = page
       .locator('[role="status"]')
       .filter({ hasText: 'No rooms can accommodate at least 20 people.' });
-    await noMatchState.getByRole('button', { name: 'Clear filter' }).click();
+    await noMatchState.getByRole('button', { name: 'Clear' }).click();
     await expect(page).not.toHaveURL(/minCapacity=/u);
-    await expect(
-      page.getByRole('grid', { name: 'Weekly schedule' }),
-    ).toBeVisible();
+    await expect(page.getByRole('grid', { name: 'Schedule' })).toBeVisible();
   });
 
   test('restores previous filter state with Back and Forward', async ({
     page,
   }) => {
-    await page.getByLabel('Minimum capacity').fill('6');
-    await page.getByRole('button', { name: 'Apply filter' }).click();
+    await page.getByLabel('From people').fill('6');
+    await page.getByRole('button', { name: 'Apply' }).click();
     await expect(page).toHaveURL(/minCapacity=6/u);
     await expect(page).toHaveURL(/roomId=room-gagarin/u);
 
-    await page.getByLabel('Minimum capacity').fill('10');
-    await page.getByRole('button', { name: 'Apply filter' }).click();
+    await page.getByLabel('From people').fill('10');
+    await page.getByRole('button', { name: 'Apply' }).click();
     await expect(page).toHaveURL(/minCapacity=10/u);
     await expect(page).toHaveURL(/roomId=room-dnipro/u);
 
@@ -116,24 +112,22 @@ test.describe('room capacity filter', () => {
   }) => {
     const initialState = new URL(page.url()).searchParams;
 
-    await page.getByLabel('Minimum capacity').fill('10');
-    await page.getByLabel('Minimum capacity').press('Enter');
+    await page.getByLabel('From people').fill('10');
+    await page.getByLabel('From people').press('Enter');
 
     await expect(page).toHaveURL(/minCapacity=10/u);
     const nextState = new URL(page.url()).searchParams;
     expect(nextState.get('date')).toBe(initialState.get('date'));
     expect(nextState.get('week')).toBe(initialState.get('week'));
     expect(nextState.get('roomId')).toBe('room-dnipro');
-    await expect(
-      page.getByRole('grid', { name: 'Weekly schedule' }),
-    ).toBeVisible();
+    await expect(page.getByRole('grid', { name: 'Schedule' })).toBeVisible();
   });
 
   test('keeps the capacity filter when date and room route writers run', async ({
     page,
   }) => {
-    await page.getByLabel('Minimum capacity').fill('6');
-    await page.getByRole('button', { name: 'Apply filter' }).click();
+    await page.getByLabel('From people').fill('6');
+    await page.getByRole('button', { name: 'Apply' }).click();
     await expect(page).toHaveURL(/minCapacity=6/u);
 
     await page.getByRole('button', { name: 'Next week' }).click();
@@ -149,34 +143,45 @@ test.describe('room capacity filter', () => {
   }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/uk/schedule');
-    await expect(
-      page.getByRole('region', { name: 'Тижневий розклад' }),
-    ).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Розклад' })).toBeVisible();
     await expect(page).toHaveURL(
       /\/uk\/schedule\?date=\d{4}-\d{2}-\d{2}&week=\d{4}-\d{2}-\d{2}&roomId=.+/u,
     );
     const initialState = new URL(page.url()).searchParams;
-    await page.getByLabel('Мінімальна місткість').fill('10');
-    await page.getByLabel('Мінімальна місткість').press('Enter');
+    await openMobileDock(page, 'uk');
+    await page.getByLabel('Від осіб').fill('10');
+    await page.getByLabel('Від осіб').press('Enter');
     await expect(page).toHaveURL(/minCapacity=10/u);
     const nextState = new URL(page.url()).searchParams;
     expect(nextState.get('date')).toBe(initialState.get('date'));
     expect(nextState.get('week')).toBe(initialState.get('week'));
     expect(nextState.get('roomId')).toBeTruthy();
-    await expect(page.getByText('Фільтр місткості активний')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /Обрана кімната:/u }),
+    ).toHaveAttribute('aria-expanded', 'false');
     const dimensions = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
-    await expect(
-      page.getByRole('grid', { name: 'Тижневий розклад' }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('status', { name: /Обрана кімната/u }),
-    ).toContainText('Поверх');
+    await expect(page.getByRole('grid', { name: 'Розклад' })).toBeVisible();
+    await expect(page.locator('[data-mobile-room-summary]')).toContainText(
+      'Поверх',
+    );
   });
 });
+
+async function openMobileDock(page: Page, locale: 'en' | 'uk'): Promise<void> {
+  const trigger = page.getByRole('button', {
+    name: new RegExp(
+      locale === 'uk' ? 'Обрана кімната:' : 'Selected room:',
+      'u',
+    ),
+  });
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await trigger.click();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+}
 
 async function signIn(page: Page, locale: 'en' | 'uk'): Promise<void> {
   await page.goto(`/${locale}/login`);
@@ -200,7 +205,7 @@ async function signIn(page: Page, locale: 'en' | 'uk'): Promise<void> {
   );
   await expect(
     page.getByRole('heading', {
-      name: locale === 'en' ? 'Weekly schedule' : 'Тижневий розклад',
+      name: locale === 'en' ? 'Schedule' : 'Розклад',
     }),
   ).toBeVisible();
 }

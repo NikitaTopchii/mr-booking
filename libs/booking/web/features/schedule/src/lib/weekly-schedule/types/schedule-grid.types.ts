@@ -32,7 +32,7 @@ export interface ScheduleDayProps {
   readonly messages: ScheduleMessages;
   readonly timeFormatter: Intl.DateTimeFormat;
   readonly firstFocusable: string | undefined;
-  readonly compact: boolean;
+  readonly currentDay: boolean;
   readonly occupiedBySlotId: ReadonlyMap<string, ScheduleBooking>;
   readonly onSelectSlot: (slot: ScheduleSlot) => void;
   readonly onSelectBooking: (booking: ScheduleBooking) => void;

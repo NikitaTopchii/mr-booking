@@ -14,30 +14,24 @@ export function MyBookingsView({
   return (
     <main
       id="main-content"
-      className="mx-auto min-h-[calc(100dvh-4.5rem)] max-w-6xl px-4 py-8 sm:px-6 sm:py-12"
+      className="mx-auto min-h-[calc(100dvh-var(--app-header-height))] max-w-4xl px-3 py-5 sm:px-6 sm:py-8"
     >
-      <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           {messages.title}
         </h1>
-        <p className="mt-3 text-base leading-7 text-muted-foreground">
-          {messages.description}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {messages.localTime}: {browserTimeZone}
-        </p>
       </header>
 
       {cancellation.wasCancelled ? (
         <p
           role="status"
-          className="mt-6 rounded-md border border-border bg-muted px-4 py-3 text-sm font-medium"
+          className="mt-4 border-y border-border py-3 text-sm font-medium"
         >
           {messages.cancellation.success}
         </p>
       ) : null}
 
-      <div className="mt-8 grid gap-6">
+      <div className="mt-6 grid gap-7">
         <UpcomingBookingsSection
           locale={locale}
           browserTimeZone={browserTimeZone}

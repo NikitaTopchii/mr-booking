@@ -23,7 +23,10 @@ export function ApplicationShell({
       </a>
 
       <header className="sticky top-0 z-40 border-b border-border bg-card">
-        <div className="mx-auto flex min-h-18 max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+        <div
+          data-app-header-content
+          className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-3 py-2 sm:px-6"
+        >
           <Link
             className="shrink-0 rounded-sm font-semibold tracking-tight text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             href={scheduleHref}

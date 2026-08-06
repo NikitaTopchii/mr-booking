@@ -14,6 +14,7 @@ import type {
   SchedulePresentation,
   ScheduleRange,
   ScheduleSlot,
+  ScheduleWeekTransition,
 } from './schedule.types';
 
 export type ScheduleMessages = AppDictionary['schedule'];
@@ -38,7 +39,25 @@ export interface RoomCapacityFilterProps {
   readonly minimumCapacity: number | undefined;
   readonly onApply: (minimumCapacity: number) => void;
   readonly onClear: () => void;
+  readonly onApplied?: (minimumCapacity: number) => void;
+  readonly onCleared?: () => void;
 }
+
+export interface MobileScheduleControlDockProps extends ScheduleRoomSelectorProps {
+  readonly browserTimeZone: string;
+  readonly minimumCapacity: number | undefined;
+  readonly loadingSchedule: boolean;
+  readonly hasScheduleError: boolean;
+  readonly noMatchingRooms: boolean;
+  readonly onApplyCapacity: (minimumCapacity: number) => void;
+  readonly onClearCapacity: () => void;
+}
+
+export type PendingMobileDockAction =
+  | { readonly kind: 'room'; readonly roomId: string }
+  | { readonly kind: 'capacity'; readonly value: number }
+  | { readonly kind: 'clear' }
+  | undefined;
 
 export interface ScheduleNavigationState {
   readonly selectedDate: CalendarDate;
@@ -46,6 +65,7 @@ export interface ScheduleNavigationState {
   readonly selectedWeek: CalendarDate;
   readonly requestedRoomId: string | undefined;
   readonly minimumCapacity: number | undefined;
+  readonly weekTransition: ScheduleWeekTransition;
   readonly selectDate: (date: CalendarDate) => void;
   readonly selectRoom: (roomId: string) => void;
   readonly normalizeRoom: (roomId: string | undefined) => void;

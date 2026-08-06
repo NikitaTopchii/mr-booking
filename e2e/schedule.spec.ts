@@ -6,9 +6,7 @@ test.describe('interactive weekly schedule', () => {
     await page.getByLabel('Email').fill('alice@example.com');
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Sign in' }).click();
-    await expect(
-      page.getByRole('heading', { name: 'Weekly schedule' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
     await expect(page).toHaveURL(
       /date=\d{4}-\d{2}-\d{2}&week=\d{4}-\d{2}-\d{2}&roomId=.+/u,
     );
@@ -21,12 +19,8 @@ test.describe('interactive weekly schedule', () => {
       name: 'Select meeting room',
     });
     await roomSelect.click();
-    await expect(
-      page.getByRole('option', { name: /Марс.*Floor 2.*6 people/u }),
-    ).toBeVisible();
-    await page
-      .getByRole('option', { name: /Марс.*Floor 2.*6 people/u })
-      .click();
+    await expect(page.getByRole('option', { name: /Марс/u })).toBeVisible();
+    await page.getByRole('option', { name: /Марс/u }).click();
     await expect(page).toHaveURL(/roomId=room-mars/u);
     await expect(page.getByText('Floor 2', { exact: true })).toBeVisible();
     await expect(page.getByText('6 people', { exact: true })).toBeVisible();
@@ -41,9 +35,7 @@ test.describe('interactive weekly schedule', () => {
     await expect(page).toHaveURL(
       /\/uk\/schedule\?date=.*&week=.*&roomId=room-mars/u,
     );
-    await expect(
-      page.getByRole('heading', { name: 'Тижневий розклад' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Розклад' })).toBeVisible();
   });
 
   test('creates a four-hour booking, renders eight slots, and allows adjacency', async ({
@@ -269,7 +261,7 @@ test.describe('interactive weekly schedule', () => {
       await bobPage.getByLabel('Password').fill('password123');
       await bobPage.getByRole('button', { name: 'Sign in' }).click();
       await expect(
-        bobPage.getByRole('heading', { name: 'Weekly schedule' }),
+        bobPage.getByRole('heading', { name: 'Schedule' }),
       ).toBeVisible();
       const response = await bobPage.evaluate(
         async ({ roomId: selectedRoomId, startsAt }) => {
@@ -331,21 +323,56 @@ test.describe('interactive weekly schedule', () => {
         width,
         height: width === 390 ? 844 : 900,
       });
-      await expect(
-        page.getByRole('grid', { name: 'Weekly schedule' }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole('combobox', { name: 'Select meeting room' }),
-      ).toBeVisible();
+      await expect(page.getByRole('grid', { name: 'Schedule' })).toBeVisible();
       await expect(
         page.locator(`[data-schedule-presentation="${expected}"]`),
       ).toBeVisible();
+      await expect(
+        page.locator(
+          `[data-schedule-toolbar="${expected === 'expanded' ? 'expanded' : 'compact'}"]`,
+        ),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-schedule-week-navigation]'),
+      ).toBeVisible();
       if (expected === 'compact') {
+        const dock = page.locator('[data-mobile-control-dock]');
+        const trigger = page.getByRole('button', { name: /Selected room:/u });
+        await expect(dock).toBeVisible();
+        await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+        await expect(
+          page.getByRole('combobox', { name: 'Select meeting room' }),
+        ).toHaveCount(0);
+        await trigger.click();
+        await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        await expect(
+          page.getByRole('combobox', { name: 'Select meeting room' }),
+        ).toBeVisible();
+        await expect(
+          page.locator('[data-schedule-capacity-filter]'),
+        ).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(trigger).toHaveAttribute('aria-expanded', 'false');
         await expect(
           page
             .getByRole('group', { name: 'Selected date' })
             .getByRole('button'),
         ).toHaveCount(7);
+      }
+      if (expected !== 'compact') {
+        await expect(
+          page.getByRole('combobox', { name: 'Select meeting room' }),
+        ).toBeVisible();
+        await expect(
+          page.locator('[data-schedule-capacity-filter]'),
+        ).toBeVisible();
+      }
+      if (expected === 'medium') {
+        await expect(
+          page.locator(
+            '[data-schedule-toolbar="compact"] [data-schedule-week-navigation] strong',
+          ),
+        ).toBeVisible();
       }
       const dimensions = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
@@ -355,6 +382,45 @@ test.describe('interactive weekly schedule', () => {
         dimensions.clientWidth,
       );
     }
+  });
+
+  test('aligns the schedule shell and uses a wider grid breakout without overflow', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(page.locator('[data-schedule-heading]')).toBeVisible();
+    const metrics = await page.evaluate(() => {
+      const getRect = (selector: string) => {
+        const element = document.querySelector<HTMLElement>(selector);
+        if (!element) return undefined;
+        const rect = element.getBoundingClientRect();
+        return { x: rect.x, width: rect.width };
+      };
+      return {
+        header: getRect('[data-app-header-content]'),
+        standard: getRect('[data-schedule-standard-content]'),
+        heading: getRect('[data-schedule-heading]'),
+        toolbar: getRect('[data-schedule-toolbar="expanded"]'),
+        wide: getRect('[data-schedule-wide-breakout]'),
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      };
+    });
+    expect(metrics.header).toBeDefined();
+    expect(metrics.standard).toBeDefined();
+    expect(metrics.heading).toBeDefined();
+    expect(metrics.toolbar).toBeDefined();
+    expect(metrics.wide).toBeDefined();
+    expect(
+      Math.abs((metrics.header?.x ?? 0) - (metrics.standard?.x ?? 0)),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs((metrics.heading?.x ?? 0) - (metrics.toolbar?.x ?? 0)),
+    ).toBeLessThanOrEqual(1);
+    expect(metrics.wide?.width ?? 0).toBeGreaterThan(
+      metrics.standard?.width ?? 0,
+    );
+    expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
   });
 
   test('keeps the final compact slot above bottom navigation', async ({
@@ -448,9 +514,7 @@ test.describe('interactive weekly schedule', () => {
   test('associates and focuses the Ukrainian title error', async ({ page }) => {
     await page.getByRole('button', { name: /Open user menu: Alice/u }).click();
     await page.getByRole('menuitem', { name: 'Українська' }).click();
-    await expect(
-      page.getByRole('heading', { name: 'Тижневий розклад' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Розклад' })).toBeVisible();
     await page.setViewportSize({ width: 375, height: 812 });
     await page.getByRole('button', { name: 'Наступний тиждень' }).click();
     await expect(page.locator('[data-schedule-presentation]')).toHaveAttribute(
@@ -497,15 +561,14 @@ test.describe('schedule timezone rendering', () => {
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
-    await expect(page.getByText('Your time: Europe/Lisbon')).toBeVisible();
+    const dockTrigger = page.getByRole('button', { name: /Selected room:/u });
+    await expect(dockTrigger).toBeVisible();
+    await dockTrigger.click();
     await expect(
-      page
-        .getByRole('region', { name: 'Weekly schedule' })
-        .getByText('Office hours: 09:00–19:00 Europe/Kyiv'),
+      page.getByRole('note', { name: 'Office timezone: Kyiv' }),
     ).toBeVisible();
-    await expect(
-      page.getByRole('grid', { name: 'Weekly schedule' }),
-    ).toBeVisible();
+    await expect(page.getByText(/Europe\/Lisbon/u)).toHaveCount(0);
+    await expect(page.getByRole('grid', { name: 'Schedule' })).toBeVisible();
     await expect.poll(() => scheduleUrl).toContain('fromUtc=');
     const parsed = new URL(scheduleUrl);
     expect(parsed.searchParams.get('fromUtc')).toMatch(/\.000Z$/u);

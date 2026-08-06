@@ -52,6 +52,7 @@ export interface BookingSectionProps {
   readonly id: string;
   readonly title: string;
   readonly icon: LucideIcon;
+  readonly count?: number;
   readonly children: ReactNode;
 }
 
@@ -61,6 +62,15 @@ export interface BookingListProps {
   readonly browserTimeZone: string;
   readonly messages: MyBookingsMessages;
   readonly onCancel?: (booking: MyBooking) => void;
+}
+
+export interface BookingListItemProps {
+  readonly booking: MyBooking;
+  readonly href: string;
+  readonly locale: Locale;
+  readonly browserTimeZone: string;
+  readonly messages: MyBookingsMessages;
+  readonly onCancel?: () => void;
 }
 
 export interface BookingSectionStateProps {

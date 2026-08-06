@@ -19,6 +19,7 @@ export function UpcomingBookingsSection({
       id="upcoming-bookings"
       title={messages.upcoming.title}
       icon={CalendarPlus}
+      {...(!isLoading && !hasError ? { count: items.length } : {})}
     >
       {isLoading ? (
         <LoadingState message={messages.loading} />

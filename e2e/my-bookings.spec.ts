@@ -64,9 +64,7 @@ test.describe('My bookings', () => {
     await expect(page).toHaveURL(
       /\/en\/schedule\?date=\d{4}-\d{2}-\d{2}&week=\d{4}-\d{2}-\d{2}&roomId=room-kyiv/u,
     );
-    await expect(
-      page.getByRole('heading', { name: 'Weekly schedule' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
   });
 
   test('keeps the page usable at required viewport sizes', async ({ page }) => {
@@ -126,7 +124,7 @@ test.describe('My bookings timezone navigation', () => {
     await loginAsAlice(page);
     await page.goto('/en/my-bookings');
 
-    await expect(page.getByText(/Pacific\/Honolulu/u)).toBeVisible();
+    await expect(page.getByText(/Pacific\/Honolulu/u)).toHaveCount(0);
     await expect(
       page.getByRole('link', {
         name: `Open in schedule: ${historyPrefix} 20`,
@@ -143,9 +141,7 @@ async function loginAsAlice(page: Page): Promise<void> {
   await page.getByLabel('Email').fill('alice@example.com');
   await page.getByLabel('Password').fill('password123');
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Weekly schedule' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
 }
 
 async function createUpcomingBooking(
