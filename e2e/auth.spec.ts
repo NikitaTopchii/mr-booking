@@ -12,7 +12,7 @@ test.describe('authentication journey', () => {
     await page.getByRole('button', { name: 'Створити акаунт' }).click();
 
     await expect(page).toHaveURL(/\/uk\/verify-email\?token=/u);
-    await page.getByRole('button', { name: 'Підтвердити пошту' }).click();
+    await page.getByRole('button', { name: 'Підтвердити email' }).click();
     await expect(page).toHaveURL(/\/uk\/verify-email\?result=success$/u);
     await page.getByRole('link', { name: 'Повернутися до розкладу' }).click();
     await expect(page).toHaveURL(/\/uk\/schedule(?:\?.*)?$/u);
@@ -225,7 +225,7 @@ test.describe('authentication journey', () => {
     page,
   }) => {
     await page.goto(`/uk/verify-email?token=${'b'.repeat(43)}`);
-    await page.getByRole('button', { name: 'Підтвердити пошту' }).click();
+    await page.getByRole('button', { name: 'Підтвердити email' }).click();
     await expect(page).toHaveURL(/\/uk\/verify-email\?result=invalid$/u);
     await expect(
       page.getByText(
@@ -485,7 +485,7 @@ async function verifyThroughPage(
   await page.goto(`/${locale}/verify-email?token=${encodeURIComponent(token)}`);
   await page
     .getByRole('button', {
-      name: locale === 'uk' ? 'Підтвердити пошту' : 'Verify email',
+      name: locale === 'uk' ? 'Підтвердити email' : 'Verify email',
     })
     .click();
   await expect(page).toHaveURL(

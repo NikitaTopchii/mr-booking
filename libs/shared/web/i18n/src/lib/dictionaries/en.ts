@@ -101,7 +101,7 @@ export const dictionary = {
     deliveryFailure:
       'We could not deliver the verification message. Request another link to try again.',
     missingToken: 'Open the verification link from your email to continue.',
-    ready: 'Confirm below to verify your email.',
+    ready: 'Development mode: confirm your email using the button below.',
     resend: 'Send verification link again',
     resending: 'Sending…',
     resendSent: 'A new verification link has been sent.',
