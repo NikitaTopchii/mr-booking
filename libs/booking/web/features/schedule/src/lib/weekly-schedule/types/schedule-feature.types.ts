@@ -51,6 +51,10 @@ export interface MobileScheduleControlDockProps extends ScheduleRoomSelectorProp
   readonly noMatchingRooms: boolean;
   readonly onApplyCapacity: (minimumCapacity: number) => void;
   readonly onClearCapacity: () => void;
+  readonly onPrevious: () => void;
+  readonly onCurrent: () => void;
+  readonly onNext: () => void;
+  readonly onOpenCalendar: () => void;
 }
 
 export type PendingMobileDockAction =

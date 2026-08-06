@@ -221,9 +221,9 @@ describe('weekly schedule', () => {
     expect(
       document.querySelector('[data-schedule-presentation="compact"]'),
     ).toBeDefined();
-    expect(screen.getAllByRole('button', { name: /^Select /u })).toHaveLength(
-      7,
-    );
+    expect(
+      await screen.findAllByRole('button', { name: /^Select /u }),
+    ).toHaveLength(7);
     const available = await screen.findAllByRole('gridcell', {
       name: /Available/,
     });

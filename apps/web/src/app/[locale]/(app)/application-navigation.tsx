@@ -45,13 +45,13 @@ export function ApplicationNavigation({
       <div
         aria-hidden="true"
         data-mobile-navigation-scrim
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-[var(--mobile-navigation-occupied-space)] border-t border-border bg-background md:hidden"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-[calc(var(--mobile-navigation-height)+var(--mobile-navigation-bottom-offset))] bg-background md:hidden"
       />
 
       <nav
         aria-label={label}
         data-mobile-navigation
-        className="fixed inset-x-0 bottom-0 z-30 min-h-[var(--mobile-navigation-height)] border-y border-border bg-card px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 min-h-[var(--mobile-navigation-height)] border-b border-border bg-card px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden"
       >
         <ul className="mx-auto grid max-w-sm grid-cols-2">
           {items.map((item) => {

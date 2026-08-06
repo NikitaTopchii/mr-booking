@@ -32,7 +32,7 @@ export function ScheduleDay({
     <div
       data-current-day={currentDay || undefined}
       className={cn(
-        'relative grid border-r-2 border-[var(--schedule-grid-day-border)] last:border-r-0',
+        'relative grid border-r border-[var(--schedule-grid-day-border)] last:border-r-0',
         currentDay && 'bg-[var(--schedule-current-day-surface)]',
       )}
       style={{ gridTemplateRows: `repeat(${rowCount}, ${rowHeightRem}rem)` }}

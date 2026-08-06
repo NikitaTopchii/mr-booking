@@ -19,6 +19,7 @@ export interface ScheduleGridProps {
   readonly browserTimeZone: string;
   readonly revalidating: boolean;
   readonly selectedDate: CalendarDate;
+  readonly onSelectDate: (date: CalendarDate) => void;
   readonly onSelectSlot: (slot: ScheduleSlot) => void;
   readonly onSelectBooking: (booking: ScheduleBooking) => void;
 }

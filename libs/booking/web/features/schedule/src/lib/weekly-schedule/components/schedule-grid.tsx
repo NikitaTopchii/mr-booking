@@ -6,6 +6,7 @@ import { scheduleTimeBoundary } from '../model/schedule-grid-visuals';
 import { formatScheduleCalendarDate } from '../formatting/schedule-date-time.formatter';
 import type { ScheduleGridProps } from '../types/schedule-grid.types';
 import { ScheduleDay } from './schedule-day';
+import { ScheduleWeekDateStrip } from './schedule-date-navigation';
 
 export function ScheduleGrid({
   locale,
@@ -17,6 +18,7 @@ export function ScheduleGrid({
   browserTimeZone,
   revalidating,
   selectedDate,
+  onSelectDate,
   onSelectSlot,
   onSelectBooking,
 }: ScheduleGridProps) {
@@ -59,22 +61,36 @@ export function ScheduleGrid({
       data-schedule-presentation={presentation}
       aria-busy={revalidating}
       className={cn(
-        'relative mt-3 overflow-hidden rounded-sm border border-[var(--schedule-grid-day-border)] bg-card',
+        'relative mt-3 overflow-hidden rounded-xl border border-[var(--schedule-grid-day-border)] bg-card shadow-[var(--schedule-grid-shadow)]',
         presentation === 'compact' && 'mt-0 flex min-h-0 flex-1 flex-col',
       )}
     >
       {revalidating ? (
         <div
-          className="absolute top-3 right-3 z-30 rounded-sm border border-border bg-card p-2"
+          className="absolute inset-0 z-30 grid place-items-center bg-background/45 backdrop-blur-[1px]"
           role="status"
           aria-label={messages.loadingSchedule}
         >
-          <Spinner className="size-4" />
+          <Spinner className="size-10 text-primary" />
         </div>
       ) : null}
-      {presentation !== 'compact' ? (
+      {presentation === 'compact' ? (
         <div
-          className="grid border-b border-[var(--schedule-grid-day-border)] bg-background"
+          data-mobile-day-strip
+          className="sticky top-0 z-20 shrink-0 border-b border-[var(--schedule-grid-day-border)] bg-background/90 backdrop-blur-sm"
+        >
+          <ScheduleWeekDateStrip
+            locale={locale}
+            messages={messages}
+            selectedDate={selectedDate}
+            nowUtc={now}
+            browserTimeZone={browserTimeZone}
+            onSelect={onSelectDate}
+          />
+        </div>
+      ) : (
+        <div
+          className="grid border-b border-[var(--schedule-grid-day-border)] bg-background/90"
           style={{ gridTemplateColumns: columnTemplate }}
         >
           <div className="border-r border-border p-2" aria-hidden="true" />
@@ -124,7 +140,7 @@ export function ScheduleGrid({
             );
           })}
         </div>
-      ) : null}
+      )}
       <div
         role="grid"
         aria-label={messages.title}
@@ -137,7 +153,7 @@ export function ScheduleGrid({
         style={{ gridTemplateColumns: columnTemplate }}
       >
         <div
-          className="sticky left-0 z-20 grid border-r-2 border-[var(--schedule-grid-day-border)] bg-background"
+          className="sticky left-0 z-20 grid border-r border-[var(--schedule-grid-day-border)] bg-background"
           style={{
             gridTemplateRows: `repeat(${model.rowCount}, ${model.rowHeightRem}rem)`,
           }}

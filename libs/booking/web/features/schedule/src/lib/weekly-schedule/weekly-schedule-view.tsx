@@ -15,6 +15,7 @@ import {
   ScheduleNoMatchingRoomsState,
 } from './components/schedule-states';
 import { resolveFeatureErrorMessage } from './errors/resolve-schedule-error-message';
+import { MobileScheduleControlDock } from './components/mobile-schedule-control-dock';
 
 export function WeeklyScheduleView({
   locale,
@@ -50,7 +51,7 @@ export function WeeklyScheduleView({
       className={cn(
         'mx-auto w-full max-w-screen-2xl overflow-x-clip py-2 md:min-h-[calc(100dvh-var(--app-header-height))] md:py-4 lg:py-5',
         compactPresentation &&
-          'flex h-[calc(100dvh-var(--app-header-height)-var(--mobile-navigation-occupied-space))] min-h-0 flex-col overflow-hidden',
+          'flex h-[var(--mobile-schedule-main-height)] min-h-0 flex-col overflow-hidden py-0 -mb-[var(--mobile-navigation-clearance)]',
       )}
     >
       <section
@@ -73,30 +74,29 @@ export function WeeklyScheduleView({
               compactPresentation && 'shrink-0',
             )}
           >
-            <ScheduleToolbar
-              locale={locale}
-              messages={messages}
-              rooms={data.rooms}
-              room={data.selectedRoom}
-              schedule={data.presentationRange}
-              presentation={data.presentation}
-              selectedDate={navigation.selectedDate}
-              nowUtc={clock.nowUtc}
-              loadingRooms={data.isLoadingRooms}
-              browserTimeZone={browserTimeZone}
-              onRoomChange={navigation.selectRoom}
-              onPrevious={navigation.goToPreviousWeek}
-              onCurrent={navigation.goToToday}
-              onNext={navigation.goToNextWeek}
-              onOpenCalendar={navigation.openCalendar}
-              onSelectDate={navigation.selectDate}
-              minimumCapacity={navigation.minimumCapacity}
-              onApplyCapacity={data.applyMinimumCapacity}
-              onClearCapacity={navigation.clearMinimumCapacity}
-              loadingSchedule={data.isLoadingSchedule}
-              hasScheduleError={scheduleError !== undefined}
-              noMatchingRooms={data.noMatchingRooms}
-            />
+            {!compactPresentation ? (
+              <ScheduleToolbar
+                locale={locale}
+                messages={messages}
+                rooms={data.rooms}
+                room={data.selectedRoom}
+                schedule={data.presentationRange}
+                presentation={data.presentation}
+                selectedDate={navigation.selectedDate}
+                nowUtc={clock.nowUtc}
+                loadingRooms={data.isLoadingRooms}
+                browserTimeZone={browserTimeZone}
+                onRoomChange={navigation.selectRoom}
+                onPrevious={navigation.goToPreviousWeek}
+                onCurrent={navigation.goToToday}
+                onNext={navigation.goToNextWeek}
+                onOpenCalendar={navigation.openCalendar}
+                onSelectDate={navigation.selectDate}
+                minimumCapacity={navigation.minimumCapacity}
+                onApplyCapacity={data.applyMinimumCapacity}
+                onClearCapacity={navigation.clearMinimumCapacity}
+              />
+            ) : null}
           </div>
           {creation.notice === 'created' ? (
             <p
@@ -147,7 +147,7 @@ export function WeeklyScheduleView({
               retry={messages.retry}
               onRetry={data.retrySchedule}
             />
-          ) : data.isLoadingSchedule || !data.presentationRange ? (
+          ) : !data.hasScheduleData || !data.presentationRange ? (
             <ScheduleLoading
               presentation={data.presentation}
               message={messages.loadingSchedule}
@@ -179,7 +179,8 @@ export function WeeklyScheduleView({
                 data-week-transition={navigation.weekTransition}
                 className={cn(
                   'schedule-wide-breakout schedule-week-transition',
-                  compactPresentation && 'mt-2 flex min-h-0 flex-1 flex-col',
+                  compactPresentation &&
+                    'mt-1 mb-4 flex min-h-0 flex-1 flex-col',
                 )}
               >
                 <ScheduleGrid
@@ -192,6 +193,7 @@ export function WeeklyScheduleView({
                   browserTimeZone={browserTimeZone}
                   revalidating={data.isRevalidating}
                   selectedDate={navigation.selectedDate}
+                  onSelectDate={navigation.selectDate}
                   onSelectSlot={(slot) => {
                     if (!emailVerified) {
                       onVerificationRequired?.();
@@ -206,6 +208,26 @@ export function WeeklyScheduleView({
           ) : null}
         </div>
       </section>
+      {compactPresentation ? (
+        <MobileScheduleControlDock
+          messages={messages}
+          rooms={data.rooms}
+          room={data.selectedRoom}
+          loading={data.isLoadingRooms}
+          onChange={navigation.selectRoom}
+          browserTimeZone={browserTimeZone}
+          minimumCapacity={navigation.minimumCapacity}
+          loadingSchedule={data.isLoadingSchedule}
+          hasScheduleError={scheduleError !== undefined}
+          noMatchingRooms={data.noMatchingRooms}
+          onApplyCapacity={data.applyMinimumCapacity}
+          onClearCapacity={navigation.clearMinimumCapacity}
+          onPrevious={navigation.goToPreviousWeek}
+          onCurrent={navigation.goToToday}
+          onNext={navigation.goToNextWeek}
+          onOpenCalendar={navigation.openCalendar}
+        />
+      ) : null}
       <ScheduleDatePicker
         locale={locale}
         messages={messages}

@@ -23,7 +23,7 @@ export function ScheduleLoading({
       aria-label={message}
     >
       <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
-        <Spinner />
+        <Spinner className="size-8 text-primary" />
         <span>{message}</span>
       </div>
       <div

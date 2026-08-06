@@ -137,7 +137,7 @@ export function useScheduleData({
       ? bookingKeys.schedule(selectedRoom.id, presentationRange.range)
       : null;
   const scheduleQuery = useSWR(scheduleKey, fetchRoomBookingsByKey, {
-    keepPreviousData: false,
+    keepPreviousData: true,
   });
 
   useEffect(() => {

@@ -44,8 +44,16 @@ room label.
 
 ## Compact interaction
 
-The sticky compact context contains the room selector, week navigation,
-Today, month-picker access, room metadata, and a seven-day strip. The strip
+The compact schedule keeps the calendar adjacent to a collapsed bottom command
+deck above the fixed app navigation. The deck contains a concise selected-room
+and active-filter summary row, then previous, Today, next, and month-picker
+controls. Its expanded panel opens upward with the existing room selector,
+capacity filter, and timezone disclosure; it is not a second modal or a second
+set of URL-state controls. The deck remains available during loading and
+retains validation/error states until the resulting schedule is ready.
+
+The sticky compact day strip belongs to the calendar frame, immediately above
+the role grid. The strip
 uses seven touch-sized buttons, complete localized labels, `aria-pressed` for
 selection, and `aria-current="date"` for today. The month dialog is secondary
 date navigation only and does not request monthly availability.
@@ -119,11 +127,12 @@ feature-owned and unchanged.
 
 The approved reference direction is a confident operational calendar: concise
 titles, minimal explanation, reduced borders/shadows, compact controls, and
-the calendar as the dominant surface. The supplied palette is `#020608`,
-`#1C252B`, `#486B85`, `#93B4BC`, and `#CAD2CB`. Dark text is used on the two
-light palette colors; white text is reserved for sufficiently dark primary or
-secondary surfaces. Derived off-white canvas and half-hour tokens keep the
-calendar readable without introducing unrelated blue or purple values.
+the calendar as the dominant surface. The visual refresh uses the supplied
+palette: ink `#000010`, white canvas and surfaces `#FFFFFF`, neutral gray
+`#CACAC8`, warm brown `#B6846B`, and vivid red `#F73149`. Ink is used on the
+red action surface to preserve readable contrast; white is reserved for the
+dark secondary surface. Calendar grid tokens remain quieter than controls so
+the schedule stays readable without becoming a dense spreadsheet.
 
 When the browser timezone differs from `Europe/Kyiv`, the schedule shows one
 small localized office-timezone indicator. When it matches Kyiv, the indicator
@@ -137,13 +146,14 @@ primary interactions.
 The schedule is a calendar-first workspace, not a stack of cards. On compact
 screens below 768px, its visible page heading is screen-reader-only because
 the active bottom-navigation destination already establishes the location. The
-default order is room/filter summary, compact week navigation, day strip, then
-the calendar. The room/filter dock is collapsed by default and exposes the
-room name, floor, capacity, and any applied capacity summary. It uses a real
+default order is the calendar and its adjacent day strip, followed by the
+command deck above the fixed app navigation. The command deck is collapsed by
+default and exposes the room name, floor, capacity, and any applied capacity
+summary. It uses a real
 button with `aria-expanded` and `aria-controls`; Escape returns focus to that
 button.
 
-The expanded dock contains the existing room selector and capacity form. Its
+The expanded deck contains the existing room selector and capacity form. Its
 local presentation state is not part of the schedule URL. After a successful
 room change, valid capacity application, or clear action, it collapses only
 when the resulting schedule state is ready and error-free. Validation,
@@ -152,10 +162,13 @@ only a grid-row, opacity, and chevron transition, and the global
 reduced-motion policy makes it effectively immediate.
 
 The compact main layout owns one `100dvh` contract through
-`--app-header-height` and `--mobile-navigation-occupied-space`: the grid gets
-the remaining flex space and is the vertical calendar scroll container. It
-keeps native scrolling, sticky time rail support, focus scroll-into-view, and
-bottom scroll padding without a scattered fixed-height calculation. Medium
+`--app-header-height`, `--mobile-schedule-main-height`, and the safe-area-aware
+mobile navigation tokens. The grid frame gets the remaining flex space; its
+role grid is the vertical scroll container while the day strip stays adjacent
+to it. The command deck grows upward without covering the calendar or the app
+navigation. It keeps native scrolling, sticky time rail support, focus
+scroll-into-view, and bottom scroll padding without a scattered fixed-height
+calculation. Medium
 layouts from 768px use an always-visible two-column toolbar; the expanded
 desktop toolbar uses one aligned room/filter group and one week/range group.
 

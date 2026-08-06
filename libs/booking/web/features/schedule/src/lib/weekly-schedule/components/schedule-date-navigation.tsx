@@ -58,7 +58,7 @@ export function ScheduleWeekDateStrip({
             aria-pressed={selected}
             aria-current={today ? 'date' : undefined}
             className={cn(
-              'min-h-11 touch-manipulation rounded-sm border px-0.5 py-1 text-center outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none',
+              'min-h-11 touch-manipulation rounded-lg border px-0.5 py-1 text-center outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none',
               selected
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-transparent bg-card text-foreground hover:bg-accent',

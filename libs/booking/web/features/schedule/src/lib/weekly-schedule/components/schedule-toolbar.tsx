@@ -6,7 +6,6 @@ import type { Locale } from '@mr-booking/shared-i18n';
 import { formatScheduleWeekRange } from '../formatting/schedule-date-time.formatter';
 import { IconButton, ScheduleWeekDateStrip } from './schedule-date-navigation';
 import { RoomCapacityFilter } from './room-capacity-filter';
-import { MobileScheduleControlDock } from './mobile-schedule-control-dock';
 import { ScheduleRoomSelector } from './schedule-room-selector';
 import { ScheduleTimeZoneSummary } from './schedule-time-zone-summary';
 import type { ScheduleMessages } from '../types/schedule-feature.types';
@@ -35,9 +34,6 @@ export function ScheduleToolbar({
   minimumCapacity,
   onApplyCapacity,
   onClearCapacity,
-  loadingSchedule,
-  hasScheduleError,
-  noMatchingRooms,
 }: {
   readonly locale: Locale;
   readonly messages: ScheduleMessages;
@@ -58,9 +54,6 @@ export function ScheduleToolbar({
   readonly minimumCapacity: number | undefined;
   readonly onApplyCapacity: (minimumCapacity: number) => void;
   readonly onClearCapacity: () => void;
-  readonly loadingSchedule: boolean;
-  readonly hasScheduleError: boolean;
-  readonly noMatchingRooms: boolean;
 }) {
   return (
     <>
@@ -124,41 +117,23 @@ export function ScheduleToolbar({
           </div>
         </div>
       ) : null}
-      {presentation !== 'expanded' ? (
+      {presentation === 'medium' ? (
         <div data-schedule-toolbar="compact" className="grid lg:hidden">
-          {presentation === 'compact' ? (
-            <MobileScheduleControlDock
+          <div className="grid grid-cols-[minmax(16rem,18rem)_minmax(18rem,1fr)] items-end gap-4 border-b border-border py-3">
+            <ScheduleRoomSelector
               messages={messages}
               rooms={rooms}
               room={room}
               loading={loadingRooms}
               onChange={onRoomChange}
-              browserTimeZone={browserTimeZone}
-              minimumCapacity={minimumCapacity}
-              loadingSchedule={loadingSchedule}
-              hasScheduleError={hasScheduleError}
-              noMatchingRooms={noMatchingRooms}
-              onApplyCapacity={onApplyCapacity}
-              onClearCapacity={onClearCapacity}
             />
-          ) : null}
-          {presentation === 'medium' ? (
-            <div className="grid grid-cols-[minmax(16rem,18rem)_minmax(18rem,1fr)] items-end gap-4 border-b border-border py-3">
-              <ScheduleRoomSelector
-                messages={messages}
-                rooms={rooms}
-                room={room}
-                loading={loadingRooms}
-                onChange={onRoomChange}
-              />
-              <RoomCapacityFilter
-                messages={messages}
-                minimumCapacity={minimumCapacity}
-                onApply={onApplyCapacity}
-                onClear={onClearCapacity}
-              />
-            </div>
-          ) : null}
+            <RoomCapacityFilter
+              messages={messages}
+              minimumCapacity={minimumCapacity}
+              onApply={onApplyCapacity}
+              onClear={onClearCapacity}
+            />
+          </div>
           <div className="grid gap-2 py-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
             <div
               role="group"

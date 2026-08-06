@@ -327,18 +327,22 @@ test.describe('interactive weekly schedule', () => {
       await expect(
         page.locator(`[data-schedule-presentation="${expected}"]`),
       ).toBeVisible();
-      await expect(
-        page.locator(
-          `[data-schedule-toolbar="${expected === 'expanded' ? 'expanded' : 'compact'}"]`,
-        ),
-      ).toBeVisible();
-      await expect(
-        page.locator('[data-schedule-week-navigation]'),
-      ).toBeVisible();
+      if (expected === 'compact') {
+        await expect(page.locator('[data-mobile-command-deck]')).toBeVisible();
+      } else {
+        await expect(
+          page.locator(
+            `[data-schedule-toolbar="${expected === 'expanded' ? 'expanded' : 'compact'}"]`,
+          ),
+        ).toBeVisible();
+      }
       if (expected === 'compact') {
         const dock = page.locator('[data-mobile-control-dock]');
         const trigger = page.getByRole('button', { name: /Selected room:/u });
         await expect(dock).toBeVisible();
+        await expect(
+          page.locator('[data-mobile-command-deck-navigation]'),
+        ).toBeVisible();
         await expect(trigger).toHaveAttribute('aria-expanded', 'false');
         await expect(
           page.getByRole('combobox', { name: 'Select meeting room' }),
@@ -358,6 +362,11 @@ test.describe('interactive weekly schedule', () => {
             .getByRole('group', { name: 'Selected date' })
             .getByRole('button'),
         ).toHaveCount(7);
+      }
+      if (expected !== 'compact') {
+        await expect(
+          page.locator('[data-schedule-week-navigation]'),
+        ).toBeVisible();
       }
       if (expected !== 'compact') {
         await expect(
@@ -384,7 +393,54 @@ test.describe('interactive weekly schedule', () => {
     }
   });
 
-  test('aligns the schedule shell and uses a wider grid breakout without overflow', async ({
+  test('keeps compact calendar and command deck in the one-handed viewport', async ({
+    page,
+  }) => {
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 375, height: 812 },
+      { width: 390, height: 844 },
+      { width: 393, height: 852 },
+      { width: 430, height: 932 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const frame = page.locator('[data-schedule-presentation="compact"]');
+      const deck = page.locator('[data-mobile-command-deck]');
+      const navigation = page.locator('[data-mobile-navigation]');
+      await expect(frame).toBeVisible();
+      await expect(deck).toBeVisible();
+      const metrics = await page.evaluate(() => {
+        const rect = (selector: string) => {
+          const element = document.querySelector<HTMLElement>(selector);
+          if (!element) return undefined;
+          const box = element.getBoundingClientRect();
+          return { top: box.top, bottom: box.bottom, height: box.height };
+        };
+        return {
+          frame: rect('[data-schedule-presentation="compact"]'),
+          deck: rect('[data-mobile-command-deck]'),
+          navigation: rect('[data-mobile-navigation]'),
+          viewportHeight: window.visualViewport?.height ?? window.innerHeight,
+          documentHeight: document.documentElement.scrollHeight,
+        };
+      });
+      expect(metrics.frame).toBeDefined();
+      expect(metrics.deck).toBeDefined();
+      expect(metrics.navigation).toBeDefined();
+      expect(metrics.deck?.bottom ?? 0).toBeLessThanOrEqual(
+        (metrics.navigation?.top ?? 0) + 1,
+      );
+      expect(metrics.documentHeight).toBeLessThanOrEqual(viewport.height + 1);
+      expect(metrics.frame?.height ?? 0).toBeGreaterThanOrEqual(
+        metrics.viewportHeight * (viewport.width === 320 ? 0.5 : 0.58),
+      );
+      await expect(
+        page.locator('[data-mobile-command-deck-navigation]'),
+      ).toBeVisible();
+    }
+  });
+
+  test('aligns the schedule shell and keeps the grid in its container', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -417,8 +473,13 @@ test.describe('interactive weekly schedule', () => {
     expect(
       Math.abs((metrics.heading?.x ?? 0) - (metrics.toolbar?.x ?? 0)),
     ).toBeLessThanOrEqual(1);
-    expect(metrics.wide?.width ?? 0).toBeGreaterThan(
-      metrics.standard?.width ?? 0,
+    expect(metrics.wide?.x ?? 0).toBeGreaterThanOrEqual(
+      metrics.standard?.x ?? 0,
+    );
+    expect(
+      (metrics.wide?.x ?? 0) + (metrics.wide?.width ?? 0),
+    ).toBeLessThanOrEqual(
+      (metrics.standard?.x ?? 0) + (metrics.standard?.width ?? 0),
     );
     expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
   });

@@ -1,6 +1,6 @@
 import { formatBookingDateTimeRange } from '@mr-booking/booking-ui';
 import { Button } from '@mr-booking/shared-ui';
-import { Clock3, MapPin, Users } from 'lucide-react';
+import { Clock3, MapPin, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import type { BookingListItemProps } from '../types/my-bookings.types';
 
@@ -61,10 +61,11 @@ export function BookingListItem({
         {booking.canCancel && onCancel ? (
           <Button
             type="button"
-            variant="ghost"
-            className="min-h-11 justify-start text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:justify-center"
+            variant="outline"
+            className="w-full border-destructive/60 bg-destructive/10 font-semibold text-destructive hover:border-destructive hover:bg-destructive/15 hover:text-destructive active:bg-destructive/20 sm:w-fit sm:justify-center"
             onClick={onCancel}
           >
+            <X aria-hidden="true" />
             {messages.actions.cancel}
           </Button>
         ) : null}
