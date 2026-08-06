@@ -90,9 +90,9 @@ export function EmailVerificationBanner({
             </Button>
             {resend.developmentVerificationUrl ? (
               <Button asChild variant="ghost" size="sm">
-                <a href={resend.developmentVerificationUrl}>
+                <Link href={resend.developmentVerificationUrl}>
                   {messages.openVerificationLink}
-                </a>
+                </Link>
               </Button>
             ) : null}
           </div>

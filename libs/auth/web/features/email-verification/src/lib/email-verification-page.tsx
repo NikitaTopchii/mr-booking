@@ -166,9 +166,9 @@ export function EmailVerificationPage({
               </Button>
               {resend.developmentVerificationUrl ? (
                 <Button asChild variant="ghost" className="w-full">
-                  <a href={resend.developmentVerificationUrl}>
+                  <Link href={resend.developmentVerificationUrl}>
                     {messages.openVerificationLink}
-                  </a>
+                  </Link>
                 </Button>
               ) : null}
             </div>

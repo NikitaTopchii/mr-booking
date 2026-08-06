@@ -1,4 +1,7 @@
+'use client';
+
 import { Button } from '@mr-booking/shared-ui';
+import Link from 'next/link';
 import type { AuthLanguageSwitcherProps } from './types/auth-ui.types';
 
 export function AuthLanguageSwitcher({
@@ -23,14 +26,18 @@ export function AuthLanguageSwitcher({
             : 'min-w-11 px-2 text-xs font-medium text-muted-foreground'
         }
       >
-        <a
+        <Link
           href={ukrainianHref}
           hrefLang="uk"
           aria-label={ukrainianLabel}
           aria-current={currentLocale === 'uk' ? 'page' : undefined}
+          onClick={(event) => {
+            event.preventDefault();
+            window.location.assign(ukrainianHref);
+          }}
         >
           uk
-        </a>
+        </Link>
       </Button>
       <span aria-hidden="true">/</span>
       <Button
@@ -42,14 +49,18 @@ export function AuthLanguageSwitcher({
             : 'min-w-11 px-2 text-xs font-medium text-muted-foreground'
         }
       >
-        <a
+        <Link
           href={englishHref}
           hrefLang="en"
           aria-label={englishLabel}
           aria-current={currentLocale === 'en' ? 'page' : undefined}
+          onClick={(event) => {
+            event.preventDefault();
+            window.location.assign(englishHref);
+          }}
         >
           en
-        </a>
+        </Link>
       </Button>
     </nav>
   );

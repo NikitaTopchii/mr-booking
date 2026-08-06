@@ -1,4 +1,5 @@
 import { Button, Spinner } from '@mr-booking/shared-ui';
+import Link from 'next/link';
 import { AuthField } from './auth-field';
 import { AuthFormError } from './auth-form-error';
 import type { AuthFormViewProps } from './types/auth-ui.types';
@@ -67,12 +68,12 @@ export function AuthFormView({
 
       <p className="text-center text-sm leading-6 text-muted-foreground">
         {messages.switchText}{' '}
-        <a
+        <Link
           href={switchHref}
           className="font-medium text-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {messages.switchAction}
-        </a>
+        </Link>
       </p>
     </form>
   );
