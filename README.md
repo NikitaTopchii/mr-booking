@@ -9,8 +9,8 @@ not include recurring bookings or end-of-booking notifications.
 
 - Node.js `>=24.0.0 <25` — pinned in `package.json` and `.nvmrc` (`24`).
 - Corepack and Yarn `4.17.1` — the version is pinned in `package.json`.
-- Docker Compose is required only for the separate Docker bonus; the main local
-  flow works without Docker.
+- Docker path: Docker with Docker Compose.
+- Local path: Node.js and Corepack/Yarn as documented below.
 
 Check the versions before installation:
 
@@ -22,7 +22,46 @@ yarn --version
 
 Node 24 and Yarn `4.17.1` are expected.
 
-## Quick start
+## Quick start with Docker
+
+The Docker flow is the primary review path for the Docker bonus. It requires
+only Docker and Docker Compose:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+After the containers are ready:
+
+- Web: <http://localhost:3000>;
+- API through the public gateway: <http://localhost:3000/api>;
+- API health: <http://localhost:3000/api/health/ready>;
+- Web health: <http://localhost:3000/health>.
+
+The API entrypoint validates the environment, applies committed migrations,
+and runs the deterministic room, user, and booking seed before the API becomes
+healthy. The SQLite database, WAL, and SHM files are stored in the persistent
+Compose volume `sqlite_data`. The gateway waits for both API and web health
+checks before accepting traffic.
+
+Stop the application while preserving the local volume:
+
+```bash
+docker compose down
+```
+
+Stop the application and delete its local database volume:
+
+```bash
+docker compose down -v
+```
+
+The Compose configuration is implemented and parses successfully. A clean
+runtime startup remains marked unverified when the local Docker daemon is
+unavailable; the command above is the intended one-command Docker scenario.
+
+## Local development without Docker
 
 Run these commands from the repository root:
 
@@ -39,21 +78,7 @@ open; press `Ctrl+C` to stop them. The migration and seed commands are safe to
 run repeatedly. `SEED_ON_START=true` also ensures rooms and demo data are
 available when the API starts.
 
-## Docker startup
-
-The Docker Compose stack is available for the production-shaped local flow:
-
-```bash
-docker compose config --quiet
-yarn start
-```
-
-The public gateway is available at <http://localhost:3000>. Use `yarn logs` to
-inspect the services and `yarn stop` to stop them. The Compose configuration
-and persistent volume are implemented, but a clean runtime startup is not
-claimed as verified when the local Docker daemon is unavailable.
-
-## Application addresses
+## Local application addresses
 
 Main local web application:
 
@@ -121,6 +146,7 @@ For bonus verification, the same link is also printed to the API console:
 Main reviewer commands:
 
 ```bash
+docker compose config --quiet
 npm test
 yarn test:integration
 yarn test:e2e --retries=0
