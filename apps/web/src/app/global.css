@@ -51,7 +51,6 @@
   --booking-foreign-surface: #b6846b;
   --booking-foreign-border: #000010;
   --booking-foreign-foreground: #000010;
-  --motion-quick: 120ms;
   --motion-standard: 180ms;
   --motion-week: 220ms;
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
