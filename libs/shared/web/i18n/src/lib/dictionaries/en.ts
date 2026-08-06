@@ -181,9 +181,9 @@ export const dictionary = {
       ninetyMinutes: '1.5 hours',
       twoHours: '2 hours',
       twoAndHalfHours: '2.5 hours',
+      threeHours: '3 hours',
       threeAndHalfHours: '3.5 hours',
       fourHours: '4 hours',
-      custom: 'Other end time',
     },
     accessibility: {
       selectDay: 'Select',

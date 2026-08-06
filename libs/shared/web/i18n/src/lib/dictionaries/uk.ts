@@ -183,9 +183,9 @@ export const dictionary = {
       ninetyMinutes: '1,5 години',
       twoHours: '2 години',
       twoAndHalfHours: '2,5 години',
+      threeHours: '3 години',
       threeAndHalfHours: '3,5 години',
       fourHours: '4 години',
-      custom: 'Інший час завершення',
     },
     accessibility: {
       selectDay: 'Обрати',

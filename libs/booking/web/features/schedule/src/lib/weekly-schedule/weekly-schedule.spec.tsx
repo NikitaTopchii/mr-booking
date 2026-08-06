@@ -132,9 +132,9 @@ const messages: AppDictionary['schedule'] = {
     ninetyMinutes: '1.5 hours',
     twoHours: '2 hours',
     twoAndHalfHours: '2.5 hours',
+    threeHours: '3 hours',
     threeAndHalfHours: '3.5 hours',
     fourHours: '4 hours',
-    custom: 'Other end time',
   },
   accessibility: {
     selectDay: 'Select',
@@ -284,6 +284,9 @@ describe('weekly schedule', () => {
       screen
         .getByRole('button', { name: '3.5 hours' })
         .hasAttribute('disabled'),
+    ).toBe(false);
+    expect(
+      screen.getByRole('button', { name: '3 hours' }).hasAttribute('disabled'),
     ).toBe(false);
     expect(
       screen.getByRole('button', { name: '4 hours' }).hasAttribute('disabled'),
@@ -670,9 +673,6 @@ describe('weekly schedule', () => {
           .getByRole('button', { name: '2 hours' })
           .hasAttribute('disabled'),
       ).toBe(true);
-      expect(
-        screen.getByRole('combobox', { name: 'Other end time' }).textContent,
-      ).toMatch(/5:00 PM/u);
     });
     expect(screen.queryByText('Duration')).toBeDefined();
   });

@@ -9,11 +9,6 @@ import {
   DialogTitle,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '@mr-booking/shared-ui';
 import { BOOKING_SLOT_MILLISECONDS } from '@mr-booking/booking-domain';
 import { AlertCircle } from 'lucide-react';
@@ -55,6 +50,7 @@ export function CreateBookingDialog({
     [3, messages.duration.ninetyMinutes],
     [4, messages.duration.twoHours],
     [5, messages.duration.twoAndHalfHours],
+    [6, messages.duration.threeHours],
     [7, messages.duration.threeAndHalfHours],
     [8, messages.duration.fourHours],
   ] as const;
@@ -143,25 +139,6 @@ export function CreateBookingDialog({
               })}
             </div>
           </fieldset>
-          <div className="grid gap-2">
-            <Label htmlFor="booking-end">{messages.duration.custom}</Label>
-            <Select value={creation.endsAt} onValueChange={creation.setEnd}>
-              <SelectTrigger id="booking-end" disabled={creation.reconciling}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {creation.endOptions.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {formatScheduleInstant(
-                      Date.parse(option),
-                      locale,
-                      browserTimeZone,
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           {formError ? (
             <Alert variant="destructive" role="alert">
               <AlertCircle aria-hidden="true" />
