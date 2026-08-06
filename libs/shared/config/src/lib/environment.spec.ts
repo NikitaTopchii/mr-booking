@@ -7,6 +7,7 @@ describe('parseRuntimeEnvironment', () => {
   it('provides safe local development defaults', () => {
     expect(parseRuntimeEnvironment({})).toEqual({
       NODE_ENV: 'development',
+      APP_RUNTIME_MODE: 'development',
       APP_PORT: 3000,
       WEB_INTERNAL_PORT: 3001,
       API_INTERNAL_PORT: 3002,
@@ -61,6 +62,37 @@ describe('parseRuntimeEnvironment', () => {
     expect(() => parseRuntimeEnvironment(production)).toThrow(
       'development delivery is not allowed in production',
     );
+  });
+
+  it('allows development app settings in a production framework runtime', () => {
+    expect(
+      parseRuntimeEnvironment({
+        NODE_ENV: 'production',
+        APP_RUNTIME_MODE: 'development',
+        APP_PORT: '3000',
+        WEB_INTERNAL_PORT: '3001',
+        API_INTERNAL_PORT: '3002',
+        DATABASE_PATH: '/data/mr-booking.sqlite',
+        SEED_ON_START: 'true',
+        OFFICE_TIME_ZONE: 'Europe/Kyiv',
+        OFFICE_OPEN_TIME: '09:00',
+        OFFICE_CLOSE_TIME: '19:00',
+        WEB_ORIGIN: 'http://localhost:3000',
+        APP_PUBLIC_URL: 'http://localhost:3000',
+        API_INTERNAL_URL: 'http://api:3002',
+        SESSION_COOKIE_NAME: 'room_booking_session',
+        SESSION_TTL_DAYS: '7',
+        EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: '1440',
+        EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: '60',
+        EMAIL_DELIVERY_MODE: 'development',
+        EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true',
+        LOG_DEVELOPMENT_VERIFICATION_LINK: 'true',
+      }),
+    ).toMatchObject({
+      NODE_ENV: 'production',
+      APP_RUNTIME_MODE: 'development',
+      APP_PUBLIC_URL: 'http://localhost:3000',
+    });
   });
 
   it('rejects the test-only verification TTL outside test environments', () => {

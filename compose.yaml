@@ -6,7 +6,9 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      # The Compose stack is the local/demo runtime, not a production deployment.
+      NODE_ENV: development
+      APP_RUNTIME_MODE: development
       APP_PORT: ${APP_PORT:-3000}
       WEB_INTERNAL_PORT: ${WEB_INTERNAL_PORT:-3001}
       API_INTERNAL_PORT: ${API_INTERNAL_PORT:-3002}
@@ -16,15 +18,15 @@ services:
       OFFICE_OPEN_TIME: ${OFFICE_OPEN_TIME:-09:00}
       OFFICE_CLOSE_TIME: ${OFFICE_CLOSE_TIME:-19:00}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
-      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      APP_PUBLIC_URL: http://localhost:3000
       API_INTERNAL_URL: http://api:${API_INTERNAL_PORT:-3002}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-room_booking_session}
       SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
       EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: ${EMAIL_VERIFICATION_TOKEN_TTL_MINUTES:-1440}
       EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: ${EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS:-60}
-      EMAIL_DELIVERY_MODE: ${EMAIL_DELIVERY_MODE:-disabled}
-      EXPOSE_DEVELOPMENT_VERIFICATION_LINK: ${EXPOSE_DEVELOPMENT_VERIFICATION_LINK:-false}
-      LOG_DEVELOPMENT_VERIFICATION_LINK: ${LOG_DEVELOPMENT_VERIFICATION_LINK:-false}
+      EMAIL_DELIVERY_MODE: development
+      EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true'
+      LOG_DEVELOPMENT_VERIFICATION_LINK: 'true'
       DEMO_SEED_WEEK_START: ${DEMO_SEED_WEEK_START:-}
     volumes:
       - sqlite_data:/data
@@ -47,7 +49,9 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      # The Compose stack is the local/demo runtime, not a production deployment.
+      NODE_ENV: development
+      APP_RUNTIME_MODE: development
       APP_PORT: ${APP_PORT:-3000}
       WEB_INTERNAL_PORT: ${WEB_INTERNAL_PORT:-3001}
       API_INTERNAL_PORT: ${API_INTERNAL_PORT:-3002}
@@ -57,15 +61,15 @@ services:
       OFFICE_OPEN_TIME: ${OFFICE_OPEN_TIME:-09:00}
       OFFICE_CLOSE_TIME: ${OFFICE_CLOSE_TIME:-19:00}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
-      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      APP_PUBLIC_URL: http://localhost:3000
       API_INTERNAL_URL: http://api:${API_INTERNAL_PORT:-3002}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-room_booking_session}
       SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
       EMAIL_VERIFICATION_TOKEN_TTL_MINUTES: ${EMAIL_VERIFICATION_TOKEN_TTL_MINUTES:-1440}
       EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: ${EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS:-60}
-      EMAIL_DELIVERY_MODE: ${EMAIL_DELIVERY_MODE:-disabled}
-      EXPOSE_DEVELOPMENT_VERIFICATION_LINK: ${EXPOSE_DEVELOPMENT_VERIFICATION_LINK:-false}
-      LOG_DEVELOPMENT_VERIFICATION_LINK: ${LOG_DEVELOPMENT_VERIFICATION_LINK:-false}
+      EMAIL_DELIVERY_MODE: development
+      EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true'
+      LOG_DEVELOPMENT_VERIFICATION_LINK: 'true'
       DEMO_SEED_WEEK_START: ${DEMO_SEED_WEEK_START:-}
     healthcheck:
       test:

@@ -32,6 +32,14 @@ cp .env.example .env
 docker compose up --build
 ```
 
+The Compose stack intentionally runs the local demo in development mode. Its
+development email verification link is logged by the API, and the public link
+uses the gateway at `http://localhost:3000`. Host-level `NODE_ENV` and
+production email settings cannot change this demo-only Compose mode. The
+application mode is controlled by `APP_RUNTIME_MODE`; `NODE_ENV` may still be
+set to `production` internally by the optimized Next.js server. This stack is
+not a production deployment: it has no SMTP delivery or HTTPS termination.
+
 After the containers are ready:
 
 - Web: <http://localhost:3000>;

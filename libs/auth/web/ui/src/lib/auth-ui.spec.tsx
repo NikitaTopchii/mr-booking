@@ -39,6 +39,9 @@ describe('auth presentation', () => {
     expect(
       screen.getByText('The email or password is incorrect.'),
     ).toBeDefined();
+    expect(
+      screen.getByRole('link', { name: 'Register' }).getAttribute('href'),
+    ).toBe('/en/register');
   });
 
   it('exposes an accessible active locale', () => {

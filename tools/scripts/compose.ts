@@ -16,7 +16,18 @@ function isComposeCommand(
 }
 
 loadRootEnvironmentFile();
-parseRuntimeEnvironment(process.env);
+
+const demoEnvironment = {
+  ...process.env,
+  NODE_ENV: 'development',
+  APP_RUNTIME_MODE: 'development',
+  APP_PUBLIC_URL: 'http://localhost:3000',
+  EMAIL_DELIVERY_MODE: 'development',
+  EXPOSE_DEVELOPMENT_VERIFICATION_LINK: 'true',
+  LOG_DEVELOPMENT_VERIFICATION_LINK: 'true',
+};
+
+parseRuntimeEnvironment(demoEnvironment);
 
 const command = process.argv[2];
 
@@ -34,7 +45,7 @@ if (command === 'reset') {
 
 const result = spawnSync('docker', composeCommands[command], {
   stdio: 'inherit',
-  env: process.env,
+  env: demoEnvironment,
 });
 
 if (result.error) {

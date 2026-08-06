@@ -5,6 +5,7 @@ import {
 } from '@mr-booking/shared-date-time';
 
 const nodeEnvironmentSchema = z.enum(['development', 'test', 'production']);
+const appRuntimeModeSchema = z.enum(['development', 'production']);
 
 const portSchema = z.coerce.number().int().min(1).max(65_535);
 const emailDeliveryModeSchema = z.enum(['development', 'disabled']);
@@ -23,6 +24,7 @@ const demoSeedWeekStartSchema = z.preprocess(
 const environmentSchema = z
   .object({
     NODE_ENV: nodeEnvironmentSchema,
+    APP_RUNTIME_MODE: appRuntimeModeSchema,
     APP_PORT: portSchema,
     WEB_INTERNAL_PORT: portSchema,
     API_INTERNAL_PORT: portSchema,
@@ -68,7 +70,7 @@ const environmentSchema = z
   })
   .superRefine((environment, context) => {
     if (
-      environment.NODE_ENV === 'production' &&
+      environment.APP_RUNTIME_MODE === 'production' &&
       !isAbsolutePath(environment.DATABASE_PATH)
     ) {
       context.addIssue({
@@ -89,7 +91,7 @@ const environmentSchema = z
       });
     }
 
-    if (environment.NODE_ENV === 'production') {
+    if (environment.APP_RUNTIME_MODE === 'production') {
       if (environment.EMAIL_DELIVERY_MODE === 'development') {
         context.addIssue({
           code: 'custom',
@@ -127,6 +129,7 @@ const environmentSchema = z
   });
 
 const localDefaults = {
+  APP_RUNTIME_MODE: 'development',
   APP_PORT: '3000',
   WEB_INTERNAL_PORT: '3001',
   API_INTERNAL_PORT: '3002',
@@ -174,10 +177,23 @@ export function parseRuntimeEnvironment(
     throw new EnvironmentValidationError(nodeEnvironment.error.issues);
   }
 
+  const appRuntimeMode =
+    source['APP_RUNTIME_MODE'] ??
+    (nodeEnvironment.data === 'production' ? 'production' : 'development');
+
   const candidate =
     nodeEnvironment.data === 'production'
-      ? { ...source, NODE_ENV: nodeEnvironment.data }
-      : { ...localDefaults, ...source, NODE_ENV: nodeEnvironment.data };
+      ? {
+          ...source,
+          NODE_ENV: nodeEnvironment.data,
+          APP_RUNTIME_MODE: appRuntimeMode,
+        }
+      : {
+          ...localDefaults,
+          ...source,
+          NODE_ENV: nodeEnvironment.data,
+          APP_RUNTIME_MODE: appRuntimeMode,
+        };
 
   const result = environmentSchema.safeParse(candidate);
 
